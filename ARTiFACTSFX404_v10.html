@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v10 (audio-clock hardening + remaining pending items):
+    AUDIO CLOCK (now robust to mid-playback change)
+      · The scheduler publishes an authoritative time→step log; the LCD display and live
+        record read the current step from it instead of recomputing from a fixed start time
+        and a constant tempo. The old recompute silently drifted the instant the tempo
+        changed mid-playback (tempo knob, TAP TEMPO, DJ BPM bend) or STEPS/BEAT changed, and
+        ignored the DJ bend entirely. Verified: display step stays correct through a live
+        tempo change (unit test) and tracks a DJ BPM bend in-browser (rate +6% as expected).
+      · Swing offset now scales with the real (DJ-bend-adjusted) step duration.
+      · Voice release-fade window (audibleDur) now includes the DJ bend baked into playbackRate.
+    REMAINING PENDING ITEMS
+      · remapPatternGrid() carries each hit's groove offset across a STEPS/BEAT change
+        (clamped to the new step) instead of zeroing it.
+      · Autosave restore validates imported LINK/MUTE group maps with the same shared
+        validator as project import (a tampered localStorage snapshot can't smuggle a bad
+        bank key into the GROUPS markup); the validator was hoisted to one shared function.
+      · Sub-24px tap targets (.stepDivBtn / .popupX / .rcClose) raised to 24px (WCAG 2.5.8).
   v9 (second audit pass — bugs, dead code, optimization):
     BUGS
       · RESAMPLE decoded its capture without .slice(0), detaching the ArrayBuffer it then
@@ -703,7 +720,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   }
   .rcTutBtn:active{ transform:translateY(2px); box-shadow:0 0 0 #000, inset 0 1px 3px rgba(0,0,0,.6); }
   .rcHead .rcClose{
-    width:22px; height:22px; border-radius:3px; background:var(--key); border:1px solid rgba(255,255,255,.08);
+    width:24px; height:24px; border-radius:3px; background:var(--key); border:1px solid rgba(255,255,255,.08); /* WCAG 2.5.8 min target size */
     color:var(--lcd-dim); display:flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer; touch-action:none; flex-shrink:0;
   }
   .rcBody{ flex:1; overflow-y:auto; touch-action:pan-y; display:flex; flex-direction:column; gap:12px; padding-right:4px; position:relative; z-index:2; }
@@ -1108,7 +1125,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   /* Unified close control — a small square X in the top-right corner of every popup,
      same spot the corner screws used to sit, but actually functional. */
   .popupX{
-    position:absolute; top:8px; right:8px; z-index:2; width:22px; height:22px;
+    position:absolute; top:8px; right:8px; z-index:2; width:24px; height:24px; /* WCAG 2.5.8 min target size */
     display:flex; align-items:center; justify-content:center; cursor:pointer; touch-action:none;
     background:var(--popup-key); border:1px solid var(--popup-border-soft); border-radius:0;
     color:var(--popup-text-dim); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1;
@@ -1166,7 +1183,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   .editTitle{ font-weight:700; font-size:13px; color:var(--accent); letter-spacing:1.5px; text-transform:uppercase; min-width:0; overflow-wrap:break-word; }
   .swingWrap{ display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--popup-text-dim); letter-spacing:.5px; flex-shrink:0; background:var(--popup-key); border:1px solid var(--popup-border-soft); padding:5px 9px; }
   .stepDivWrap{ display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--popup-text-dim); letter-spacing:.5px; flex-shrink:0; background:var(--popup-key); border:1px solid var(--popup-border-soft); padding:5px 9px; }
-  .stepDivBtn{ font-family:inherit; font-size:10.5px; font-weight:700; width:22px; height:22px; border:1px solid var(--popup-border); background:var(--popup-bg1); color:var(--popup-text-dim); cursor:pointer; }
+  .stepDivBtn{ font-family:inherit; font-size:10.5px; font-weight:700; width:24px; height:24px; /* WCAG 2.5.8 min target size — clustered STEPS/BEAT + step-shift buttons don't qualify for the spacing exception */ border:1px solid var(--popup-border); background:var(--popup-bg1); color:var(--popup-text-dim); cursor:pointer; }
   .stepDivBtn.on{ background:var(--accent); color:#000; border-color:var(--accent); }
   .stepDivBtn:active{ transform:translateY(1px); }
   .editHint{ font-size:12px; color:var(--popup-text-dim); line-height:1.4; }
@@ -2714,7 +2731,14 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         // slots per beat than the old one (less time resolution available) — keep whichever
         // is louder rather than silently dropping one or duplicating the pad on one step.
         if(existing){ if((h.vel||1) > (existing.vel||1)) existing.vel = h.vel; }
-        else newGrid[newIdx].push({idx:h.idx, off:0, vel:(typeof h.vel==='number'?h.vel:1)});
+        else {
+          // Carry the recorded groove offset instead of zeroing it. `off` is seconds-after-the-
+          // grid-line, and the grid line stays at the same musical position, so the same offset
+          // is still valid — just clamp it to the new step window so a coarser→finer change can
+          // never let it bleed into the next slot.
+          const newStepDur = (60/bpm)/newStepsPerBeat;
+          newGrid[newIdx].push({idx:h.idx, off:Math.min(Math.max(0, h.off||0), newStepDur*0.35), vel:(typeof h.vel==='number'?h.vel:1)});
+        }
       });
     });
     return newGrid;
@@ -4458,7 +4482,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       rate = pitchRate * (bpm/nativeBpm);
     }
     src.playbackRate.value = rate * djBendMultiplier; // djBendMultiplier is 1 outside DJ MODE — see the DJ MODE section further down
-    const audibleDur = playDur / rate;
+    const audibleDur = playDur / (rate * djBendMultiplier); // real wall-clock duration must include the DJ bend that's baked into playbackRate, or the release-fade window lands in the wrong place while a bend is held
     const targetGain = (typeof opts.gain==='number') ? opts.gain : 1;
     // ANTI-CLICK FADE — a hard trim edge (start>0 or end<1) can land mid-waveform, which
     // clicks on a sharp discontinuity. A ~3ms ramp there is too short to be heard as a
@@ -4985,6 +5009,23 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   // practice — this is defense in depth against any value reaching a markup sink.
   const escHtml = s=> String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+  // Shared validator for pad LINK/MUTE group maps arriving from ANY untrusted-ish source (an
+  // imported .fx404 or a localStorage autosave that could be tampered/corrupt): only accept
+  // real bank letters (A–J), pad indices 0–15, and finite numeric group ids, so nothing
+  // malformed reaches state or the GROUPS-menu markup sink. Mutates dst in place.
+  function importGroupMap(dst, src){
+    if(!src || typeof src!=='object') return;
+    BANK_LETTERS.forEach(b=>{
+      const m=src[b]; if(!m || typeof m!=='object') return;
+      const clean={};
+      Object.keys(m).forEach(k=>{
+        const idx=Number(k), gid=Number(m[k]);
+        if(Number.isInteger(idx) && idx>=0 && idx<16 && Number.isFinite(gid)) clean[idx]=gid;
+      });
+      if(Object.keys(clean).length) dst[b]=clean;
+    });
+  }
+
   function refreshGroupsList(){
     const groups=collectGroups();
     document.getElementById('groupsStatus').textContent =
@@ -5245,20 +5286,9 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       // SECURITY: only accept well-formed group maps from the imported .fx404 — keys must be
       // real bank letters (A–J) and pad indices 0–15, values finite numeric group ids. A
       // crafted file could otherwise smuggle an arbitrary string as a "bank" key, which
-      // refreshGroupsList() later interpolates into the GROUPS-menu markup; validating here
-      // drops anything that isn't a legitimate bank/pad/group id before it can reach the DOM.
-      const importGroupMap=(dst, src)=>{
-        if(!src || typeof src!=='object') return;
-        BANK_LETTERS.forEach(b=>{
-          const m=src[b]; if(!m || typeof m!=='object') return;
-          const clean={};
-          Object.keys(m).forEach(k=>{
-            const idx=Number(k), gid=Number(m[k]);
-            if(Number.isInteger(idx) && idx>=0 && idx<16 && Number.isFinite(gid)) clean[idx]=gid;
-          });
-          if(Object.keys(clean).length) dst[b]=clean;
-        });
-      };
+      // refreshGroupsList() later interpolates into the GROUPS-menu markup; the shared
+      // importGroupMap() validator drops anything that isn't a legitimate bank/pad/group id
+      // before it can reach state or the DOM.
       importGroupMap(padLinkGroup, manifest.padLinkGroup);
       importGroupMap(padMuteGroup, manifest.padMuteGroup);
       if(Array.isArray(manifest.disabledGroupIds)) manifest.disabledGroupIds.forEach(gid=> disabledGroupIds.add(gid));
@@ -6163,8 +6193,22 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   let STEP_COUNT = stepsPerBeat*4*BARS_PER_PATTERN;
   let pattern = [];
   for(let i=0;i<STEP_COUNT;i++) pattern.push([]);
-  let seqTimer=null, currentStep=0, loopStartTime=0;
+  let seqTimer=null, currentStep=0;
   let nextNoteTime=0;
+  // AUDIO-CLOCK ROBUSTNESS — authoritative time→step schedule. The scheduler records the real
+  // audio-clock start time of every grid step it fires; the LCD display and live-record read
+  // the current step from THIS log (currentScheduledEntry) instead of recomputing it from a
+  // fixed start time + a constant tempo. That old recompute silently drifted the instant the
+  // tempo changed mid-playback (tempo knob, TAP TEMPO, DJ BPM bend) or STEPS/BEAT changed, and
+  // ignored the DJ bend entirely (the scheduler advances at bpm*djBpmBendMultiplier). Reading
+  // the log makes the clock report exactly what the audio actually did, under any change.
+  let stepSchedule=[]; // chronological [{t, step, dur}], pruned to a short trailing window
+  function currentScheduledEntry(){
+    const now = ctx.currentTime + 0.0005; // tiny epsilon so a step counts the instant it starts
+    let found = null;
+    for(let i=0;i<stepSchedule.length;i++){ if(stepSchedule[i].t <= now) found = stepSchedule[i]; else break; }
+    return found;
+  }
   const SCHEDULE_AHEAD=0.12;   // seconds of audio scheduled ahead of "now"
   const LOOKAHEAD_MS=25;       // how often the scheduler wakes up to top up the queue
   const seqVoices={}; // seqVoices[bank][idx] = last scheduled voice — lets choke groups apply during sequenced playback, scoped per bank so simultaneous playlist tracks in different banks never choke each other
@@ -6178,7 +6222,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   }
 
   function startSequencer(){
-    playing=true; currentStep=0; loopStartTime=ctx.currentTime; // same clock scheduler() uses
+    playing=true; currentStep=0; stepSchedule.length=0; // fresh schedule log for this run
     nextNoteTime = ctx.currentTime + 0.05;
     clearInterval(seqTimer);
     seqTimer=setInterval(scheduler, LOOKAHEAD_MS);
@@ -6265,8 +6309,9 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   function scheduler(){
     while(nextNoteTime < ctx.currentTime + SCHEDULE_AHEAD){
       const stepToPlay = currentStep;
-      const stepDur = (60/bpm)/stepsPerBeat;
+      const stepDur = (60/(bpm*djBpmBendMultiplier))/stepsPerBeat; // REAL grid spacing incl. DJ BPM bend — swing now scales with it, and the schedule log records the true tempo
       const swingDelay = (stepToPlay % 2 === 1) ? swingAmount * stepDur * 0.5 : 0; // only the off-beat subdivision shifts — the grid itself (metronome, LEDs) stays straight
+      stepSchedule.push({t: nextNoteTime, step: stepToPlay, dur: stepDur}); // authoritative: when this grid step actually fires
       if(PlaylistEngine.running){
         // TRUE multi-track playback: every track with a block covering the current loop
         // position fires ITS OWN pattern into ITS OWN bank, all within this same step —
@@ -6289,7 +6334,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         pulseRec(nextNoteTime); // beat pulse, audio-clock accurate — now follows the real STEPS/BEAT subdivision, same as the LCD's beat-dots
         if(metronomeOn && !bouncing && !resampling) metronomeClick(nextNoteTime, stepToPlay===0); // never bleed the guide click into a RESAMPLE/BOUNCE/STEMS capture — recDest taps the master bus the click also routes to
       }
-      nextNoteTime += (60/(bpm*djBpmBendMultiplier))/stepsPerBeat;
+      nextNoteTime += stepDur;
       currentStep = (currentStep+1) % STEP_COUNT;
       if(currentStep===0 && PlaylistEngine.running){
         playlistPosition++; // immediate — audio-relevant for the next while-loop iteration's block lookup, same immediate/deferred split as everything else in this scheduler
@@ -6298,6 +6343,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         setTimeout(()=>{ updatePlaylistProgress(); if(chainOverlay.classList.contains('show')) updatePlaylistActiveStates(); }, nextStepDelay); // structure is unchanged loop-to-loop during playback — only re-toggle the active block, don't rebuild the whole grid
       }
     }
+    // Keep the schedule log bounded: drop entries fully in the past (retain ~0.5s of history
+    // so recordHit's off-window lookup stays valid), with a hard cap as a runaway backstop.
+    while(stepSchedule.length>2 && stepSchedule[1].t < ctx.currentTime - 0.5) stepSchedule.shift();
+    if(stepSchedule.length>1024) stepSchedule.splice(0, stepSchedule.length-1024);
   }
 
   function pulseRec(time){
@@ -6310,17 +6359,17 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   }
 
   function recordHit(idx, vel){
-    const stepDur = (60/bpm)/stepsPerBeat;
-    const elapsed = ctx.currentTime - loopStartTime; // seconds — matches scheduler's clock
-    // floor: the hit always belongs to the step that already started (the one you just
-    // heard as feedback) — never one still sitting in the scheduler's lookahead buffer,
-    // which is what caused the double-trigger.
-    const step = Math.floor(elapsed / stepDur) % STEP_COUNT;
-    // off: how far *after* that step's grid line you actually hit, in seconds — this is
-    // the groove. Clamped so it can never bleed into the next step's window. When
-    // QUANTIZE is on, this is discarded entirely and the hit snaps to the grid line.
-    const maxOff = stepDur*0.35;
-    const off = quantizeOn ? 0 : Math.min(elapsed % stepDur, maxOff);
+    // Which step is actually sounding right now, and how far into it — read straight from the
+    // schedule the audio used, so a hit lands on the right step even if the tempo changed
+    // (knob / TAP / DJ bend) since playback began. The step that already started (never one
+    // still in the lookahead buffer) is exactly what currentScheduledEntry() returns.
+    const e = currentScheduledEntry() || stepSchedule[0];
+    if(!e) return; // no grid step scheduled yet (the 50ms pre-roll) — nothing to record against
+    const step = e.step;
+    // off: how far *after* that step's grid line you actually hit, in seconds — the groove.
+    // Clamped so it can never bleed into the next step's window; discarded when QUANTIZE is on.
+    const maxOff = e.dur*0.35;
+    const off = quantizeOn ? 0 : Math.min(Math.max(0, ctx.currentTime - e.t), maxOff);
     const v = (typeof vel==='number' && !isNaN(vel)) ? Math.min(1, Math.max(0.05, vel)) : 1;
     const existing = pattern[step].find(h=>h.idx===idx);
     if(existing){ existing.off=off; existing.vel=v; } else pattern[step].push({idx, off, vel:v});
@@ -6348,21 +6397,19 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     stepDots.forEach((d,i)=>{ d.classList.toggle('current', i===s); if(i<=s) d.classList.add('played'); });
     lastLcdStep=s;
   }
-  // DISPLAY SYNC — runs every animation frame while playing, computing "which step is the
-  // audio actually on RIGHT NOW" directly from the Web Audio clock (ctx.currentTime vs
-  // loopStartTime), exactly like recordHit()'s own step math. This replaced a setTimeout
-  // scheduled ahead of time for each step: setTimeout has no precision guarantee and tends
-  // to fire late under any main-thread load, which is what made the LED display visibly lag
-  // behind the audio. Checking the real clock every frame means the display can never drift
-  // — it always shows the true current position, at worst one frame (~16ms) behind, which is
-  // the floor for any browser-painted UI and not a scheduling delay stacking on top of that.
+  // DISPLAY SYNC — runs every animation frame while playing, reading "which step is the audio
+  // actually on RIGHT NOW" from the scheduler's authoritative time→step log (same source
+  // recordHit uses). This replaced a setTimeout scheduled ahead of time for each step:
+  // setTimeout has no precision guarantee and tends to fire late under main-thread load, which
+  // made the LED display lag the audio. Reading the real schedule every frame means the display
+  // can never drift — at worst one frame (~16ms) behind, the floor for any browser-painted UI —
+  // and stays correct across mid-playback tempo changes and DJ bend, which a fixed-origin
+  // constant-tempo recompute could not.
   let displaySyncRafId = null;
   function displaySyncLoop(){
     if(playing){
-      const stepDur = (60/bpm)/stepsPerBeat;
-      const elapsed = ctx.currentTime - loopStartTime;
-      const s = Math.floor(Math.max(0,elapsed)/stepDur) % STEP_COUNT;
-      if(s!==lastLcdStep) updateLcdStep(s);
+      const e = currentScheduledEntry(); // the step the audio is truly on right now, from the schedule log
+      if(e && e.step!==lastLcdStep) updateLcdStep(e.step);
     }
     displaySyncRafId = requestAnimationFrame(displaySyncLoop);
   }
@@ -6649,8 +6696,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     tracks = Array.isArray(snap.tracks) ? snap.tracks.map(t=> ({blocks:(Array.isArray(t.blocks)?t.blocks:[]).filter(b=> b && Number.isFinite(b.start) && b.start>=0 && Number.isFinite(b.length) && b.length>=1)})) : tracks; // same block guard as importProject — a corrupted autosave can't poison playlistTotalLoops()/hang BOUNCE
     bpm = (typeof snap.bpm==='number') ? snap.bpm : bpm;
     if(typeof snap.swingAmount==='number') swingAmount = snap.swingAmount;
-    Object.keys(padLinkGroup).forEach(k=> delete padLinkGroup[k]); if(snap.padLinkGroup) Object.assign(padLinkGroup, snap.padLinkGroup);
-    Object.keys(padMuteGroup).forEach(k=> delete padMuteGroup[k]); if(snap.padMuteGroup) Object.assign(padMuteGroup, snap.padMuteGroup);
+    Object.keys(padLinkGroup).forEach(k=> delete padLinkGroup[k]); importGroupMap(padLinkGroup, snap.padLinkGroup); // validate (not raw Object.assign) — a tampered autosave can't smuggle a bad bank key into the GROUPS markup either
+    Object.keys(padMuteGroup).forEach(k=> delete padMuteGroup[k]); importGroupMap(padMuteGroup, snap.padMuteGroup);
     disabledGroupIds.clear(); if(Array.isArray(snap.disabledGroupIds)) snap.disabledGroupIds.forEach(id=> disabledGroupIds.add(id));
     nextGroupId = (typeof snap.nextGroupId==='number') ? snap.nextGroupId : nextGroupId;
     nextPatternId = (typeof snap.nextPatternId==='number') ? snap.nextPatternId : nextPatternId;
