@@ -4,6 +4,28 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v9 (second audit pass — bugs, dead code, optimization):
+    BUGS
+      · RESAMPLE decoded its capture without .slice(0), detaching the ArrayBuffer it then
+        reused as `raw`/IndexedDB payload → DataCloneError, a spurious "error de captura"
+        toast, and the resample was never persisted (lost on reload). Now decodes a copy.
+      · EXPORT STEMS had no try/finally: a throw mid-batch left stemSoloTrack pinned (normal
+        playback stuck soloing one track) and bouncing=true (all future exports blocked).
+        Wrapped so state is always released.
+      · Imported / autosaved playlist blocks are now validated (finite start≥0, length≥1) —
+        a corrupt block with an Infinite/oversized start poisoned playlistTotalLoops() and
+        made BOUNCE/STEMS render forever.
+      · LCD step markers: the loop-wrap/stop reset used className='' which also wiped the
+        'beat' (quarter-note) class; now removes only the play-state classes.
+    DEAD CODE
+      · Removed unused fn stepMs(), unused const MFX_TYPES, unused swingKnob binding, the
+        abandoned .chainSidebar/.chainSideItem/.chainSideName CSS cluster (the picker is now
+        a native <select>), and the orphaned .banklabel rule.
+    OPTIMIZATION
+      · CHAIN overlay open during playback no longer tears down and rebuilds the whole
+        playlist grid (up to ~512 ruler cells + every block's listeners) every loop pass —
+        a lightweight per-loop update just re-toggles the active block's class.
+      · pulseRec() reuses the cached #btnRec node instead of getElementById per beat.
   v8 (GODMODE-KERNEL audit pass over _fixed7):
     SECURITY
       · Stored self-XSS via crafted .fx404: imported pad LINK/MUTE group maps are now
@@ -578,7 +600,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
      nothing. */
   @media (prefers-reduced-motion: reduce){
     .logo span::after, .pad.toggle-active .toggle-dot, .unit.skin-transition,
-    .fsBtn.on, .fxbtn.on, .padfoot.on, .keybtn.bank .activeHalf, .chainSideItem .dot.lit,
+    .fsBtn.on, .fxbtn.on, .padfoot.on, .keybtn.bank .activeHalf,
     .quickFocus{
       animation:none !important;
     }
@@ -918,7 +940,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     box-shadow:inset 0 1px 2px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.03);
     margin-top:4px;
   }
-  .banklabel{ display:flex; justify-content:space-between; font-size:13.5px; letter-spacing:1.5px; color:var(--text-dim); font-weight:600; margin-bottom:6px; text-shadow:0 1px 1px rgba(0,0,0,.3);}
+  /* (removed dead .banklabel rule — no element carries that class in markup or JS.) */
 
   .padsection{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr; gap:11px; padding:6px 8px 6px; }
   .pad{
@@ -1211,21 +1233,9 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     flex:1; min-width:0; height:30px; padding:0 8px; border-radius:0; background:var(--popup-key); border:1px solid var(--popup-border);
     color:var(--popup-text); font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.3px;
   }
-  .chainSidebar{
-    width:98px; flex-shrink:0; background:var(--popup-key-alt); border-right:1px solid var(--popup-border-soft);
-    overflow-y:auto; display:flex; flex-direction:column;
-  }
-  .chainSideItem{
-    display:flex; align-items:center; gap:6px; padding:8px 8px; cursor:pointer; touch-action:none;
-    border-bottom:1px solid var(--popup-border-soft); font-size:9.5px; color:var(--popup-text-dim); letter-spacing:.3px;
-  }
-  .chainSideItem:active{ background:var(--popup-row-active); }
-  .chainSideItem.active{ background:var(--popup-row-active); color:var(--popup-text); box-shadow:inset 2px 0 0 var(--accent); } /* currently loaded channel — the one PATTERN EDIT/SELECT are pointed at right now */
-  .chainSideItem .dot{ width:6px; height:6px; border-radius:0; background:var(--accent-dim); flex-shrink:0; }
-  .chainSideName{ outline:none; border-radius:0; }
-  .chainSideName:focus{ background:var(--popup-bg1); box-shadow:0 0 0 1px var(--accent); padding:0 2px; }
-  .chainSideItem .dot.lit{ background:var(--accent); box-shadow:0 0 4px var(--accent); animation:logoLed 2.4s ease-in-out infinite; } /* channel has at least one programmed step */
-  .chainSideItem .cnt{ margin-left:auto; font-size:9px; color:var(--accent); font-weight:700; min-width:14px; text-align:right; }
+  /* (removed dead .chainSidebar/.chainSideItem/.chainSideName rules — the chain-pattern picker
+     was refactored to a native <select id="chainPatternSelect">; those classes no longer exist
+     in markup or JS.) */
   .chainTrackWrap{ flex:1; display:flex; flex-direction:column; min-width:0; background:var(--popup-bg1); }
   .chainTrackScroll{ flex:1; overflow-x:auto; overflow-y:auto; position:relative; }
   .chainPlayhead{
@@ -1369,9 +1379,6 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     .introCard{ width:min(90vw, 340px); padding:14px; border-radius:0; max-height:82vh; overflow:auto; }
     .chainCard{ max-height:82vh; }
     .chainBody{ flex-direction:column; min-height:260px; }
-    .chainSidebar{ width:100%; max-height:96px; flex-direction:row; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; border-right:none; border-bottom:1px solid var(--popup-border-soft); }
-    .chainSideItem{ flex-direction:column; gap:2px; min-width:64px; border-bottom:none; border-right:1px solid var(--popup-border-soft); text-align:center; justify-content:center; }
-    .chainSideItem .cnt{ margin-left:0; }
     .plLane, .plTrackLabel{ height:40px; }
     .plTracks{ grid-auto-rows:40px; }
     .chainTBtn{ width:26px; height:24px; }
@@ -2242,7 +2249,6 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   // ramps each chain's own "solo" gain node up/down (15ms, same ramp time as everything
   // else's smooth-bypass) instead of disconnecting/reconnecting nodes, which is what
   // would actually cause the click a menu like this is supposed to avoid. =====
-  const MFX_TYPES = ['crush','ring','tremolo','wobble','reverb','flanger','phaser'];
   let mfxType = 'crush';
   const mfxFX = (function(){
     const input = ctx.createGain();
@@ -2685,7 +2691,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   // Lives on Pattern Edit (not the chain popup) since it's a groove parameter of the
   // pattern itself, not something that makes sense per playlist block.
   let swingAmount=0;
-  const swingKnob = attachKnob(document.getElementById('kSwing'), {min:0,max:0.6,initial:0, size:28, onChange:v=>{ swingAmount=v; }});
+  attachKnob(document.getElementById('kSwing'), {min:0,max:0.6,initial:0, size:28, onChange:v=>{ swingAmount=v; }}); // return value unused — the call wires the DOM knob (side effect) and updates swingAmount
 
   // STEPS/BEAT — subdivision of the pattern grid (3=tresillo, 4=semicorchea/default, 6, 8).
   // Changing it changes what each column means in time (a 16th-note grid vs a triplet grid
@@ -3085,6 +3091,12 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
 
   const chainOverlay=document.getElementById('chainOverlay');
   const plTracks=document.getElementById('plTracks');
+  // Block element registry — lets the per-loop playback tick re-highlight the active block
+  // WITHOUT tearing down and rebuilding the whole grid (up to PLAYLIST_LOOPS≈512 ruler cells
+  // + every block's 3 pointer listeners) every ~2s while the CHAIN overlay is open. Populated
+  // by renderPlaylistGrid(); only the '.active' class changes loop-to-loop.
+  const plBlockEls=[];
+  function updatePlaylistActiveStates(){ plBlockEls.forEach(x=> x.el.classList.toggle('active', isBlockActive(x.model))); }
   const chainPlayBtn=document.getElementById('chainPlayBtn');
   const chainStopBtn=document.getElementById('chainStopBtn');
   const chainProgressFill=document.getElementById('chainProgressFill');
@@ -3282,6 +3294,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   }
   function renderPlaylistGrid(){
     plTracks.innerHTML='';
+    plBlockEls.length=0;
     plTracks.style.gridTemplateColumns = '64px repeat('+PLAYLIST_LOOPS+', '+CHAIN_TICK_PX+'px)';
     for(let i=0;i<PLAYLIST_LOOPS;i++){
       const r=document.createElement('div'); r.className='plRulerCell';
@@ -3348,6 +3361,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           renderPlaylistGrid();
         });
         block.addEventListener('pointercancel', clearPress);
+        plBlockEls.push({el:block, model:b}); // register for the lightweight per-loop active-state update
         lane.appendChild(block);
       });
       plTracks.appendChild(lane);
@@ -3736,7 +3750,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         try{
           const blob = new Blob(chunks, {type: recMime || 'audio/webm'});
           const arr = await blob.arrayBuffer();
-          const buf = await ctx.decodeAudioData(arr);
+          const buf = await ctx.decodeAudioData(arr.slice(0)); // decodeAudioData detaches its input — decode a COPY so `arr` stays intact for raw/IndexedDB below (same guard every other decode site uses); without it saveSampleToDB() structured-clones a detached buffer → DataCloneError, spurious "error de captura", and the resample never persists
           if(!bankSamples[currentBank]) bankSamples[currentBank]=new Array(16).fill(null);
           const loaded = bankSamples[currentBank];
           let padIdx = loaded.findIndex(s=>!s);
@@ -3951,26 +3965,35 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     const btn=document.getElementById('chainResampleBtn'); btn.classList.add('armed');
     toast('EXPORT STEMS: '+activeTracks.length+' pista(s) — cada una tarda como un BOUNCE normal...');
     const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-    for(let n=0;n<activeTracks.length;n++){
-      const trackIdx = activeTracks[n];
-      toast('Stem '+(n+1)+'/'+activeTracks.length+': pista '+(trackIdx+1)+'...');
-      const buf = await bounceOneStem(trackIdx, totalLoops);
-      if(!buf) continue; // skip a failed/empty stem rather than aborting the whole batch
-      const fname = 'stem-track'+(trackIdx+1)+'-'+stamp;
-      if(exportFormat==='wav' || exportFormat==='both'){
-        downloadBlob(new Blob([audioBufferToWav(buf)], {type:'audio/wav'}), fname+'.wav');
+    // try/finally: if any stem's encode/download throws mid-batch, we must still clear
+    // stemSoloTrack (otherwise the scheduler keeps soloing that one track for the rest of
+    // the session — normal playback silently broken) and release bouncing/the armed button
+    // (otherwise every future BOUNCE/RESAMPLE/STEMS is blocked until reload).
+    try{
+      for(let n=0;n<activeTracks.length;n++){
+        const trackIdx = activeTracks[n];
+        toast('Stem '+(n+1)+'/'+activeTracks.length+': pista '+(trackIdx+1)+'...');
+        const buf = await bounceOneStem(trackIdx, totalLoops);
+        if(!buf) continue; // skip a failed/empty stem rather than aborting the whole batch
+        const fname = 'stem-track'+(trackIdx+1)+'-'+stamp;
+        if(exportFormat==='wav' || exportFormat==='both'){
+          downloadBlob(new Blob([audioBufferToWav(buf)], {type:'audio/wav'}), fname+'.wav');
+        }
+        if(exportFormat==='mp3' || exportFormat==='both'){
+          if(exportFormat==='both') await new Promise(r=>setTimeout(r, 150));
+          const mp3Chunks = await encodeMp3Bytes(buf);
+          downloadBlob(new Blob(mp3Chunks, {type:'audio/mpeg'}), fname+'.mp3');
+        }
+        await new Promise(r=>setTimeout(r, 250)); // brief pause between stems so downloads don't collide
       }
-      if(exportFormat==='mp3' || exportFormat==='both'){
-        if(exportFormat==='both') await new Promise(r=>setTimeout(r, 150));
-        const mp3Chunks = await encodeMp3Bytes(buf);
-        downloadBlob(new Blob(mp3Chunks, {type:'audio/mpeg'}), fname+'.mp3');
-      }
-      await new Promise(r=>setTimeout(r, 250)); // brief pause between stems so downloads don't collide
+      toast('EXPORT STEMS completado ('+activeTracks.length+' pista(s))');
+    }catch(err){
+      toast('EXPORT STEMS: error durante el render');
+    }finally{
+      stemSoloTrack = null;
+      PlaylistEngine.stop();
+      bouncing=false; btn.classList.remove('armed');
     }
-    stemSoloTrack = null;
-    PlaylistEngine.stop();
-    bouncing=false; btn.classList.remove('armed');
-    toast('EXPORT STEMS completado ('+activeTracks.length+' pista(s))');
   }
 
   // EXPORT FORMAT — tapping EXPORT always opens the format picker first; picking a
@@ -5268,7 +5291,12 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         // stack size exceeded" here. reduce() has no such limit and gives the same result
         // for any legitimate project file.
         nextPatternId = manifest.nextPatternId || (patternPool.reduce((max,p)=> Math.max(max, (typeof p.id==='number'?p.id:0)), 0)+1);
-        tracks = Array.isArray(manifest.tracks) ? manifest.tracks.map(t=> ({blocks:t.blocks||[]})) : Array.from({length:TRACK_COUNT}, ()=>({blocks:[]}));
+        // ROBUSTNESS: import blocks verbatim only after dropping malformed ones. placeBlock()
+        // guards live edits against NaN/negative starts precisely because a bad start/length
+        // poisons playlistTotalLoops() (max(start+length)) and can hang BOUNCE/STEMS forever
+        // (playlistPosition can never reach an Infinite/oversized total, so the render never
+        // ends). Import/autosave bypass placeBlock, so re-apply the same guard here.
+        tracks = Array.isArray(manifest.tracks) ? manifest.tracks.map(t=> ({blocks:(Array.isArray(t.blocks)?t.blocks:[]).filter(b=> b && Number.isFinite(b.start) && b.start>=0 && Number.isFinite(b.length) && b.length>=1)})) : Array.from({length:TRACK_COUNT}, ()=>({blocks:[]}));
         bpm = (typeof manifest.bpm==='number') ? manifest.bpm : bpm;
         syncDelayTempo();
         syncDjfxTempo();
@@ -6149,8 +6177,6 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     });
   }
 
-  function stepMs(){ return (60000/bpm)/stepsPerBeat; }
-
   function startSequencer(){
     playing=true; currentStep=0; loopStartTime=ctx.currentTime; // same clock scheduler() uses
     nextNoteTime = ctx.currentTime + 0.05;
@@ -6269,13 +6295,13 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         playlistPosition++; // immediate — audio-relevant for the next while-loop iteration's block lookup, same immediate/deferred split as everything else in this scheduler
         if(playlistPosition >= PLAYLIST_LOOPS-8) PLAYLIST_LOOPS = Math.min(512, PLAYLIST_LOOPS + 32); // soft "infinite" canvas: grow the timeline before playback ever runs off the end of it, instead of pre-allocating an arbitrary huge grid — capped like growPlaylist(), so an unattended long session can't grow the playlist grid without bound
         const nextStepDelay = Math.max(0, (nextNoteTime - ctx.currentTime) * 1000); // scheduled time of the new step 0
-        setTimeout(()=>{ updatePlaylistProgress(); if(chainOverlay.classList.contains('show')) renderPlaylistGrid(); }, nextStepDelay);
+        setTimeout(()=>{ updatePlaylistProgress(); if(chainOverlay.classList.contains('show')) updatePlaylistActiveStates(); }, nextStepDelay); // structure is unchanged loop-to-loop during playback — only re-toggle the active block, don't rebuild the whole grid
       }
     }
   }
 
   function pulseRec(time){
-    const el = document.getElementById('btnRec');
+    const el = recBtn; // reuse the cached #btnRec node instead of a per-beat getElementById
     const delay = Math.max(0, (time - ctx.currentTime) * 1000);
     setTimeout(()=>{
       el.classList.add('pulse');
@@ -6313,11 +6339,11 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     document.getElementById('lcdMode').textContent = playing ? ('STEP '+String((typeof step==='number'?step:currentStep)+1).padStart(2,'0')) : 'MENU';
     const s = typeof step==='number' ? step : currentStep;
     if(typeof updatePlaylistProgress==='function') updatePlaylistProgress(); // PlaylistEngine reads the shared step counter here — it doesn't own a clock of its own
-    if(!playing){ stepDots.forEach(d=> d.className=''); lastLcdStep=-1; return; }
+    if(!playing){ stepDots.forEach(d=> d.classList.remove('current','played')); lastLcdStep=-1; return; } // remove only the play-state classes, keep 'beat' (quarter-note markers) intact
     if(s<lastLcdStep){ // wrapped back to the top of the loop — one full pass done
       lcdStepsEl.classList.add('wrap');
       setTimeout(()=> lcdStepsEl.classList.remove('wrap'), 130);
-      stepDots.forEach(d=> d.className=''); // fresh fill-in for the new pass
+      stepDots.forEach(d=> d.classList.remove('current','played')); // fresh fill-in for the new pass — keep 'beat' markers
     }
     stepDots.forEach((d,i)=>{ d.classList.toggle('current', i===s); if(i<=s) d.classList.add('played'); });
     lastLcdStep=s;
@@ -6620,7 +6646,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       const validGrid = Array.isArray(p.pattern) && p.pattern.length===STEP_COUNT && p.pattern.every(step=>Array.isArray(step));
       return { id:p.id, name:(typeof p.name==='string'?p.name:'PATTERN'), bank:(typeof p.bank==='string'?p.bank:'A'), pattern: validGrid ? p.pattern : emptyPatternGrid() };
     }) : patternPool;
-    tracks = Array.isArray(snap.tracks) ? snap.tracks.map(t=> ({blocks:Array.isArray(t.blocks)?t.blocks:[]})) : tracks;
+    tracks = Array.isArray(snap.tracks) ? snap.tracks.map(t=> ({blocks:(Array.isArray(t.blocks)?t.blocks:[]).filter(b=> b && Number.isFinite(b.start) && b.start>=0 && Number.isFinite(b.length) && b.length>=1)})) : tracks; // same block guard as importProject — a corrupted autosave can't poison playlistTotalLoops()/hang BOUNCE
     bpm = (typeof snap.bpm==='number') ? snap.bpm : bpm;
     if(typeof snap.swingAmount==='number') swingAmount = snap.swingAmount;
     Object.keys(padLinkGroup).forEach(k=> delete padLinkGroup[k]); if(snap.padLinkGroup) Object.assign(padLinkGroup, snap.padLinkGroup);
