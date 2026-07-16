@@ -36,6 +36,21 @@ En el móvil, usa «Añadir a pantalla de inicio» para instalarla.
 Para desplegarla basta con subir estos archivos estáticos a cualquier hosting
 (GitHub Pages, Netlify, Vercel, etc.).
 
+### Despliegue gratuito desde repo privado (Netlify o Vercel)
+
+GitHub Pages requiere plan de pago en repos privados. Alternativas gratuitas que
+sí soportan repos privados (ya incluyen su config en la raíz):
+
+- **Netlify** (`netlify.toml`): en app.netlify.com → «Add new site» → «Import from
+  Git» → elige el repo → sin comando de build, publica la raíz. Deploy automático
+  en cada push.
+- **Vercel** (`vercel.json`): en vercel.com → «Add New… Project» → importa el repo
+  → framework «Other», sin build. Deploy automático en cada push.
+
+Ambos dan una URL HTTPS instalable como PWA. Los archivos de config fijan
+`Cache-Control: no-cache` para `sw.js` (para que las actualizaciones lleguen) y el
+tipo MIME correcto del manifest.
+
 ## Estructura
 
 ```
