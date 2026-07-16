@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v15 (full app verification + polish):
+    · Visualizer: denser bars (BAR_PITCH 2.6→1.7) so more waveform detail shows across the
+      fixed window ("más espectro").
+    · Full end-to-end verification in headless Chromium — every main-panel control (52
+      role=button/.fxbtn + 6 knobs), every overlay's controls, and the core flows (pattern
+      edit, chain, sample edit open, bank switch, DJ mode, skins, play/stop, jog zoom) were
+      exercised: ZERO thrown/console/page errors.
+    · Hardened the 3 unguarded setPointerCapture calls (knob drag, sample-edit waveform handle,
+      jog wheel) with try/catch, matching the pattern already used elsewhere — a pointer that's
+      already released can no longer throw and abort the drag.
+    · Fixed a stale tutorial line: it claimed "long-press any pad to open its editor", but that
+      gesture doesn't exist (pad hold is GATE/LOOP/ROLL). Corrected to the real path: tap a pad,
+      then START/END (or PITCH/SPEED / MARK).
   v14 (LCD visualizer — fixed window, no scrolling; jog-wheel zoom):
     · The visualizer no longer sweeps side to side. It now shows a FIXED window of the most
       recent audio, redrawn in place every frame as a min/max waveform (same look as v13 /
@@ -1994,7 +2007,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     {title:'SHIFT', body:'Mantén <b>SHIFT</b> y toca otro botón para su función secundaria (naranja). Se suelta solo después de usarlo una vez — no hace falta soltarlo a mano. Activar SHIFT apaga DJ MODE automáticamente si estaba encendido, y viceversa — son excluyentes, nunca a la vez.', target:'#btnShift'},
     {title:'DJ MODE', body:'Toca el botón <b>DJ MODE</b> (junto a SHIFT) para activarla — los 16 pads pasan a ser controles de interpretación en directo en vez de disparar samples. <b>BEND+/BEND-</b>: mientras mantienes pulsado, dobla el tono de todo lo que suene ahora mismo; al soltar, vuelve exacto al valor guardado en PAD SETTINGS. <b>BPM+/BPM-</b>: empuja el tempo un poco mientras aguantas, y <b>SYNC</b> lo devuelve de golpe al tempo del proyecto. <b>CUE</b> reinicia desde el principio el último sonido que tocaste fuera de DJ MODE. <b>|&lt;&lt;</b> lo rebobina y lo deja en silencio. <b>&gt;/II</b> lo pausa y lo retoma justo por donde iba. Nada de esto se guarda — es una capa temporal encima de la configuración del pad, nunca la sobrescribe.', target:'#djModeBtn'},
     {title:'PATTERN SEQUENCER', body:'PLAY/STOP arranca o para el patrón actual — cualquier PLAY (aquí, en PATTERN EDIT o en PLAYLIST) toma el control y para lo que sonara antes, sin jerarquías. PATTERN EDIT abre la rejilla paso a paso: toca una celda para el golpe, mantenla pulsada para borrarlo, y mantén pulsada la ETIQUETA de un pad para BORRAR FILA, COPIAR/PEGAR FILA entre pads, o rellenarla con un ritmo EUCLIDEAN. STEPS/BEAT cambia la subdivisión (3/4/6/8), STEP SHIFT desplaza el patrón entero un paso, HUMANIZE le da variación humana a golpes ya puestos, y las flechas junto al título cambian de patrón sin salir de la rejilla. PATTERN CHAIN abre la PLAYLIST: elige un patrón en el desplegable de arriba (✎ lo renombra, + crea uno nuevo), toca una de las 10 pistas para colocarlo — los que coincidan en el tiempo suenan en capas. EXPORT arriba elige WAV, MP3, las dos juntas, o STEMS (cada pista con contenido, renderizada por separado — tarda como un bounce normal por cada una).', target:'#btnPatSelect'},
-    {title:'SAMPLE EDIT', body:'START/END recorta el sample, PITCH/SPEED ajusta la afinación, MARK pone el punto de loop. Mantén pulsado cualquier pad para abrir su editor completo — tiene knobs de GAIN, ATK/REL y PITCH por pad, zoom de la forma de onda (botón ZOOM + barra para moverte), y herramientas de limpieza: NORMALIZE, DENOISE (quita ruido de fondo), DC OFFSET, REVERSE PERM (invierte el sample para siempre), MONO⇄STEREO, LOOP XFADE (suaviza la costura del loop) y AUTO-CHOP (detecta golpes solo y coloca los cortes). Toca la onda para poner marcas de corte (Chop) — mantenlas pulsadas para borrarlas.', target:'#btnStartEnd'},
+    {title:'SAMPLE EDIT', body:'START/END recorta el sample, PITCH/SPEED ajusta la afinación, MARK pone el punto de loop. Toca un pad y pulsa START/END (o PITCH/SPEED, o MARK) para abrir su editor completo — tiene knobs de GAIN, ATK/REL y PITCH por pad, zoom de la forma de onda (botón ZOOM + barra para moverte), y herramientas de limpieza: NORMALIZE, DENOISE (quita ruido de fondo), DC OFFSET, REVERSE PERM (invierte el sample para siempre), MONO⇄STEREO, LOOP XFADE (suaviza la costura del loop) y AUTO-CHOP (detecta golpes solo y coloca los cortes). Toca la onda para poner marcas de corte (Chop) — mantenlas pulsadas para borrarlas.', target:'#btnStartEnd'},
     {title:'SAMPLING', body:'DEL borra el pad. <b>REC</b> graba con cuenta atrás de 4 clics — pulsa REC otra vez para parar y reiniciar. RESMPL resamplea la salida master a un pad nuevo.', target:'#btnRec'},
     {title:'QUANTIZE', body:'<b>SHIFT + REC</b> activa/desactiva QUANTIZE. OFF (por defecto) graba tu groove humano tal cual. ON ajusta cada golpe exacto a la rejilla. Si grabaste demasiado recto, HUMANIZE (en PATTERN EDIT) le devuelve variación después.', target:'#quantizeLabel'},
     {title:'SAMPLE MODE', body:'BPM SYNC ajusta el sample al tempo. GATE lo corta al soltar el pad. LOOP y REVERSE hacen lo que dicen. ROLL repite en ráfaga mientras mantienes pulsado.', target:'#modeBpmSync'},
@@ -2693,7 +2706,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     }
 
     let dragging=false;
-    el.addEventListener('pointerdown', e=>{ dragging=true; el.setPointerCapture(e.pointerId); handle.classList.add('active'); updateFromEvent(e); });
+    el.addEventListener('pointerdown', e=>{ dragging=true; try{ el.setPointerCapture(e.pointerId); }catch(_){} handle.classList.add('active'); updateFromEvent(e); });
     el.addEventListener('pointermove', e=>{ if(dragging) updateFromEvent(e); });
     el.addEventListener('pointerup', ()=>{ dragging=false; handle.classList.remove('active'); });
     el.addEventListener('pointercancel', ()=>{ dragging=false; handle.classList.remove('active'); });
@@ -5792,7 +5805,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       e.preventDefault();
       seDraggingHandle=which;
       handleEl.classList.add('active');
-      handleEl.setPointerCapture(e.pointerId);
+      try{ handleEl.setPointerCapture(e.pointerId); }catch(_){}
     });
     handleEl.addEventListener('pointermove', e=>{
       if(seDraggingHandle!==which) return;
@@ -6508,7 +6521,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   vizCanvas.setAttribute('aria-hidden','true');
   wave.appendChild(vizCanvas);
   const g2=vizCanvas.getContext('2d');
-  const BAR_PITCH=2.6; // px per bar (bar + 1px gap) — the segmented min/max waveform look
+  const BAR_PITCH=1.7; // px per bar — denser bars show more of the waveform detail ("más espectro")
   let vizW=0, vizH=0, vizDpr=1, NB=1;
   let vizZoom=1; // jog-controlled: 1x shows the whole analyser window, higher shows a shorter recent slice
   let colAccent='#ff9a3d', colFg='#dfe6f0', colFrame=0;
@@ -6680,7 +6693,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   const sampleEditOverlayEl=document.getElementById('sampleEditOverlay');
   const seZoomBtnEl=document.getElementById('seZoomBtn');
   let jogAngle=0, jogDragging=false, jogLastX=0, jogMenuAccum=0;
-  jog.addEventListener('pointerdown', e=>{ jogDragging=true; jogLastX=e.clientX; jog.setPointerCapture(e.pointerId); jog.classList.add('active'); });
+  jog.addEventListener('pointerdown', e=>{ jogDragging=true; jogLastX=e.clientX; try{ jog.setPointerCapture(e.pointerId); }catch(_){} jog.classList.add('active'); });
   jog.addEventListener('pointermove', e=>{
     if(!jogDragging) return;
     const dx=e.clientX-jogLastX; jogLastX=e.clientX;
