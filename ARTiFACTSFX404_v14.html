@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v14 (LCD visualizer — fixed window, no scrolling; jog-wheel zoom):
+    · The visualizer no longer sweeps side to side. It now shows a FIXED window of the most
+      recent audio, redrawn in place every frame as a min/max waveform (same look as v13 /
+      SAMPLE EDIT) — a stationary strip that refreshes constantly rather than a moving head.
+    · The jog wheel now zooms that window (ENC:ZOOM): 1x shows the full ~0.37s buffer, higher
+      shows a shorter, more detailed recent slice; PUSH ENTER resets to 1x. (When the SAMPLE
+      EDIT popup is open the jog still zooms that waveform instead, as before.)
+    · Analyser fftSize raised to 16384 so the fixed window spans a useful duration.
   v13 (LCD visualizer — segmented min/max waveform, matching SAMPLE EDIT):
     · Changed the live LCD visualizer to draw in the same visual language as the SAMPLE EDIT
       waveform: a vertical bar per time-slice spanning that slice's min→max sample (symmetric
@@ -2507,7 +2515,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   limiter.connect(ctx.destination);
   limiter.connect(recDest);
   const analyser = ctx.createAnalyser();
-  analyser.fftSize = 2048; // 1024 usable bins — plenty of raw resolution for the log-frequency band mapping below
+  analyser.fftSize = 16384; // ~0.37s of time-domain samples at 44.1kHz — the LCD visualizer shows a fixed window of this, zoomable with the jogw
   analyser.smoothingTimeConstant = 0.35; // kept low on purpose — attack speed lives here, the release/trail character is handled explicitly in drawSpectrum()'s own decay curve below, not by blurring the raw FFT data further
   limiter.connect(analyser);
 
@@ -6485,12 +6493,14 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     o.start(time); o.stop(time+0.05);
   }
 
-  // ===== LCD VISUALIZER — live segmented min/max WAVEFORM, drawn in the same visual language as
-  // the SAMPLE EDIT waveform (a vertical bar per slice spanning that slice's min→max sample), but
-  // scrolling: one new bar per frame under a bright moving head, with a short blanked "erase gap"
-  // just ahead of it like an audio monitor. The analyser sits after the limiter, so it shows the
-  // master output — pads, DJ MODE, mic, AND sequenced playback. Quiet = a flat row of centre dots;
-  // every kick/snare rises as a tall bar. Device-pixel crisp; colours track the active skin. =====
+  // ===== LCD VISUALIZER — FIXED-WINDOW min/max WAVEFORM (no scrolling sweep). Every frame it
+  // redraws, in place across the whole fixed strip, the min/max waveform of the most recent
+  // slice of the analyser's time-domain buffer — same visual language as the SAMPLE EDIT
+  // waveform (a vertical bar per column spanning that column's min→max sample). The strip never
+  // sweeps side to side; it just refreshes in place. The jog wheel sets how much audio duration
+  // that fixed window shows (ENC:ZOOM) — 1x = the full ~0.37s buffer, higher = a shorter, more
+  // detailed slice. The analyser sits after the limiter, so it shows the master output (pads,
+  // DJ MODE, mic, sequenced playback). Device-pixel crisp; colours track the active skin. =====
   const wave=document.getElementById('lcdWave');
   wave.innerHTML='';
   const vizCanvas=document.createElement('canvas');
@@ -6499,7 +6509,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   wave.appendChild(vizCanvas);
   const g2=vizCanvas.getContext('2d');
   const BAR_PITCH=2.6; // px per bar (bar + 1px gap) — the segmented min/max waveform look
-  let vizW=0, vizH=0, vizDpr=1, NB=1, tMin=new Float32Array(1), tMax=new Float32Array(1), sweep=0;
+  let vizW=0, vizH=0, vizDpr=1, NB=1;
+  let vizZoom=1; // jog-controlled: 1x shows the whole analyser window, higher shows a shorter recent slice
   let colAccent='#ff9a3d', colFg='#dfe6f0', colFrame=0;
   function readVizColors(){
     const cs=getComputedStyle(unitEl);
@@ -6511,41 +6522,33 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     vizW=Math.max(1, wave.clientWidth||119); vizH=Math.max(1, wave.clientHeight||35);
     vizCanvas.width=Math.round(vizW*vizDpr); vizCanvas.height=Math.round(vizH*vizDpr);
     g2.setTransform(vizDpr,0,0,vizDpr,0,0);
-    const nb=Math.max(24, Math.floor(vizW/BAR_PITCH));
-    if(nb!==NB){ tMin=new Float32Array(nb); tMax=new Float32Array(nb); NB=nb; if(sweep>=NB) sweep=0; }
+    NB=Math.max(24, Math.floor(vizW/BAR_PITCH));
     readVizColors();
   }
   sizeViz();
   if(typeof ResizeObserver==='function'){ try{ new ResizeObserver(()=>sizeViz()).observe(wave); }catch(e){} }
   const timeData = new Uint8Array(analyser.fftSize); // time-domain samples for the waveform
-  const GAP_BARS = 2;    // blanked bars just ahead of the head — the monitor "erase" gap
   let spectrumRafId = null;
-  let vizEnv = 0;        // smoothed amplitude, so the head bar's glow swells on loud transients
   function drawSpectrum(){
     analyser.getByteTimeDomainData(timeData);
-    // Min & max sample of this frame (signed, -1..1) — exactly like the SAMPLE EDIT waveform's
-    // per-column min/max, so a loud transient makes a tall vertical bar and silence is a flat
-    // row of centre dots. One new bar per frame; the strip scrolls under a moving head.
-    let mn=1, mx=-1;
-    for(let i=0;i<timeData.length;i++){ const v=(timeData[i]-128)/128; if(v<mn)mn=v; if(v>mx)mx=v; }
-    if(mx<mn || (mx-mn)<0.02){ mn=0; mx=0; } // noise floor → true silence reads as a flat line
-    tMin[sweep]=mn; tMax[sweep]=mx; sweep=(sweep+1)%NB;
-    const amp=Math.max(Math.abs(mn),Math.abs(mx)); vizEnv += (amp-vizEnv)*0.3;
-    // ---- render: segmented min/max bars, blanking the erase gap ahead of the head ----
     if(++colFrame>=20){ colFrame=0; readVizColors(); }
+    // Display the most-recent `win` samples of the buffer (jog zoom shortens it), split evenly
+    // across the fixed NB bars. Each bar spans its slice's min→max sample — a stationary
+    // waveform that refreshes in place, never sweeping across the screen.
+    const total=timeData.length;
+    const win=Math.max(NB*2, Math.min(total, Math.round(total/vizZoom)));
+    const startI=total-win, per=win/NB;
     g2.clearRect(0,0,vizW,vizH);
     const mid=vizH/2, yamp=mid-1, pitch=vizW/NB, bw=Math.max(1, pitch-1);
     g2.fillStyle='rgba(255,255,255,0.06)'; g2.fillRect(0, mid-0.5, vizW, 1); // faint centre baseline
-    g2.shadowColor=colAccent;
-    const headBar=(sweep-1+NB)%NB;
+    g2.fillStyle=colAccent; g2.shadowColor=colAccent; g2.shadowBlur=2;
     for(let b=0;b<NB;b++){
-      if(((b - sweep + NB) % NB) < GAP_BARS) continue; // erase gap
-      const y0=mid+tMin[b]*yamp, y1=mid+tMax[b]*yamp;
-      const head=(b===headBar);
-      g2.fillStyle=head?colFg:colAccent;
-      g2.shadowBlur=head?(5+vizEnv*7):2;
-      const x=b*pitch+(pitch-bw)/2;
-      g2.fillRect(x, y0, bw, Math.max(1, y1-y0)); // ≥1px so quiet bars still read as a centre dot
+      const s0=startI+Math.floor(b*per), s1=startI+Math.floor((b+1)*per);
+      let mn=1, mx=-1;
+      for(let i=s0;i<s1;i++){ const v=(timeData[i]-128)/128; if(v<mn)mn=v; if(v>mx)mx=v; }
+      if(mx<mn || (mx-mn)<0.02){ mn=0; mx=0; } // noise floor → silence reads as a flat centre line
+      const y0=mid+mn*yamp, y1=mid+mx*yamp, x=b*pitch+(pitch-bw)/2;
+      g2.fillRect(x, y0, bw, Math.max(1, y1-y0)); // ≥1px so quiet slices still read as a centre dot
     }
     g2.shadowBlur=0;
     spectrumRafId = requestAnimationFrame(drawSpectrum);
@@ -6708,6 +6711,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       if(zoom>1 && dx!==0){ seZoomOffset += dx/(jog.clientWidth||200) * seWindowWidth(); offsetChanged = true; }
       if(zoomChanged) seZoomBtnEl.textContent = 'ZOOM '+zoom+'x';
       if(zoomChanged || offsetChanged) refreshSeWaveformView();
+    } else {
+      vizZoom = zoom; // sample editor closed → the jog zooms the live LCD waveform window instead
     }
   });
   jog.addEventListener('pointerup', ()=>{ jogDragging=false; jog.classList.remove('active'); });
@@ -6721,6 +6726,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     jogAngle=0;
     jog.style.setProperty('--jog-rotate', '0deg');
     document.getElementById('lcdEnc').textContent='ENC:ZOOM(1x)';
+    vizZoom=1; // PUSH ENTER resets the live visualizer zoom back to the full window too
     if(document.getElementById('sampleEditOverlay').classList.contains('show') && seState.buffer){
       seZoom=1; seZoomOffset=0;
       document.getElementById('seZoomBtn').textContent='ZOOM 1x';
