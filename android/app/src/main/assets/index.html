@@ -4,6 +4,21 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v40 (MFX como envío radio: arranca sin efecto, el menú manda):
+    · MFX arranca SIN ningún efecto activo (el envío pasa SECO siempre; antes CRUSH venía pre-armado).
+      El menú es radio: elegir un tipo lo activa (y desactiva el anterior); "MFX OFF — bypass" vuelve a
+      seco. El botón MFX abre el menú si no hay nada elegido, y togglea el efecto elegido (bypass) si ya
+      lo hay; el resaltado del menú refleja el estado (tipo activo, o BYPASS). El envío nunca se corta.
+  v39 (auditoría global: robustez de datos + accesibilidad de teclado):
+    · DATOS: los modos SHIFT armados (INIT/EXCHANGE/LINK/MUTE/PAD SETTING) muestran un BADGE persistente
+      mientras están armados y se cancelan con Escape o al abrir cualquier menú → un pad ya no se borra por
+      accidente al ir a escucharlo. El confirm de PROJECT NEW se desarma al tocar otra fila y al cerrar
+      (raíz sistémica: reset de estado transitorio en TODO cierre, vía el observer de modalFocus).
+    · DATOS: PROJECT LOAD pide doble-toque (reemplaza el proyecto); el import de banco .zip pide confirmación
+      si el banco destino ya tiene samples.
+    · A11Y: aperturas por teclado para menús/modos que solo tenían long-press — MFX (Enter abre el menú, con
+      fila BYPASS/OFF; AVISO: Enter en MFX ya no togglea, abre el menú), ROW TOOLS (Enter en la etiqueta de
+      fila), SKIN (Enter en el logo), LIVE MODE (Shift+Enter en REMAIN). Todo respeta prefers-reduced-motion.
   v38 (animaciones a máxima tasa de refresco: pase a compositor GPU):
     · Las animaciones continuas "de respiración" dejan de repintar box-shadow cada frame y pasan a
       animar OPACIDAD (compositado en GPU) → sostienen 120Hz sin frames perdidos. El mayor coste, el
@@ -1320,6 +1335,20 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
+  /* PERSISTENT "armed mode" badge — stays up the whole time a SHIFT mode (INIT/EXCHANGE/LINK/MUTE/
+     PAD SETTING) is armed, so the next pad tap can't silently trigger a destructive action after the
+     toast has faded. Accent-outlined chip at top-center; hidden via the [hidden] attribute. */
+  .pendingBadge{
+    position:fixed; left:50%; top:14px; transform:translateX(-50%);
+    background:rgba(10,10,11,.92); border:1px solid var(--accent); color:var(--accent);
+    font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:700; letter-spacing:.5px;
+    padding:8px 14px; border-radius:8px; z-index:1500; pointer-events:none; text-align:center;
+    box-shadow:0 4px 16px rgba(0,0,0,.5); animation:pendingPulse 1.6s ease-in-out infinite;
+  }
+  .pendingBadge[hidden]{ display:none; }
+  @keyframes pendingPulse{ 0%,100%{ opacity:.72; } 50%{ opacity:1; } } /* opacity-only → GPU-composited */
+  @media (prefers-reduced-motion: reduce){ .pendingBadge{ animation:none; opacity:1; } }
+
   /* POPUP THEME — matches each skin's own real surface color instead of one fixed dark
      screen look, so every popup reads as a panel of THIS machine (whichever one is on
      right now), not a foreign layer floating above it. Default here is IVORY; the other
@@ -2135,6 +2164,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="pendingBadge" id="pendingBadge" role="status" aria-live="polite" hidden></div>
 <input type="file" id="importInput" multiple accept="audio/*,.wav,.mp3,.aiff,.zip" style="display:none">
 <div class="dropOverlay" id="dropOverlay">SUELTA AQUÍ<br><span>.zip o archivos de audio → banco <b id="dropBankLabel">A</b></span></div>
 <div class="utilOverlay" id="utilOverlay" role="dialog" aria-modal="true" aria-label="Menú de utilidad">
@@ -2179,6 +2209,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       <div class="utilRow" data-type="reverb">REVERB — cola de sala sintética</div>
       <div class="utilRow" data-type="flanger">FLANGER — barrido tipo "jet"</div>
       <div class="utilRow" data-type="phaser">PHASER — barrido en fase, más suave</div>
+      <div class="utilRow" data-type="__off" style="border-top:1px solid var(--popup-border-soft); margin-top:4px; padding-top:9px;">MFX OFF — bypass</div>
     </div>
     <div class="utilHint">Toca un tipo para aplicarlo — el cambio es instantáneo y sin clicks.</div>
   </div>
@@ -2583,14 +2614,13 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   let skinHoldTimer=null;
   const logoEl=document.querySelector('.logo');
   if(logoEl){
-    logoEl.addEventListener('pointerdown', ()=>{
-      skinHoldTimer=setTimeout(()=>{
-        const next = SKINS[(SKINS.indexOf(currentSkin)+1) % SKINS.length];
-        applySkin(next, true);
-        toast('CHASIS: '+SKIN_NAMES[next]);
-      }, 600);
-    });
+    logoEl.setAttribute('role','button'); logoEl.setAttribute('tabindex','0');
+    logoEl.setAttribute('aria-label','Cambiar chasis (skin)');
+    const cycleSkin=()=>{ const next = SKINS[(SKINS.indexOf(currentSkin)+1) % SKINS.length]; applySkin(next, true); toast('CHASIS: '+SKIN_NAMES[next]); };
+    logoEl.addEventListener('pointerdown', ()=>{ skinHoldTimer=setTimeout(cycleSkin, 600); });
     ['pointerup','pointerleave','pointercancel'].forEach(ev=> logoEl.addEventListener(ev, ()=> clearTimeout(skinHoldTimer)));
+    // Keyboard: the 600ms hold has no keyboard equivalent, so Enter/Space cycles the skin.
+    logoEl.addEventListener('keydown', (e)=>{ if(e.repeat) return; if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){ e.preventDefault(); e.stopPropagation(); cycleSkin(); } });
   }
 
   // ===== PANEL DE CONEXIONES easter egg — long-press (600ms) the "FX-404" model header to
@@ -2848,7 +2878,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   // ramps each chain's own "solo" gain node up/down (15ms, same ramp time as everything
   // else's smooth-bypass) instead of disconnecting/reconnecting nodes, which is what
   // would actually cause the click a menu like this is supposed to avoid. =====
-  let mfxType = 'crush';
+  let mfxType = null; // no effect engaged by default — MFX is a send that passes DRY until you pick one from the menu (radio)
   const mfxFX = (function(){
     const inputOuter = ctx.createGain(); // exposed to the master; always-on feed to the dry path
     const input = ctx.createGain(); input.gain.value = 0; // GATED feed into every effect chain — turning MFX off ramps this to 0 so no NEW signal enters, but the reverb/flanger/etc. tail rings out through the still-open wet path
@@ -2872,6 +2902,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       input.connect(ws);
       const solo=ctx.createGain(); solo.gain.value=1; // default active type
       ws.connect(solo); solo.connect(wet);
+      solo.gain.value=0; // no type is pre-armed — every effect starts inactive; the menu picks which one engages
       solos.crush=solo; nodes.crush={setCrushSteps};
     }
     // RING MOD — classic ring modulation: an oscillator connected directly to a GainNode's
@@ -3422,6 +3453,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     setCtrlFocus('mfx', l[0], l[1], l[2]);
   }
   function setMfxOn(on){
+    if(on && !mfxType){ openMfxMenu(); return; } // can't engage with nothing selected — open the menu to pick an effect
     const el=document.getElementById('fxMfx');
     el.classList.toggle('on', on);
     el.setAttribute('aria-pressed', on?'true':'false');
@@ -3429,6 +3461,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     mfxFX.setWet(on?0.5:0);
     if(on) updateMfxCtrlLabels();
     else if(ctrlFocusFX==='mfx') ctrlFocusFX=null;
+    syncMfxSelection(); // keep the menu's radio highlight in sync with engaged/bypassed state
   }
   (function(){
     const el = document.getElementById('fxMfx');
@@ -3439,22 +3472,35 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     });
     el.addEventListener('pointerup', ()=>{
       if(pressTimer){ clearTimeout(pressTimer); pressTimer=null; }
-      if(longFired) return; // the hold already opened the menu — a plain tap-toggle right after would be confusing
+      if(longFired) return; // the hold already opened the menu — a plain tap right after would be confusing
+      if(!mfxType){ openMfxMenu(); return; } // nothing selected yet → the send is dry; open the menu to pick an effect
       const nowOn = !el.classList.contains('on'); // classList is the single source of truth — the menu can also flip it directly, so no separate boolean to desync
-      setMfxOn(nowOn);
-      toast('MFX '+(nowOn?'ON':'OFF')+' — '+mfxType.toUpperCase());
+      setMfxOn(nowOn); // toggle the selected effect in/out; the DRY send keeps passing either way
+      toast(nowOn ? 'MFX ON — '+mfxType.toUpperCase() : 'MFX BYPASS');
     });
     el.addEventListener('pointerleave', ()=>{ if(pressTimer){ clearTimeout(pressTimer); pressTimer=null; } });
+    // Keyboard: the 600ms hold has no keyboard equivalent (the activation bridge only taps), so Enter/Space
+    // OPENS the type menu (which includes every type + a BYPASS/OFF row → full keyboard control of MFX).
+    // stopPropagation keeps the bridge from also firing the tap-toggle.
+    el.addEventListener('keydown', (e)=>{
+      if(e.repeat) return;
+      if(e.key==='Enter' || e.key===' ' || e.key==='Spacebar'){ e.preventDefault(); e.stopPropagation(); openMfxMenu(); }
+    });
   })();
 
   const mfxOverlay = document.getElementById('mfxOverlay');
   function syncMfxSelection(){
-    document.querySelectorAll('#mfxMenu .utilRow').forEach(r=> r.classList.toggle('sel', r.dataset.type===mfxType));
+    // Radio highlight: the active type when engaged, otherwise the OFF/bypass row (nothing active).
+    const engaged = document.getElementById('fxMfx').classList.contains('on');
+    document.querySelectorAll('#mfxMenu .utilRow').forEach(r=>{
+      r.classList.toggle('sel', engaged ? (r.dataset.type===mfxType) : (r.dataset.type==='__off'));
+    });
   }
   function openMfxMenu(){ syncMfxSelection(); mfxOverlay.classList.add('show'); }
   document.getElementById('mfxCloseBtn').addEventListener('pointerdown', ()=> mfxOverlay.classList.remove('show'));
   document.querySelectorAll('#mfxMenu .utilRow').forEach(row=>{
     row.addEventListener('pointerdown', ()=>{
+      if(row.dataset.type==='__off'){ setMfxOn(false); toast('MFX OFF — bypass'); syncMfxSelection(); setTimeout(()=> mfxOverlay.classList.remove('show'), 180); return; }
       mfxFX.setMfxType(row.dataset.type);
       syncMfxSelection();
       toast('MFX → '+row.dataset.type.toUpperCase());
@@ -3597,6 +3643,11 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     }, 3000);
   });
   ['pointerup','pointerleave'].forEach(ev=> document.getElementById('btnRemain').addEventListener(ev, ()=> clearTimeout(remainHoldTimer)));
+  // Keyboard equivalent of the 3s hold (which the activation bridge can't reproduce): Shift+Enter toggles
+  // LIVE MODE. A modifier so a normal Enter never triggers this hidden power feature by accident.
+  (function(){ const br=document.getElementById('btnRemain'); br.setAttribute('aria-keyshortcuts','Shift+Enter'); br.setAttribute('title','Mantén 3s (o Shift+Enter) para LIVE MODE');
+    br.addEventListener('keydown', (e)=>{ if(e.repeat) return; if(e.shiftKey && e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); unitEl.classList.toggle('live-mode'); toast(unitEl.classList.contains('live-mode')?'LIVE MODE activado':'LIVE MODE desactivado'); } });
+  })();
   document.getElementById('btnCopy').addEventListener('pointerdown', ()=>{
     if(shiftHeld){
       if(bankProtected.has(currentBank)){ bankProtected.delete(currentBank); toast('BANK '+currentBank+' desprotegido'); }
@@ -4085,6 +4136,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       else if(lib && lib.pads[idx]) soundName = lib.pads[idx].name;
       else soundName = kitTypes[idx].toUpperCase(); // same fix as updatePadFooters — def.foot is the SHIFT-layer function name, not a "nothing loaded here" placeholder
       label.textContent = def.n+'. '+soundName;
+      label.setAttribute('role','button'); label.setAttribute('tabindex','0');
+      label.setAttribute('aria-label','Herramientas de fila '+label.textContent);
       (function(){
         let rowPressTimer=null;
         label.addEventListener('pointerdown', ()=>{
@@ -4092,6 +4145,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         });
         label.addEventListener('pointerup', ()=>{ if(rowPressTimer){ clearTimeout(rowPressTimer); rowPressTimer=null; } });
         label.addEventListener('pointerleave', ()=>{ if(rowPressTimer){ clearTimeout(rowPressTimer); rowPressTimer=null; } });
+        // Keyboard: the 600ms hold has no keyboard equivalent, so Enter/Space opens ROW TOOLS directly.
+        label.addEventListener('keydown', (e)=>{ if(e.repeat) return; if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){ e.preventDefault(); e.stopPropagation(); openRowToolsMenu(idx, label.textContent); } });
       })();
       editGrid.appendChild(label);
       for(let s=0;s<STEP_COUNT;s++){
@@ -5430,6 +5485,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   async function assignSamplesToBank(bank, decoded){
     if(bankProtected.has(bank)){ toast('BANCO '+bank+' protegido — desprotege con SHIFT+COPY'); return; }
     if(!decoded.length){ toast('No se encontraron audios utilizables'); return; }
+    const existing = (bankSamples[bank]||[]).filter(Boolean).length;
+    if(existing){ const ok = await confirmOverwrite('SOBRESCRIBIR BANCO '+bank, 'El banco '+bank+' ya tiene '+existing+' pad(s) con sample. La importación los reemplaza (no se puede deshacer). ¿Continuar?'); if(!ok){ toast('Importación cancelada'); return; } }
     const queues={};
     decoded.forEach(d=>{ (queues[d.category]=queues[d.category]||[]).push(d); });
     const slots = new Array(16).fill(null);
@@ -5804,6 +5861,21 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   }
 
   let pendingMode=null, pendingFirstPad=null, pendingGroupId=null;
+  // A SHIFT mode (INIT/EXCHANGE/LINK/MUTE/PAD SETTING) stays "armed" until the next pad tap consumes it.
+  // Route every arm/clear through these so a persistent on-screen badge always reflects the armed state
+  // (a lone toast fades and the user then taps a pad thinking it will play — and INIT wipes it instead).
+  const PENDING_LABELS = {
+    init:'INIT PARAM — toca un pad para vaciarlo', exchange:'EXCHANGE — toca 2 pads',
+    link:'PAD LINK — toca pads · SHIFT+7 cierra', mutegroup:'MUTE GROUP — toca pads · SHIFT+8 cierra',
+    padedit:'PAD SETTING — toca un pad', padinfo:'PAD INFO — toca un pad'
+  };
+  function syncPendingUI(){
+    const b=document.getElementById('pendingBadge'), on=!!pendingMode;
+    if(unitEl) unitEl.classList.toggle('pending-armed', on);
+    if(b){ if(on){ b.textContent='◆ '+(PENDING_LABELS[pendingMode]||String(pendingMode).toUpperCase())+' · Esc cancela'; b.hidden=false; } else { b.hidden=true; } }
+  }
+  function armPending(mode){ pendingMode=mode; pendingFirstPad=null; syncPendingUI(); }
+  function clearPending(silent){ if(pendingMode!==null){ pendingMode=null; pendingFirstPad=null; syncPendingUI(); if(!silent) toast('Modo cancelado'); } }
 
   let countInEnabled=true; // ON by default — expecting count-in before REC is the normal case, not an opt-in
 
@@ -5814,8 +5886,12 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   // none of this blocks the main thread. =====
   const BANK_LETTERS=['A','B','C','D','E','F','G','H','I','J'];
   const utilOverlay=document.getElementById('utilOverlay');
-  let utilSelIndex=0, utilNewConfirm=false;
+  let utilSelIndex=0, utilNewConfirm=false, utilLoadConfirm=false;
   function utilRowEls(){ return Array.from(document.querySelectorAll('.utilRow')); }
+  function setUtilRowText(action, txt){ const r=utilRowEls().find(x=>x.dataset.action===action); if(r) r.textContent=txt; }
+  // Disarm BOTH destructive confirms (NEW = wipe project, LOAD = replace project) and restore their
+  // labels. Called on open, on close (via modalFocus.onClose), and whenever a different row is used.
+  function resetUtilConfirm(){ utilNewConfirm=false; utilLoadConfirm=false; setUtilRowText('new','PROJECT NEW'); setUtilRowText('load','PROJECT LOAD'); }
   function refreshUtilStatus(){
     const banksWithSamples = Object.keys(bankSamples).filter(b=> bankSamples[b] && bankSamples[b].some(Boolean));
     document.getElementById('utilStatus').textContent =
@@ -5823,8 +5899,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   }
   function syncUtilSelection(rows){ (rows||utilRowEls()).forEach((r,i)=> r.classList.toggle('sel', i===utilSelIndex)); }
   function openUtilMenu(){
-    utilSelIndex=0; utilNewConfirm=false;
-    utilRowEls().find(r=>r.dataset.action==='new').textContent='PROJECT NEW';
+    utilSelIndex=0; resetUtilConfirm();
     refreshUtilStatus(); syncUtilSelection();
     utilOverlay.classList.add('show');
   }
@@ -5832,11 +5907,17 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   function activateUtilRow(i){
     const row = utilRowEls()[i];
     const action = row.dataset.action;
+    // Using any row other than the armed one disarms that confirm — the two taps must be consecutive.
+    if(action!=='new'){ utilNewConfirm=false; setUtilRowText('new','PROJECT NEW'); }
+    if(action!=='load'){ utilLoadConfirm=false; setUtilRowText('load','PROJECT LOAD'); }
     if(action==='save'){ exportProject(); }
-    else if(action==='load'){ document.getElementById('projectImportInput').click(); }
+    else if(action==='load'){ // PROJECT LOAD replaces the whole project → two-tap confirm before the picker
+      if(utilLoadConfirm){ utilLoadConfirm=false; setUtilRowText('load','PROJECT LOAD'); document.getElementById('projectImportInput').click(); }
+      else { utilLoadConfirm=true; setUtilRowText('load','¿SEGURO? CARGAR (reemplaza)'); toast('Pulsa CARGAR otra vez — reemplaza el proyecto actual'); }
+    }
     else if(action==='new'){
-      if(utilNewConfirm){ resetProject(); utilNewConfirm=false; row.textContent='PROJECT NEW'; }
-      else { utilNewConfirm=true; row.textContent='¿SEGURO? TOCA DE NUEVO'; toast('Pulsa PROJECT NEW otra vez para confirmar — borra todo'); }
+      if(utilNewConfirm){ resetProject(); utilNewConfirm=false; setUtilRowText('new','PROJECT NEW'); }
+      else { utilNewConfirm=true; setUtilRowText('new','¿SEGURO? TOCA DE NUEVO'); toast('Pulsa PROJECT NEW otra vez para confirmar — borra todo'); }
     }
     else if(action==='groups'){ utilOverlay.classList.remove('show'); openGroupsMenu(); }
   }
@@ -5920,6 +6001,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     }).join('');
   }
 
+  function resetGroupsConfirm(){ if(groupsPendingDelete!==null){ groupsPendingDelete=null; if(groupsOverlay.classList.contains('show')) refreshGroupsList(); } } // disarm the BORRAR confirm on close (see modalFocus.onClose)
   function openGroupsMenu(){ groupsPendingDelete=null; refreshGroupsList(); groupsOverlay.classList.add('show'); }
   document.getElementById('groupsCloseBtn').addEventListener('pointerdown', ()=> groupsOverlay.classList.remove('show'));
 
@@ -6355,21 +6437,21 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       case 1: sixteenVelocityMode=!sixteenVelocityMode; toast('16 VELOCITY '+(sixteenVelocityMode?'ON — toca arriba=fuerte, abajo=suave':'OFF')); break;
       case 2: toast('CUE no disponible: un navegador solo tiene una salida de audio, no puede separar PHONES de LINE OUT'); break;
       case 3: chromaticMode=!chromaticMode; toast('CHROMATIC '+(chromaticMode?'ON':'OFF')); break;
-      case 4: pendingMode='exchange'; pendingFirstPad=null; toast('EXCHANGE: toca 2 pads para intercambiarlos'); break;
-      case 5: pendingMode='init'; toast('INIT PARAM: toca un pad para vaciarlo'); break;
+      case 4: armPending('exchange'); toast('EXCHANGE: toca 2 pads para intercambiarlos'); break;
+      case 5: armPending('init'); toast('INIT PARAM: toca un pad para vaciarlo'); break;
       case 6:
-        if(pendingMode==='link'){ pendingMode=null; toast('PAD LINK: grupo cerrado'); }
-        else { pendingMode='link'; pendingGroupId=nextGroupId++; toast('PAD LINK: toca los pads a enlazar, SHIFT+7 para cerrar'); }
+        if(pendingMode==='link'){ clearPending(true); toast('PAD LINK: grupo cerrado'); }
+        else { armPending('link'); pendingGroupId=nextGroupId++; toast('PAD LINK: toca los pads a enlazar, SHIFT+7 para cerrar'); }
         break;
       case 7:
-        if(pendingMode==='mutegroup'){ pendingMode=null; toast('MUTE GROUP: grupo cerrado'); }
-        else { pendingMode='mutegroup'; pendingGroupId=nextGroupId++; toast('MUTE GROUP: toca los pads del grupo, SHIFT+8 para cerrar'); }
+        if(pendingMode==='mutegroup'){ clearPending(true); toast('MUTE GROUP: grupo cerrado'); }
+        else { armPending('mutegroup'); pendingGroupId=nextGroupId++; toast('MUTE GROUP: toca los pads del grupo, SHIFT+8 para cerrar'); }
         break;
       case 9: countInEnabled=!countInEnabled; toast('COUNT-IN '+(countInEnabled?'ON — 4 clics antes de grabar':'OFF')); break;
       case 11: toast('GAIN (mic/guitar): '+Math.round(gainKnobCtl.get()*100)+'%'); break;
       case 12: openUtilMenu(); break; // UTILITY — now a real menu (PROJECT SAVE/LOAD/NEW), tutorial has its own access point on the connections panel
       case 13: importInput.click(); break; // IMPORT/EXPORT
-      case 14: pendingMode='padedit'; toast('PAD SETTING: toca un pad para editarlo (trim/replace/normalize)'); break;
+      case 14: armPending('padedit'); toast('PAD SETTING: toca un pad para editarlo (trim/replace/normalize)'); break;
       case 15: toast('EFX SETTING: usa FILTER+DRIVE / RESONATOR / DELAY / ISOLATOR / DJFX LOOPER / MFX arriba'); break;
       default: toast(def.foot);
     }
@@ -6385,7 +6467,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   async function handlePendingModeTap(idx){
     if((pendingMode==='init' || pendingMode==='exchange') && bankProtected.has(currentBank)){
       toast('BANK '+currentBank+' protegido — desprotege con SHIFT+COPY');
-      pendingMode=null; pendingFirstPad=null;
+      clearPending(true);
       return;
     }
     if(pendingMode==='init'){
@@ -6393,7 +6475,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       await clearPadInDB(currentBank, idx);
       updatePadFooters();
       toast('Pad '+(idx+1)+' inicializado');
-      pendingMode=null;
+      clearPending(true);
     } else if(pendingMode==='exchange'){
       if(pendingFirstPad===null){
         pendingFirstPad=idx;
@@ -6410,7 +6492,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         else await clearPadInDB(currentBank, b);
         updatePadFooters();
         toast('Pads '+(a+1)+' y '+(b+1)+' intercambiados');
-        pendingMode=null; pendingFirstPad=null;
+        clearPending(true);
       }
     } else if(pendingMode==='link'){
       if(!padLinkGroup[currentBank]) padLinkGroup[currentBank]={};
@@ -6428,9 +6510,9 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       else if(lib && lib.pads[idx]) info = 'libreria '+lib.name+': '+lib.pads[idx].name;
       else info = 'sintesis generica ('+kitTypes[idx]+')';
       toast('Pad '+(idx+1)+' -> '+info);
-      pendingMode=null;
+      clearPending(true);
     } else if(pendingMode==='padedit'){
-      pendingMode=null;
+      clearPending(true);
       openSampleEditor(idx);
     }
   }
@@ -7570,6 +7652,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   document.addEventListener('keydown', (e)=>{
     if(e.key!=='Escape') return;
     if(closeTopmostOverlay()) return; // an overlay was open — closed it
+    if(pendingMode){ clearPending(); return; } // cancel an armed SHIFT mode (INIT/EXCHANGE/…) before the next pad tap can consume it destructively
     if(unitEl.classList.contains('rear-active')) setRearActive(false); // otherwise Escape backs out of the rear connections panel too
   });
 
@@ -7618,6 +7701,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     const anyOpen = ()=> CLOSEABLE_OVERLAY_IDS.some(id=>{ const e=document.getElementById(id); return e && e.classList.contains('show'); });
     const topmost = ()=>{ for(const id of CLOSEABLE_OVERLAY_IDS){ const e=document.getElementById(id); if(e && e.classList.contains('show')) return e; } return null; };
     function onOpen(el){
+      clearPending(true); // opening any menu means you've moved on — never leave a SHIFT mode armed under an overlay
       openerFor.set(el, document.activeElement);
       if(unitEl) unitEl.inert = true;
       const f = focusablesIn(el);
@@ -7626,6 +7710,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       setTimeout(()=>{ try{ target.focus(); }catch(e){} }, 0); // defer so display/layout has settled
     }
     function onClose(el){
+      // Reset transient/armed state on EVERY close path (×, Escape, click-outside) — the one place that
+      // covers them all. Without this, a "¿SEGURO?" confirm stayed armed after closing (see resetUtilConfirm).
+      if(el.id==='utilOverlay' && typeof resetUtilConfirm==='function') resetUtilConfirm();
+      else if(el.id==='groupsOverlay' && typeof resetGroupsConfirm==='function') resetGroupsConfirm();
       const opener = openerFor.get(el); openerFor.delete(el);
       if(!anyOpen() && unitEl) unitEl.inert = false; // keep background inert while a nested overlay is still up
       setTimeout(()=>{ try{ if(opener && document.contains(opener) && isVisible(opener)) opener.focus(); }catch(e){} }, 0);
@@ -7841,6 +7929,31 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     overlay.querySelector('#autosaveDiscard').addEventListener('pointerdown', ()=>{
       try{ localStorage.removeItem(AUTOSAVE_KEY); }catch(e){}
       overlay.remove();
+    });
+  }
+
+  // Generic Sí/No confirm modal (Promise<boolean>) — same look as the autosave prompt. title/msg are
+  // internal strings only (never user content), so innerHTML here is XSS-safe. Used to guard overwriting
+  // a non-empty bank on .zip/multi-file import.
+  function confirmOverwrite(title, msg){
+    return new Promise((resolve)=>{
+      const overlay=document.createElement('div');
+      overlay.style.cssText='position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;background:var(--scrim,rgba(6,7,9,.72));backdrop-filter:blur(7px) saturate(1.04);-webkit-backdrop-filter:blur(7px) saturate(1.04);font-family:"JetBrains Mono",monospace;opacity:0;transition:opacity .2s ease;';
+      overlay.innerHTML='<div style="max-width:min(86vw,380px);padding:20px;background:linear-gradient(180deg,var(--popup-bg1,#efebe0),var(--popup-bg2,#ddd7c6));color:var(--popup-text,#2a2926);border:1px solid var(--popup-border,#8a8470);">'
+        +'<div style="font-weight:700;font-size:14px;letter-spacing:1.5px;margin-bottom:10px;text-transform:uppercase;color:var(--accent,#ff9a3d);">'+title+'</div>'
+        +'<div style="font-size:13.5px;line-height:1.5;margin-bottom:16px;">'+msg+'</div>'
+        +'<div style="display:flex;gap:10px;">'
+          +'<div id="cfNo" role="button" tabindex="0" style="flex:1;padding:12px;text-align:center;cursor:pointer;background:var(--popup-key,#d5cfbd);">CANCELAR</div>'
+          +'<div id="cfYes" role="button" tabindex="0" style="flex:1;padding:12px;text-align:center;cursor:pointer;background:var(--accent,#ff9a3d);color:#000;font-weight:700;">SOBRESCRIBIR</div>'
+        +'</div></div>';
+      document.body.appendChild(overlay);
+      if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ overlay.style.opacity='1'; } else { requestAnimationFrame(()=>{ overlay.style.opacity='1'; }); }
+      const done=(v)=>{ document.removeEventListener('keydown',onKey); if(overlay.parentNode) overlay.parentNode.removeChild(overlay); resolve(v); };
+      function onKey(e){ if(e.key==='Escape'){ done(false); } }
+      overlay.querySelector('#cfYes').addEventListener('pointerdown', ()=> done(true));
+      overlay.querySelector('#cfNo').addEventListener('pointerdown', ()=> done(false));
+      overlay.addEventListener('pointerdown', (e)=>{ if(e.target===overlay) done(false); });
+      document.addEventListener('keydown', onKey);
     });
   }
 
