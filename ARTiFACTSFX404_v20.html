@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v20 (pads light up while an effect is engaged):
+    · Whenever any FX button is ON, the whole pad grid breathes a soft accent glow
+      (@keyframes padFxGlow, 2.4s — same tempo as the logo/toggle LEDs, so all accent lights
+      move in sync). Driven by updatePadFxGlow() toggling .unit.fx-active from the live button
+      state. Clears when the last effect turns off. Excludes hit/muted pads; respects
+      prefers-reduced-motion.
   v19 (design polish — lighting/texture/animation):
     · Pad strike: a one-shot "impact" (@keyframes padImpact) — the tile pops slightly larger
       and flares brighter on the first frame of every hit, then settles to its held glow, so
@@ -702,6 +708,15 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     0%{ transform:translateZ(0) scale(1.045); filter:brightness(1.28); box-shadow:0 0 36px rgba(var(--skin-glow),.95), 0 3px 0 #7a4d1c; }
     100%{ transform:translateZ(0) scale(1); filter:brightness(1); box-shadow:0 0 22px rgba(var(--skin-glow),.7), 0 3px 0 #7a4d1c; }
   }
+  /* Pads react when any effect is engaged (.unit.fx-active, toggled from updatePadFxGlow):
+     a soft accent glow breathes on the whole grid, in the same 2.4s idle-breathing tempo as
+     the logo/toggle LEDs so every accent light in the unit moves in sync. Base pad shadows are
+     preserved in both keyframe stops; only the accent bloom fades in and out. */
+  @keyframes padFxGlow{
+    0%,100%{ box-shadow:0 3px 0 var(--padbtn-shadow), inset 0 1px 0 rgba(255,255,255,.9), inset 0 -10px 14px rgba(0,0,0,.05); }
+    50%{ box-shadow:0 3px 0 var(--padbtn-shadow), inset 0 1px 0 rgba(255,255,255,.9), inset 0 -10px 14px rgba(0,0,0,.05), inset 0 0 9px rgba(var(--skin-glow),.4), 0 0 7px rgba(var(--skin-glow),.22); }
+  }
+  .unit.fx-active .pad:not(.hit):not(.muted){ animation:padFxGlow 2.4s ease-in-out infinite; }
   /* Accessibility: anyone with reduced-motion set at the OS level gets every decorative
      animation switched off outright — the breathing LEDs, the skin-swap flash, all of
      it — rather than just slowed down. None of these carry functional information (the
@@ -710,7 +725,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   @media (prefers-reduced-motion: reduce){
     .logo span::after, .pad.toggle-active .toggle-dot, .unit.skin-transition,
     .fsBtn.on, .fxbtn.on, .padfoot.on, .keybtn.bank .activeHalf,
-    .quickFocus, .pad.hit{
+    .quickFocus, .pad.hit, .unit.fx-active .pad{
       animation:none !important;
     }
     /* The rear-panel easter egg flips via transform TRANSITIONS (rotateX/translateY), not
@@ -2888,9 +2903,14 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   }
   document.querySelectorAll('.stepDivBtn').forEach(b=> b.addEventListener('pointerdown', ()=> setStepsPerBeat(Number(b.dataset.div))));
 
+  // Light up the pads whenever ANY effect is engaged — a breathing accent glow on the whole
+  // grid (see .unit.fx-active .pad) so the pads visibly react to the active FX, not just the
+  // FX button. Recomputed from the live button state so it's correct no matter which effect
+  // (or how many) is on.
+  function updatePadFxGlow(){ unitEl.classList.toggle('fx-active', !!document.querySelector('.fxbtn.on')); }
   function toggleBtn(el, onSet){
     let on=false;
-    el.addEventListener('pointerdown', ()=>{ on=!on; el.classList.toggle('on',on); el.setAttribute('aria-pressed', on?'true':'false'); onSet(on); });
+    el.addEventListener('pointerdown', ()=>{ on=!on; el.classList.toggle('on',on); el.setAttribute('aria-pressed', on?'true':'false'); onSet(on); updatePadFxGlow(); });
     return { get:()=>on };
   }
   toggleBtn(document.getElementById('fxFilterDrive'), on=>{
@@ -2960,6 +2980,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     const el=document.getElementById('fxMfx');
     el.classList.toggle('on', on);
     el.setAttribute('aria-pressed', on?'true':'false');
+    updatePadFxGlow();
     mfxFX.setWet(on?0.5:0);
     if(on) updateMfxCtrlLabels();
     else if(ctrlFocusFX==='mfx') ctrlFocusFX=null;
