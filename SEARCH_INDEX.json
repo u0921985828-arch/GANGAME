@@ -1,0 +1,45 @@
+{
+  "generatedFrom": "scripts/build-index.js",
+  "version": "1.0.0",
+  "counts": {
+    "total": 2,
+    "public": 2,
+    "byCollection": {
+      "posts": 1,
+      "pages": 1
+    }
+  },
+  "tags": [
+    "cms",
+    "meta"
+  ],
+  "entries": [
+    {
+      "collection": "pages",
+      "slug": "about",
+      "title": "Acerca de",
+      "status": "published",
+      "date": null,
+      "updated": null,
+      "tags": [],
+      "summary": "Arquitectura del CMS Markdown/Git.",
+      "path": "content/pages/about.md",
+      "public": true
+    },
+    {
+      "collection": "posts",
+      "slug": "welcome",
+      "title": "Bienvenida al CMS",
+      "status": "published",
+      "date": "2026-07-16",
+      "updated": null,
+      "tags": [
+        "meta",
+        "cms"
+      ],
+      "summary": "Primer post del CMS Markdown/Git.",
+      "path": "content/posts/welcome.md",
+      "public": true
+    }
+  ]
+}

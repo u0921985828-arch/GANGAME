@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# CMS pre-commit: validate + auto-fix frontmatter, rebuild search index,
+# re-stage anything the hooks changed. Idempotent and fast.
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-commit: node is required for CMS validation" >&2
+  exit 1
+fi
+
+node scripts/validate.js --fix
+node scripts/build-index.js
+
+# Re-stage files touched by validate --fix / build-index so the commit is clean.
+git add content "$(node -e 'process.stdout.write(require("./cms.config.json").indexFile)')" 2>/dev/null || true
+
+exit 0

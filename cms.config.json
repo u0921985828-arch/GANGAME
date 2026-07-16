@@ -1,0 +1,29 @@
+{
+  "$schema": "./scripts/lib/config.schema.json",
+  "version": "1.0.0",
+  "contentDir": "content",
+  "indexFile": "SEARCH_INDEX.json",
+  "collections": {
+    "posts": {
+      "dir": "content/posts",
+      "template": "templates/post.md",
+      "required": ["title", "date", "status", "tags", "slug"],
+      "optional": ["updated", "author", "summary", "cover"]
+    },
+    "pages": {
+      "dir": "content/pages",
+      "template": "templates/page.md",
+      "required": ["title", "status", "slug"],
+      "optional": ["updated", "summary", "order"]
+    }
+  },
+  "enums": {
+    "status": ["draft", "review", "published", "archived"]
+  },
+  "rules": {
+    "dateFormat": "YYYY-MM-DD",
+    "slugPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+    "uniqueSlug": true,
+    "requireH1": false
+  }
+}

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# CMS post-merge: rebuild the search index after pulling/merging new content.
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+command -v node >/dev/null 2>&1 || exit 0
+node scripts/build-index.js || true
+
+exit 0

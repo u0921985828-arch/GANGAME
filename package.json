@@ -1,0 +1,17 @@
+{
+  "name": "gangame-cms",
+  "version": "1.0.0",
+  "description": "Markdown/Git CMS: .md files as database, Git as versioning, hooks as automation.",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "validate": "node scripts/validate.js",
+    "fix": "node scripts/validate.js --fix",
+    "build": "node scripts/build-index.js",
+    "hooks": "bash scripts/install-hooks.sh",
+    "check": "node scripts/validate.js && node scripts/build-index.js"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
