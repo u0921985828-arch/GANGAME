@@ -1,24 +1,53 @@
-# VistaViva 👁️ — Ejercicios diarios para los ojos
+# VistaViva 👁️ — Coach de entrenamiento visual
 
-PWA (aplicación web progresiva) para relajar la vista y ejercitar los músculos
-oculares con una rutina guiada diaria. **Instalable** en el móvil y **funciona
-sin conexión**. Sin dependencias, sin backend, sin cuentas: todo se guarda en tu
-dispositivo.
+PWA (aplicación web progresiva) de **entrenamiento visual guiado**: ejercita los
+músculos oculares, la coordinación, el enfoque y los hábitos que protegen tu
+vista, con base en la evidencia de la terapia visual. **Instalable** en el móvil
+y **funciona sin conexión**. Sin dependencias, sin backend, sin cuentas: todo se
+guarda en tu dispositivo.
+
+> **Honestidad clínica.** Estos ejercicios entrenan músculos, coordinación,
+> enfoque y hábitos, y alivian la fatiga visual. **No** reshapean el ojo ni
+> corrigen defectos refractivos (miopía, hipermetropía, astigmatismo), así que
+> **no sustituyen tu graduación** — la Academia Americana de Oftalmología es
+> clara, y el “método Bates” está desmentido. La app lo explica sin humo en la
+> ficha «¿Puedo dejar las gafas?».
+
+## Programa (14 ejercicios en 7 categorías)
+
+- **Calentamiento** — Parpadeo consciente (película lagrimal / ojo seco).
+- **Seguimiento (pursuits)** — Horizontal · Vertical · Diagonales · Círculos · Ocho ∞.
+- **Sacádicos** — Saltos horizontales · Saltos en rejilla (agilidad de fijación).
+- **Flexibilidad de enfoque** — Cerca–lejos tipo *flippers* (acomodación).
+- **Convergencia / binocular** — Cuerda de Brock · Convergencia (tipo *push-up*),
+  la técnica con evidencia del *Convergence Insufficiency Treatment Trial* (NEI).
+- **Visión periférica** — Fijación central con detección periférica.
+- **Descanso y hábitos** — Regla 20-20-20 · Palming · recordatorio de luz natural
+  (2 h/día al aire libre: lo único con evidencia sólida para retrasar la miopía
+  infantil).
 
 ## Características
 
-- **9 ejercicios guiados** con animación en pantalla:
-  - Parpadeo consciente · Movimiento horizontal / vertical / diagonal
-  - Círculos · Ocho infinito (∞) · Enfoque cerca–lejos (convergencia)
-  - Regla 20-20-20 · Palming con guía de respiración
-- **Reproductor** con temporizador, barra de progreso, pausa, anterior/siguiente
-  y control por teclado (espacio, ← →, Esc).
+- **Reproductor** con motor de animación en canvas por tipo de ejercicio,
+  temporizador, barra de progreso, pausa, anterior/siguiente y control por teclado
+  (espacio, ← →, Esc).
 - **Racha diaria** y estadísticas (rutinas totales, semana), guardadas en
   `localStorage`.
 - **Ajustes**: sonidos, vibración, movimiento reducido y duración de la rutina
   (corta / normal / larga).
+- **Responsive**: en móvil una columna a pantalla completa; en escritorio, inicio
+  a dos columnas y reproductor inmersivo con escenario acotado.
 - **Accesible** (contraste AA, foco visible, respeta `prefers-reduced-motion`) y
   **tema oscuro** cómodo para la vista.
+
+## Fundamento (fuentes)
+
+- Academia Americana de Oftalmología — los ejercicios no corrigen defectos
+  refractivos ni el método Bates.
+- *Convergence Insufficiency Treatment Trial* (CITT), National Eye Institute —
+  eficacia de la terapia de convergencia.
+- IMI / Myopia Institute — tiempo al aire libre y luz natural en la prevención de
+  la miopía infantil.
 
 ## Cómo usarla
 

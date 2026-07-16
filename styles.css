@@ -107,7 +107,12 @@ button { font-family: inherit; cursor: pointer; }
 .list { margin-top: 28px; }
 .list__head { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted-2); margin-bottom: 12px; }
 .exercises { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.exercises li {
+.exercises .ex-cat {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--accent); font-weight: 700; margin: 12px 2px 2px;
+}
+.exercises .ex-cat:first-child { margin-top: 0; }
+.exercises .ex-item {
   display: flex; align-items: center; gap: 14px;
   background: var(--surface); border: 1px solid var(--line);
   border-radius: 14px; padding: 12px 14px;
@@ -122,6 +127,33 @@ button { font-family: inherit; cursor: pointer; }
   margin-top: 26px; font-size: 0.74rem; line-height: 1.5; color: var(--muted-2);
   background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px;
 }
+
+/* Nota del coach (abre el diálogo honesto) */
+.coach-note {
+  margin-top: 26px; width: 100%; display: flex; align-items: center; gap: 12px;
+  text-align: left; background: var(--bg-2); border: 1px solid var(--line);
+  border-radius: 14px; padding: 14px 16px; color: var(--text);
+  transition: background .15s, border-color .15s;
+}
+.coach-note:hover { background: var(--surface); border-color: #3a4a70; }
+.coach-note__icon { font-size: 1.3rem; flex: 0 0 auto; }
+.coach-note span:nth-child(2) { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.coach-note strong { font-size: 0.92rem; }
+.coach-note small { color: var(--muted); font-size: 0.78rem; line-height: 1.4; }
+.coach-note__chev { color: var(--muted-2); font-size: 1.4rem; flex: 0 0 auto; }
+
+/* Contenido del diálogo del coach */
+.coach__lead { color: var(--muted); font-size: 0.9rem; margin-top: -4px; }
+.coach__block { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--surface); }
+.coach__block h3 { font-size: 0.98rem; margin-bottom: 6px; }
+.coach__block p, .coach__block li { font-size: 0.85rem; line-height: 1.5; color: #d6def0; }
+.coach__block ul { padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.coach__block--no { border-left: 3px solid var(--danger); }
+.coach__block--yes { border-left: 3px solid var(--ok); }
+.coach__block--tip { border-left: 3px solid var(--accent-2); }
+.coach__block u { text-decoration-color: currentColor; text-underline-offset: 2px; }
+.coach__foot { font-size: 0.76rem; color: var(--muted-2); line-height: 1.5; }
+.sheet--tall .sheet__inner { max-height: 86vh; overflow-y: auto; }
 
 /* ============ REPRODUCTOR ============ */
 .player { flex-direction: column; position: relative; background: #05070f; overflow: hidden; }
@@ -229,21 +261,24 @@ button { font-family: inherit; cursor: pointer; }
   #home {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+    grid-template-rows: auto auto auto auto 1fr;
     grid-template-areas:
       "top    top"
       "streak list"
       "cta    list"
-      "note   list";
+      "note   list"
+      "pad    list";
     column-gap: 44px;
     row-gap: 16px;
     align-content: start;
     padding-top: calc(var(--safe-t) + 40px);
   }
   .home__top { grid-area: top; margin-bottom: 8px; }
-  .streak    { grid-area: streak; margin-top: 0; }
-  .cta       { grid-area: cta; margin-top: 4px; }
+  .streak    { grid-area: streak; margin-top: 0; align-self: start; }
+  .cta       { grid-area: cta; margin-top: 4px; align-self: start; }
   .list      { grid-area: list; margin-top: 0; align-self: start; }
   .disclaimer { grid-area: note; margin-top: 4px; align-self: start; }
+  .coach-note { grid-area: note; margin-top: 4px; align-self: start; }
 
   /* Un poco más de presencia en el héroe. */
   .brand__name { font-size: 1.7rem; }
@@ -255,8 +290,8 @@ button { font-family: inherit; cursor: pointer; }
   .cta:hover { box-shadow: 0 16px 40px -14px #f59e0baa; transform: translateY(-1px); }
 
   /* Tarjetas de ejercicio con hover en escritorio. */
-  .exercises li { padding: 14px 16px; transition: border-color .15s, background .15s, transform .12s; }
-  .exercises li:hover { background: var(--surface-2); border-color: #3a4a70; transform: translateX(2px); }
+  .exercises .ex-item { padding: 14px 16px; transition: border-color .15s, background .15s, transform .12s; }
+  .exercises .ex-item:hover { background: var(--surface-2); border-color: #3a4a70; transform: translateX(2px); }
 
   /* Reproductor: escenario centrado y acotado para que el barrido no obligue a
      girar la cabeza en monitores anchos (la vista debe moverse, no el cuello). */

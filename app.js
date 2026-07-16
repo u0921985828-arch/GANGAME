@@ -122,13 +122,23 @@
     el.routineSummary.textContent = `${EXERCISES.length} ejercicios · ~${mins} min`;
 
     el.exerciseList.innerHTML = '';
+    let currentCat = null;
     EXERCISES.forEach((ex) => {
+      if (ex.category !== currentCat) {
+        currentCat = ex.category;
+        const head = document.createElement('li');
+        head.className = 'ex-cat';
+        head.textContent = (typeof CATEGORIES !== 'undefined' && CATEGORIES[currentCat]) || currentCat;
+        el.exerciseList.appendChild(head);
+      }
       const li = document.createElement('li');
+      li.className = 'ex-item';
       li.innerHTML = `
         <span class="ex-dot" style="background:${ex.accent}"></span>
-        <span class="ex-body"><b>${ex.name}</b><small></small></span>
+        <span class="ex-body"><b></b><small></small></span>
         <span class="ex-time">${effDuration(ex)}s</span>`;
-      li.querySelector('small').textContent = ex.instruction.split('.')[0] + '.';
+      li.querySelector('b').textContent = ex.name;
+      li.querySelector('small').textContent = ex.goal || ex.instruction.split('.')[0] + '.';
       el.exerciseList.appendChild(li);
     });
   }
@@ -201,12 +211,27 @@
     }
   }
 
-  function drawTarget(nx, ny, rScale, accent) {
-    const margin = 46;
-    const cx = cssW / 2 + nx * (cssW / 2 - margin);
-    const cy = cssH / 2 + ny * (cssH / 2 - margin - 40);
+  // Convierte coordenadas normalizadas [-1,1] a píxeles del lienzo, dejando
+  // márgenes (más grande abajo, donde están los controles y el texto).
+  function norm2px(nx, ny) {
+    // Reservamos abajo el espacio del texto/controles para que ningún objetivo
+    // los invada; el campo de juego se centra en la mitad superior visible.
+    const marginX = 48, marginTop = 54;
+    const marginBot = Math.min(cssH * 0.30, 240);
+    const halfX = (cssW - marginX * 2) / 2;
+    const cx = cssW / 2 + nx * halfX;
+    const midY = (marginTop + (cssH - marginBot)) / 2;
+    const halfY = (cssH - marginBot - marginTop) / 2;
+    const cy = midY + ny * halfY;
+    return { cx, cy };
+  }
+
+  function drawTarget(nx, ny, rScale, accent, alpha) {
+    const { cx, cy } = norm2px(nx, ny);
     const base = Math.min(cssW, cssH) * 0.05;
     const r = base * rScale;
+    ctx.save();
+    ctx.globalAlpha = alpha == null ? 1 : alpha;
     // halo
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 3);
     g.addColorStop(0, accent + 'aa');
@@ -218,6 +243,110 @@
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();
     ctx.fillStyle = '#ffffffcc';
     ctx.beginPath(); ctx.arc(cx - r * 0.28, cy - r * 0.28, r * 0.32, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+
+  // Marcador tenue (posición candidata en sacádicos/Brock).
+  function drawGhostDot(nx, ny, rScale, accent) {
+    const { cx, cy } = norm2px(nx, ny);
+    const r = Math.min(cssW, cssH) * 0.05 * rScale;
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = accent;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+
+  const slowFactor = () => (state.settings.reduced ? 1.4 : 1);
+
+  // Sacádicos: dos o cinco dianas fijas; se ilumina una a saltos.
+  function drawSaccade(ex, t) {
+    const m = ex.motion;
+    const interval = m.interval * slowFactor();
+    const idx = Math.floor(t / interval);
+    let pts, order;
+    if (m.pattern === 'horizontal') {
+      pts = [[-0.82, 0], [0.82, 0]];
+      order = [0, 1];
+    } else {
+      pts = [[-0.78, -0.58], [0.78, 0.58], [0.78, -0.58], [-0.78, 0.58], [0, 0]];
+      order = [0, 1, 2, 3, 4, 2, 0, 3, 1, 4];
+    }
+    const active = order[idx % order.length];
+    pts.forEach((p, i) => { if (i !== active) drawGhostDot(p[0], p[1], 0.7, ex.accent); });
+    // pulso al aparecer
+    const frac = (t % interval) / interval;
+    const pulse = 1 + Math.max(0, 0.5 - frac) * 0.8;
+    drawTarget(pts[active][0], pts[active][1], pulse, ex.accent);
+  }
+
+  // Cuerda de Brock: línea en perspectiva con 3 cuentas; se ilumina una.
+  function drawBrock(ex, t) {
+    const m = ex.motion;
+    const interval = m.interval * slowFactor();
+    const nearY = 0.62, farY = -0.82;
+    const fracs = [0.16, 0.5, 0.86]; // near, media, lejos (0=near)
+    const labels = ['Cerca', 'Media', 'Lejos'];
+    const active = Math.floor(t / interval) % 3;
+    const near = norm2px(0, nearY), far = norm2px(0, farY);
+    // cuerda
+    ctx.save();
+    ctx.strokeStyle = ex.accent + '66'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(near.cx, near.cy); ctx.lineTo(far.cx, far.cy); ctx.stroke();
+    ctx.restore();
+    fracs.forEach((f, i) => {
+      const ny = nearY + (farY - nearY) * f;
+      const sizeScale = 1.15 - f * 0.7; // más grande cerca (abajo)
+      if (i === active) drawTarget(0, ny, sizeScale * 1.1, ex.accent);
+      else drawGhostDot(0, ny, sizeScale, ex.accent);
+    });
+    drawCenterTextBelow(labels[active], ex.accent);
+  }
+
+  // Flexibilidad de enfoque: alterna una diana LEJOS (aro grande) y CERCA (punto).
+  function drawAccommodation(ex, t) {
+    const m = ex.motion;
+    const half = (m.period * slowFactor()) / 2;
+    const far = Math.floor(t / half) % 2 === 0;
+    const { cx, cy } = norm2px(0, 0);
+    if (far) {
+      const R = Math.min(cssW, cssH) * 0.22;
+      ctx.save();
+      ctx.strokeStyle = ex.accent; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
+      ctx.globalAlpha = 0.5; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(cx, cy, R * 1.35, 0, TAU); ctx.stroke();
+      ctx.restore();
+      drawCenterTextBelow('Lejos · relaja', ex.accent);
+    } else {
+      drawTarget(0, 0, 0.72, ex.accent);
+      drawCenterTextBelow('Cerca · enfoca', ex.accent);
+    }
+  }
+
+  // Visión periférica: cruz central fija + destellos en la periferia.
+  function drawPeripheral(ex, t) {
+    const m = ex.motion;
+    const interval = m.interval * slowFactor();
+    const idx = Math.floor(t / interval);
+    // cruz central
+    const c = norm2px(0, 0);
+    ctx.save();
+    ctx.strokeStyle = ex.accent; ctx.lineWidth = 3; ctx.globalAlpha = 0.9;
+    const s = Math.min(cssW, cssH) * 0.03;
+    ctx.beginPath();
+    ctx.moveTo(c.cx - s, c.cy); ctx.lineTo(c.cx + s, c.cy);
+    ctx.moveTo(c.cx, c.cy - s); ctx.lineTo(c.cx, c.cy + s);
+    ctx.stroke();
+    ctx.restore();
+    // destello periférico (ángulo áureo para repartir; aparece y se desvanece)
+    const ang = idx * 2.39996;
+    const rad = 0.82;
+    const frac = (t % interval) / interval;
+    const alpha = Math.max(0, 1 - frac * 1.1);
+    if (alpha > 0.02) {
+      drawTarget(Math.cos(ang) * rad, Math.sin(ang) * rad * 0.9, 0.9, ex.accent, alpha);
+    }
   }
 
   function drawBlink(close, accent) {
@@ -273,6 +402,13 @@
 
   function renderFrame(ex, t) {
     ctx.clearRect(0, 0, cssW, cssH);
+    // Tipos con dibujo propio (no pasan por evaluate).
+    switch (ex.motion.type) {
+      case 'saccade': drawSaccade(ex, t); return;
+      case 'brock': drawBrock(ex, t); return;
+      case 'accommodation': drawAccommodation(ex, t); return;
+      case 'peripheral': drawPeripheral(ex, t); return;
+    }
     const s = evaluate(ex, t);
     if (s.mode === 'blink') {
       drawBlink(s.close, ex.accent);
@@ -468,6 +604,12 @@
       else advance(-1);
     });
     $('#btn-settings').addEventListener('click', () => { syncSettingsUI(); dlg.showModal(); });
+
+    const coach = $('#coach');
+    $('#btn-coach').addEventListener('click', () => coach.showModal());
+    $('#coach-close').addEventListener('click', () => coach.close());
+    // cerrar diálogos al tocar fuera del contenido
+    [coach, dlg].forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
 
     window.addEventListener('resize', () => { if (player.running) resizeCanvas(); });
     document.addEventListener('visibilitychange', () => {

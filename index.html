@@ -25,7 +25,7 @@
         </span>
         <div>
           <h1 class="brand__name">VistaViva</h1>
-          <p class="brand__tag">Ejercicios diarios para tus ojos</p>
+          <p class="brand__tag">Tu coach de entrenamiento visual</p>
         </div>
       </div>
       <button id="btn-settings" class="icon-btn" aria-label="Ajustes" type="button">
@@ -54,13 +54,56 @@
       <ul id="exercise-list" class="exercises"></ul>
     </section>
 
-    <p class="disclaimer">
-      Estos ejercicios ayudan a relajar la vista y a reducir la fatiga visual.
-      No sustituyen la revisión de un profesional ni corrigen problemas como
-      la miopía. Si notas dolor, mareo o visión borrosa persistente, detente y
-      consulta a tu oftalmólogo.
-    </p>
+    <button id="btn-coach" class="coach-note" type="button">
+      <span class="coach-note__icon" aria-hidden="true">💡</span>
+      <span>
+        <strong>¿Esto me quita las gafas?</strong>
+        <small>Te lo explico sin humo: qué puede y qué no puede lograr el entrenamiento visual.</small>
+      </span>
+      <span class="coach-note__chev" aria-hidden="true">›</span>
+    </button>
   </main>
+
+  <!-- ============ DIÁLOGO: COACH (honestidad clínica) ============ -->
+  <dialog id="coach" class="sheet sheet--tall" aria-label="¿Puedo dejar las gafas?">
+    <div class="sheet__inner">
+      <div class="sheet__grip" aria-hidden="true"></div>
+      <h2 class="sheet__title">¿Puedo dejar las gafas?</h2>
+      <p class="coach__lead">Como coach honesto, te doy la versión real, no la de los anuncios.</p>
+
+      <div class="coach__block coach__block--no">
+        <h3>Lo que el entrenamiento <u>no</u> hace</h3>
+        <p>La miopía, la hipermetropía y el astigmatismo dependen de la <strong>forma
+        del ojo y de la córnea</strong>. Ningún ejercicio los reshapea, así que
+        <strong>no eliminan tu graduación</strong>. La Academia Americana de Oftalmología
+        es clara, y el “método Bates” (dejar las gafas a base de ejercicios) está
+        desmentido por estudios controlados. Desconfía de quien te prometa lo contrario.</p>
+      </div>
+
+      <div class="coach__block coach__block--yes">
+        <h3>Lo que <u>sí</u> entrena (y con evidencia)</h3>
+        <ul>
+          <li><strong>Convergencia y visión binocular:</strong> la terapia visual funciona
+            (ensayo CITT del Instituto Nacional del Ojo, EE. UU.). Aquí: cuerda de Brock y convergencia.</li>
+          <li><strong>Flexibilidad de enfoque:</strong> ejercicios cerca–lejos (tipo “flippers”).</li>
+          <li><strong>Músculos y movimientos oculares:</strong> seguimientos y sacádicos.</li>
+          <li><strong>Fatiga visual por pantallas:</strong> parpadeo, regla 20-20-20 y palming.</li>
+        </ul>
+      </div>
+
+      <div class="coach__block coach__block--tip">
+        <h3>El mejor hábito para tus ojos</h3>
+        <p><strong>Luz natural exterior</strong>: ~2 horas al día al aire libre es lo único
+        con evidencia sólida para <em>retrasar la aparición</em> de la miopía en niños
+        (por la dopamina que libera la retina con la luz brillante). No es un ejercicio,
+        es un hábito — y este coach te lo va a recordar.</p>
+      </div>
+
+      <p class="coach__foot">Si notas dolor, mareo o visión borrosa persistente, detente y
+        consulta a tu oftalmólogo u optometrista. Esto complementa, no sustituye, su criterio.</p>
+      <button class="btn-primary" id="coach-close" type="button">Entendido, vamos a entrenar</button>
+    </div>
+  </dialog>
 
   <!-- ============ PANTALLA: REPRODUCTOR ============ -->
   <section id="player" class="screen player" aria-label="Reproductor de ejercicios" aria-hidden="true">
