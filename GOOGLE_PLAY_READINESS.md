@@ -99,6 +99,26 @@ sensible, sin compras, sin contenido generado compartido en línea).
 - **Capturas:** ≥2 de teléfono (usa la app real: pads + PAD SETTINGS/piano roll quedan vistosos).
 - **Textos:** descripción corta (≤80) y larga (es). La `<meta name="description">` de v36 sirve de base.
 
+## 7-bis. Alta tasa de refresco (120Hz / ProMotion)  (severidad: 🟡 calidad — el WebView se pinea a 60Hz)
+
+- **Lado web (ya resuelto):** el navegador/WebView renderiza `requestAnimationFrame` y las animaciones
+  CSS **a la tasa del display** — en un panel 120Hz ya van a 120fps. **No hay ninguna API web para
+  "forzar" 120fps** y la app **no tiene ningún cap** de framerate. Los movimientos de alta frecuencia
+  (playhead, barra de progreso, jog, scrollbar, pads) usan `transform`/`opacity` (compositados en GPU);
+  desde v38 también las animaciones "de respiración" (glow de pads en FX-active, LEDs) animan opacidad
+  en vez de repintar `box-shadow` cada frame → **sostienen 120fps sin frames perdidos**.
+- **Lado Android (pendiente en el wrapper):** por defecto muchos dispositivos **fijan el WebView a
+  60Hz** aunque el panel sea de 120. Para desbloquear la tasa alta, la Activity debe pedirla:
+  - `WindowManager.LayoutParams.preferredRefreshRate = <hz más alto>` **o**
+    `preferredDisplayModeId = <modo de mayor Hz de `Display.getSupportedModes()`>` (elige el modo cuya
+    resolución coincide con la actual y mayor `refreshRate`).
+  - En **Android 11+**: `Surface.setFrameRate(hz, FRAME_RATE_COMPATIBILITY_DEFAULT)` sobre la surface
+    del WebView (o `SurfaceControl.Transaction#setFrameRate`) para señalar la cadencia deseada.
+  - Opcional: mantener la pantalla despierta durante uso activo (`FLAG_KEEP_SCREEN_ON`).
+- **Verificación en dispositivo:** activar *Debug GPU overdraw / Show refresh rate* en Opciones de
+  desarrollador, o `adb shell dumpsys SurfaceFlinger | grep refresh`, y confirmar que la app corre al
+  modo alto mientras se anima.
+
 ## 8. Estado actual de la app (lo que YA está bien)
 
 - ✅ **Offline total**, self-contained (fuentes y librerías JSZip/lamejs embebidas en `data:`).
