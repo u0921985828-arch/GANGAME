@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v12 (LCD visualizer — hospital-pulse-monitor / oscilloscope):
+    · Replaced the 28 flat DOM bars with a device-pixel-crisp <canvas> oscilloscope that reads
+      like an ECG / hospital pulse monitor: a bright head sweeps left→right leaving a glowing
+      time-domain trace of the master output, with a short blanked "erase gap" just ahead of
+      the head. Quiet = a near-flat baseline; every kick/snare punches a spike through it. The
+      head's glow swells with a smoothed amplitude envelope. Colours track the active skin.
+    · The analyser sits after the limiter, so the trace shows EVERYTHING audible — pads, DJ
+      MODE, mic, and sequenced playback (each hit reads as a pulse). Note: this replaces the
+      old per-loop "pattern shape" bar view with a single live scope in all states.
+    · Removed the now-dead .lcd-wave bar styling.
   v11 (keyboard focus management + robustness):
     ACCESSIBILITY — modal focus (WCAG 2.4.3 / 4.1.2 / 2.1.2)
       · Central modal-focus manager (MutationObserver on each overlay's 'show' class): on open
@@ -914,8 +924,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     mix-blend-mode:multiply;
   }
   .lcd-top{ display:flex; justify-content:space-between; font-size:14.5px; }
-  .lcd-wave{ height:68px; display:flex; align-items:center; gap:1px; }
-  .lcd-wave i{ flex:1; background:var(--lcd-fg); opacity:.85; border-radius:1px; transition:height .05s linear, opacity .08s linear, box-shadow .08s linear; }
+  .lcd-wave{ height:68px; display:flex; align-items:center; }
+  .lcd-wave canvas{ width:100%; height:100%; display:block; }
   .lcd-steps{ display:flex; gap:1.5px; height:9px; align-items:center; margin:3px 0; }
   .lcd-steps i{ flex:1; height:5px; border-radius:2px; background:var(--lcd-dim); opacity:.45; transition:background-color .06s linear, opacity .06s linear, box-shadow .06s linear; }
   .lcd-steps i.beat{ opacity:.6; } /* quarter-note markers read slightly brighter even when idle — driven by stepsPerBeat in rebuildLcdSteps(), not a fixed CSS stride, since STEPS/BEAT is user-configurable (3/4/6/8) */
@@ -6469,75 +6479,79 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     o.start(time); o.stop(time+0.05);
   }
 
+  // ===== LCD VISUALIZER — hospital-pulse-monitor / oscilloscope. A bright head sweeps left→
+  // right leaving a glowing time-domain trace of the master output (the analyser sits after the
+  // limiter, so it sees pads, DJ MODE, mic, AND sequenced playback), with a short blanked "erase
+  // gap" just ahead of the head — exactly like an ECG monitor. Quiet = a near-flat baseline;
+  // every kick/snare punches a spike through it. Device-pixel crisp; colours track the skin. =====
   const wave=document.getElementById('lcdWave');
-  const waveBars=[];
-  for(let i=0;i<28;i++){ const b=document.createElement('i'); b.style.height='4%'; wave.appendChild(b); waveBars.push(b); }
-  const freqData = new Uint8Array(analyser.frequencyBinCount); // broadband loudness proxy while a pattern plays; per-bin data reused directly for the live view below when it doesn't
-  // LOOP-SHAPE VISUALIZATION — each of the 28 bars is a time-slice of the CURRENT PATTERN
-  // LOOP (whatever STEP_COUNT it is right now: 24-64 steps depending on STEPS/BEAT), not an
-  // instantaneous frequency snapshot. As the pattern plays, the bar under the playhead's
-  // current step holds the loudest level seen while the playhead sits on it, and stays at
-  // that height for the rest of the pass — so by the time the loop finishes, the whole
-  // strip reads as the shape of that entire beat/pattern (kick here, snare there, hats
-  // running through), not a flicker per individual hit. The shape resets fresh at the start
-  // of every new pass (detected via currentStep wrapping back to a lower value).
-  const barLevels = new Array(waveBars.length).fill(4);
-  const lastBarPct = new Array(waveBars.length).fill(-1);
-  const DECAY_PER_FRAME = 2.2; // percentage-points/frame at ~60fps — bar fall-off, used both to settle the pattern shape once playback stops and as the live view's release
-  let lastStepForWave = -1;
+  wave.innerHTML='';
+  const vizCanvas=document.createElement('canvas');
+  vizCanvas.style.cssText='width:100%;height:100%;display:block';
+  vizCanvas.setAttribute('aria-hidden','true');
+  wave.appendChild(vizCanvas);
+  const g2=vizCanvas.getContext('2d');
+  let vizW=0, vizH=0, vizDpr=1, COLS=1, trace=new Float32Array(1), sweep=0;
+  let colAccent='#ff9a3d', colFg='#dfe6f0', colFrame=0;
+  function readVizColors(){
+    const cs=getComputedStyle(unitEl);
+    const a=cs.getPropertyValue('--accent').trim(); if(a) colAccent=a;
+    const f=cs.getPropertyValue('--lcd-fg').trim();  if(f) colFg=f;
+  }
+  function sizeViz(){
+    vizDpr=Math.min(3, window.devicePixelRatio||1);
+    vizW=Math.max(1, wave.clientWidth||119); vizH=Math.max(1, wave.clientHeight||35);
+    vizCanvas.width=Math.round(vizW*vizDpr); vizCanvas.height=Math.round(vizH*vizDpr);
+    g2.setTransform(vizDpr,0,0,vizDpr,0,0);
+    g2.lineJoin='round'; g2.lineCap='round';
+    const cols=Math.max(32, Math.round(vizW)); // one trace sample per CSS pixel of width
+    if(cols!==COLS){ const old=trace; trace=new Float32Array(cols); trace.set(old.subarray(0, Math.min(old.length, cols))); COLS=cols; if(sweep>=COLS) sweep=0; }
+    readVizColors();
+  }
+  sizeViz();
+  if(typeof ResizeObserver==='function'){ try{ new ResizeObserver(()=>sizeViz()).observe(wave); }catch(e){} }
+  const timeData = new Uint8Array(analyser.fftSize); // time-domain samples for the scope trace
+  const SWEEP_COLS = 2;   // trace columns advanced per animation frame — the sweep speed
+  const GAP_COLS   = 5;   // blanked columns just ahead of the head — the ECG "erase" gap
   let spectrumRafId = null;
-  // Live-view bin ranges (log-ish spacing across the usable bins) depend only on waveBars.length
-  // and analyser.frequencyBinCount, both fixed for the app's lifetime — computed once here
-  // instead of on every animation frame.
-  const liveBarBinRanges = (()=>{
-    const usableBins = freqData.length;
-    const ranges = [];
-    for(let i=0;i<waveBars.length;i++){
-      const lo = Math.floor(Math.pow(i/waveBars.length, 1.6) * usableBins);
-      const hi = Math.min(usableBins, Math.max(lo+1, Math.floor(Math.pow((i+1)/waveBars.length, 1.6) * usableBins)));
-      ranges.push([lo, hi]);
-    }
-    return ranges;
-  })();
+  let vizEnv = 0;         // smoothed amplitude, so the head's glow swells on loud transients
   function drawSpectrum(){
-    analyser.getByteFrequencyData(freqData);
-    let currentBarIdx = -1;
-    if(playing){
-      let sum=0; for(let i=0;i<freqData.length;i++) sum+=freqData[i];
-      const loudnessPct = Math.max(4, (sum/freqData.length/255)*100);
-      if(currentStep<lastStepForWave) barLevels.fill(4); // wrapped around — this pass's shape starts fresh
-      lastStepForWave = currentStep;
-      currentBarIdx = Math.min(waveBars.length-1, Math.floor(currentStep/STEP_COUNT*waveBars.length));
-      barLevels[currentBarIdx] = Math.max(barLevels[currentBarIdx], loudnessPct); // peak-hold for this slice until the loop resets
-    } else {
-      // No sequence running via PLAY/STOP, but sound can still be live right now — a pad
-      // tapped by hand, DJ MODE, mic monitoring, a sample preview. The analyser sits after
-      // the limiter, so it already sees all of that; read it as a real live spectrum here
-      // instead of just decaying the last pattern shape to silence, so those sounds show up
-      // on the display too. Bars map log-ish across the usable bins so the low end isn't
-      // just the first couple of bins.
-      lastStepForWave = -1;
-      for(let i=0;i<waveBars.length;i++){
-        const [lo, hi] = liveBarBinRanges[i];
-        let peak=0; for(let b=lo;b<hi;b++) if(freqData[b]>peak) peak=freqData[b];
-        const pct = Math.max(4, (peak/255)*100);
-        barLevels[i] = Math.max(pct, barLevels[i]-DECAY_PER_FRAME);
-      }
+    analyser.getByteTimeDomainData(timeData);
+    // Write SWEEP_COLS new samples at the head. Each new column takes the max-|deviation|
+    // sample (with its sign) from its slice of the time-domain buffer, so the trace wiggles
+    // like a real scope and a transient punches a clean spike rather than averaging away.
+    const L=timeData.length; let frameAmp=0;
+    for(let s=0;s<SWEEP_COLS;s++){
+      const from=Math.floor((s/SWEEP_COLS)*L), to=Math.floor(((s+1)/SWEEP_COLS)*L);
+      let best=0; for(let i=from;i<to;i++){ const d=timeData[i]-128; if(Math.abs(d)>Math.abs(best)) best=d; }
+      let v=best/128; if(Math.abs(v)<0.02) v=0; // noise floor → true silence reads as a flat line
+      trace[sweep]=v; sweep=(sweep+1)%COLS;
+      if(Math.abs(v)>frameAmp) frameAmp=Math.abs(v);
     }
-    for(let i=0;i<waveBars.length;i++){
-      const pct = barLevels[i];
-      if(pct!==lastBarPct[i]){
-        lastBarPct[i]=pct;
-        waveBars[i].style.height = pct+'%';
-        // The bar under the current playhead position glows brightest (like a moving
-        // cursor over the pattern's shape); the rest shade by their held level, same
-        // visual language the step LEDs already use for "current"/"played".
-        const lvl = Math.min(1, pct/100);
-        const isPlayhead = i===currentBarIdx;
-        waveBars[i].style.opacity = isPlayhead ? '1' : (0.45 + lvl*0.55).toFixed(2);
-        waveBars[i].style.boxShadow = (isPlayhead || lvl>0.55) ? '0 0 '+(Math.max(lvl, isPlayhead?0.8:0)*6).toFixed(1)+'px var(--accent)' : 'none';
-      }
+    vizEnv += (frameAmp - vizEnv)*0.3;
+    // ---- render ----
+    if(++colFrame>=20){ colFrame=0; readVizColors(); }
+    g2.clearRect(0,0,vizW,vizH);
+    const mid=vizH/2, yamp=mid-1;
+    // faint center baseline — the "flatline" reference
+    g2.strokeStyle='rgba(255,255,255,0.07)'; g2.lineWidth=1;
+    g2.beginPath(); g2.moveTo(0, mid+0.5); g2.lineTo(vizW, mid+0.5); g2.stroke();
+    // the trace: fixed x per column, blanking the erase gap immediately ahead of the head
+    g2.strokeStyle=colAccent; g2.lineWidth=1.6; g2.shadowColor=colAccent; g2.shadowBlur=6;
+    g2.beginPath();
+    let started=false;
+    for(let idx=0; idx<COLS; idx++){
+      if(((idx - sweep + COLS) % COLS) < GAP_COLS){ started=false; continue; } // erase gap
+      const x=(idx+0.5)/COLS*vizW, y=mid - trace[idx]*yamp;
+      if(!started){ g2.moveTo(x,y); started=true; } else g2.lineTo(x,y);
     }
+    g2.stroke();
+    // bright sweep head (the moving cursor), its glow swelling with the smoothed amplitude
+    const headIdx=(sweep-1+COLS)%COLS;
+    const hx=(headIdx+0.5)/COLS*vizW, hy=mid - trace[headIdx]*yamp;
+    g2.fillStyle=colFg; g2.shadowColor=colAccent; g2.shadowBlur=6+vizEnv*8;
+    g2.beginPath(); g2.arc(hx, hy, 1.7+vizEnv*1.2, 0, Math.PI*2); g2.fill();
+    g2.shadowBlur=0;
     spectrumRafId = requestAnimationFrame(drawSpectrum);
   }
   function startSpectrumLoop(){ if(spectrumRafId==null) spectrumRafId = requestAnimationFrame(drawSpectrum); }
