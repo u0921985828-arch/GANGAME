@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="chassis_black">#0A0A0B</color>   <!-- matches the web app's theme-color / page bg -->
+    <color name="icon_bg">#141518</color>          <!-- adaptive-icon background plate -->
+    <color name="accent">#FF9A3D</color>           <!-- STEEL skin accent (the app's default) -->
+</resources>

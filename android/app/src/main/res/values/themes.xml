@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Post-splash app theme: edge-to-edge black chassis, no action bar. Uses the framework Material
+         theme so the shell needs no AppCompat/Material dependency. -->
+    <style name="Theme.App" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/chassis_black</item>
+        <item name="android:statusBarColor">@color/chassis_black</item>
+        <item name="android:navigationBarColor">@color/chassis_black</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Android 12 SplashScreen (via androidx.core:core-splashscreen, back-compatible to API 24).
+         Chains the OS splash (#0A0A0B + monochrome mark) into the in-app HTML splash seamlessly. -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/chassis_black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="postSplashScreenTheme">@style/Theme.App</item>
+    </style>
+
+</resources>

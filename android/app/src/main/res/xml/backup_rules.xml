@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app stores everything in the WebView's IndexedDB/localStorage; nothing needs
+     custom backup handling. Default full-backup covers the WebView data directory. -->
+<full-backup-content />

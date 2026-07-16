@@ -145,21 +145,30 @@ firma, ficha). Ver checklist.
 - [x] Manifest `purpose: any maskable`
 - [x] Pantalla de inicio (splash) en estilo del aparato
 
-**Proyecto Android (wrapper) — pendiente**
-- [ ] Módulo Gradle: `minSdk 24`, `targetSdk`/`compileSdk` al nivel Play vigente, `applicationId`, `versionCode/Name`
-- [ ] `MainActivity` + `WebViewAssetLoader` (origen seguro) cargando el HTML de `assets/`
-- [ ] WebView: JS + DOM storage ON; `onShowFileChooser`; **back → cerrar overlays antes de salir**
-- [ ] Descargas *blob* → MediaStore/Downloads (sin permiso)
-- [ ] `AndroidManifest.xml` con **cero permisos peligrosos** (ni `RECORD_AUDIO` ni almacenamiento)
-- [ ] SplashScreen API (fondo `#0a0a0b` + icono monocromo)
-- [ ] `res/mipmap` adaptive + maskable; icono 512×512
+**Proyecto Android (wrapper) — CÓDIGO LISTO en `android/` (compilar en Android Studio)**
+- [x] Módulo Gradle: `minSdk 24`, `targetSdk`/`compileSdk 35`, `applicationId com.artifacts.fx404`, `versionCode/Name`
+- [x] `MainActivity` + `WebViewAssetLoader` (origen seguro) cargando el HTML de `assets/` (v38 embebido)
+- [x] WebView: JS + DOM storage ON; `onShowFileChooser`; **back → cierra overlays antes de salir** (`__fx404Back`)
+- [x] Descargas *blob* → **SAF `ACTION_CREATE_DOCUMENT`** (el usuario elige destino; sin permiso en ninguna API)
+- [x] `AndroidManifest.xml` con **cero permisos** (ni `RECORD_AUDIO` ni almacenamiento)
+- [x] SplashScreen API (fondo `#0A0A0B` + icono monocromo) — `Theme.App.Starting`
+- [x] Opt-in de alta tasa de refresco (`preferredDisplayModeId`/`preferredRefreshRate`)
+- [x] `res/mipmap` adaptive + maskable + monochrome; PNG legacy (API 24-25) en todas las densidades
+- [ ] Generar el `gradle-wrapper.jar` (lo hace Android Studio al importar) y compilar el **.aab**
 
-**Consola de Play — pendiente**
-- [ ] Build **.aab** + **Play App Signing**
+**Activos de ficha — GENERADOS en `store/`**
+- [x] Icono **512×512** 32-bit (`store/icon_512.png`)
+- [x] **Feature graphic** 1024×500 (`store/feature_graphic.png`)
+- [x] Capturas de teléfono 1080×1920 (`store/screenshots/`)
+- [x] Descripción corta/larga (es) — `store/LISTING_es.md`
+- [x] **Política de privacidad** (es) lista para publicar — `store/PRIVACY_POLICY_es.md`
+
+**Consola de Play — pasos que haces tú (con lo anterior ya preparado)**
+- [ ] Build **.aab** + activar **Play App Signing**
 - [ ] Formulario **Data safety** = "no se recogen datos"
-- [ ] **Política de privacidad** publicada (URL) — texto base en §4
+- [ ] **Publicar** la política de privacidad (URL) y pegarla en la ficha
 - [ ] **Clasificación IARC** (previsible "Para todos")
-- [ ] Ficha: icono 512, feature graphic 1024×500, ≥2 capturas, descripción corta/larga
+- [ ] Subir icono 512, feature graphic, capturas y textos a la ficha
 
 ---
 *Empaquetado Android = siguiente paso (código para Android Studio; no compilable/verificable en este
