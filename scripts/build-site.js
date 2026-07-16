@@ -42,6 +42,18 @@ function write(rel, content) {
   fs.mkdirSync(path.dirname(full), { recursive: true });
   fs.writeFileSync(full, content);
 }
+function copyDir(src, dest) {
+  if (!fs.existsSync(src)) return 0;
+  let n = 0;
+  fs.mkdirSync(dest, { recursive: true });
+  for (const e of fs.readdirSync(src, { withFileTypes: true })) {
+    const s = path.join(src, e.name);
+    const d = path.join(dest, e.name);
+    if (e.isDirectory()) n += copyDir(s, d);
+    else { fs.copyFileSync(s, d); n++; }
+  }
+  return n;
+}
 
 const docs = listDocs(cfg, root).filter((d) => d.collection && !d.error);
 const pub = docs.filter((d) => INCLUDE_DRAFTS || d.data.status === 'published');
@@ -267,7 +279,11 @@ write('search.html', layout({
 // ---- stylesheet ----
 write('assets/style.css', STYLE());
 
-console.log(`✓ site built: ${bySlug.size} page(s) -> ${outArg}/`);
+// ---- verbatim static assets (games, media, downloads) ----
+let staticCount = 0;
+if (cfg.staticDir) staticCount = copyDir(path.join(root, cfg.staticDir), outDir);
+
+console.log(`✓ site built: ${bySlug.size} page(s) + ${staticCount} static file(s) -> ${outArg}/`);
 
 function STYLE() {
   return `:root{

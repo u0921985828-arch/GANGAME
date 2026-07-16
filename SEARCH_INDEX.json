@@ -2,15 +2,18 @@
   "generatedFrom": "scripts/build-index.js",
   "version": "1.0.0",
   "counts": {
-    "total": 2,
-    "public": 2,
+    "total": 4,
+    "public": 4,
     "byCollection": {
-      "posts": 1,
-      "pages": 1
+      "posts": 2,
+      "pages": 2
     }
   },
   "tags": [
     "cms",
+    "gamedev",
+    "gdd",
+    "memoria",
     "meta"
   ],
   "entries": [
@@ -24,6 +27,34 @@
       "tags": [],
       "summary": "Arquitectura del CMS Markdown/Git.",
       "path": "content/pages/about.md",
+      "public": true
+    },
+    {
+      "collection": "pages",
+      "slug": "memoria",
+      "title": "Memoria Infinita",
+      "status": "published",
+      "date": null,
+      "updated": null,
+      "tags": [],
+      "summary": "Juego de memoria sin fin, adaptativo y diseñado para no cansar.",
+      "path": "content/pages/memoria.md",
+      "public": true
+    },
+    {
+      "collection": "posts",
+      "slug": "gdd-memoria-infinita",
+      "title": "GDD — Memoria Infinita",
+      "status": "published",
+      "date": "2026-07-16",
+      "updated": null,
+      "tags": [
+        "gamedev",
+        "gdd",
+        "memoria"
+      ],
+      "summary": "Documento de diseño del juego de memoria endless anti-fatiga.",
+      "path": "content/posts/gdd-memoria-infinita.md",
       "public": true
     },
     {
