@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v18 (DJFX LOOPER fades out in ~1.5s on off):
+    · makeWetDry gained an optional {offRelease} — on OFF the wet ramps to 0 over that many
+      seconds instead of ringing out indefinitely. DJFX LOOPER (near-unity feedback) uses
+      offRelease=1.5, so its residual now fades over ~1.5s. The naturally-decaying effects
+      (delay/reverb/resonator) keep offRelease=0 → they still ring out on their own.
   v17 (FX tails ring out after turning an effect off):
     · Turning a time-based effect OFF now lets its residual (delay repeats, reverb/resonator
       tail, DJFX loop) ring out and decay naturally instead of being chopped. The wet/dry
@@ -2250,7 +2255,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   const driveShaper = ctx.createWaveShaper(); setDriveCurve(0);
   filterNode.connect(driveShaper);
 
-  function makeWetDry(effectBuildFn){
+  function makeWetDry(effectBuildFn, opts){
+    const offRelease = (opts && typeof opts.offRelease==='number') ? opts.offRelease : 0; // >0 = force the residual to fade over this many seconds on OFF (for near-unity-feedback effects that would otherwise ring ~forever)
     const input = ctx.createGain();
     const output = ctx.createGain();
     const dry = ctx.createGain(); dry.gain.value = 1;
@@ -2268,7 +2274,9 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     return { input, output, setWet:(v)=>{
       const t=ctx.currentTime, on = v>0.0001;
       send.gain.cancelScheduledValues(t); send.gain.setValueAtTime(send.gain.value,t); send.gain.linearRampToValueAtTime(on?1:0, t+0.015);
-      if(on){ wet.gain.cancelScheduledValues(t); wet.gain.setValueAtTime(wet.gain.value,t); wet.gain.linearRampToValueAtTime(v, t+0.015); } // on off, leave wet as-is so the tail decays through it
+      wet.gain.cancelScheduledValues(t); wet.gain.setValueAtTime(wet.gain.value,t);
+      if(on){ wet.gain.linearRampToValueAtTime(v, t+0.015); }
+      else if(offRelease>0){ wet.gain.linearRampToValueAtTime(0, t+offRelease); } // forced fade-out of the residual; otherwise leave wet open so it decays naturally
       const dryTarget = on ? (1 - v*0.5) : 1;
       dry.gain.cancelScheduledValues(t); dry.gain.setValueAtTime(dry.gain.value,t); dry.gain.linearRampToValueAtTime(dryTarget, t+0.015);
     } };
@@ -2525,7 +2533,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   // this effect's name.
   let djfxTimeNode = null, djfxFbNode = null, djfxToneNode = null;
   function syncDjfxTempo(){ if(djfxTimeNode) djfxTimeNode.delayTime.value = Math.min(1.0, 60/bpm); }
-  const djfxFX = makeWetDry((inp)=>{
+  const djfxFX = makeWetDry((inp)=>{ /* near-unity feedback loop → force its residual to fade in ~1.5s on OFF instead of ringing forever (opts below) */
     const dl = ctx.createDelay(1.0); dl.delayTime.value = 0.5; // same reason as DELAY above — synced properly right after bpm is initialized
     djfxTimeNode = dl;
     const fb = ctx.createGain(); fb.gain.value=0.97; // near-unity — a real loop, not a decaying echo
@@ -2534,7 +2542,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     djfxToneNode = tone;
     inp.connect(dl); dl.connect(tone); tone.connect(fb); fb.connect(dl);
     return dl;
-  });
+  }, {offRelease:1.5});
 
   driveShaper.connect(resonatorFX.input);
   resonatorFX.output.connect(delayFX.input);
