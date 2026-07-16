@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v13 (LCD visualizer — segmented min/max waveform, matching SAMPLE EDIT):
+    · Changed the live LCD visualizer to draw in the same visual language as the SAMPLE EDIT
+      waveform: a vertical bar per time-slice spanning that slice's min→max sample (symmetric
+      around the centre line), instead of the single connected oscilloscope line of v12. Still
+      scrolls one new bar per frame under a bright moving head with the "erase gap"; quiet reads
+      as a flat row of centre dots, loud transients rise as tall segmented bars. Skin-tinted.
   v12 (LCD visualizer — hospital-pulse-monitor / oscilloscope):
     · Replaced the 28 flat DOM bars with a device-pixel-crisp <canvas> oscilloscope that reads
       like an ECG / hospital pulse monitor: a bright head sweeps left→right leaving a glowing
@@ -6479,11 +6485,12 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     o.start(time); o.stop(time+0.05);
   }
 
-  // ===== LCD VISUALIZER — hospital-pulse-monitor / oscilloscope. A bright head sweeps left→
-  // right leaving a glowing time-domain trace of the master output (the analyser sits after the
-  // limiter, so it sees pads, DJ MODE, mic, AND sequenced playback), with a short blanked "erase
-  // gap" just ahead of the head — exactly like an ECG monitor. Quiet = a near-flat baseline;
-  // every kick/snare punches a spike through it. Device-pixel crisp; colours track the skin. =====
+  // ===== LCD VISUALIZER — live segmented min/max WAVEFORM, drawn in the same visual language as
+  // the SAMPLE EDIT waveform (a vertical bar per slice spanning that slice's min→max sample), but
+  // scrolling: one new bar per frame under a bright moving head, with a short blanked "erase gap"
+  // just ahead of it like an audio monitor. The analyser sits after the limiter, so it shows the
+  // master output — pads, DJ MODE, mic, AND sequenced playback. Quiet = a flat row of centre dots;
+  // every kick/snare rises as a tall bar. Device-pixel crisp; colours track the active skin. =====
   const wave=document.getElementById('lcdWave');
   wave.innerHTML='';
   const vizCanvas=document.createElement('canvas');
@@ -6491,7 +6498,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   vizCanvas.setAttribute('aria-hidden','true');
   wave.appendChild(vizCanvas);
   const g2=vizCanvas.getContext('2d');
-  let vizW=0, vizH=0, vizDpr=1, COLS=1, trace=new Float32Array(1), sweep=0;
+  const BAR_PITCH=2.6; // px per bar (bar + 1px gap) — the segmented min/max waveform look
+  let vizW=0, vizH=0, vizDpr=1, NB=1, tMin=new Float32Array(1), tMax=new Float32Array(1), sweep=0;
   let colAccent='#ff9a3d', colFg='#dfe6f0', colFrame=0;
   function readVizColors(){
     const cs=getComputedStyle(unitEl);
@@ -6503,54 +6511,42 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     vizW=Math.max(1, wave.clientWidth||119); vizH=Math.max(1, wave.clientHeight||35);
     vizCanvas.width=Math.round(vizW*vizDpr); vizCanvas.height=Math.round(vizH*vizDpr);
     g2.setTransform(vizDpr,0,0,vizDpr,0,0);
-    g2.lineJoin='round'; g2.lineCap='round';
-    const cols=Math.max(32, Math.round(vizW)); // one trace sample per CSS pixel of width
-    if(cols!==COLS){ const old=trace; trace=new Float32Array(cols); trace.set(old.subarray(0, Math.min(old.length, cols))); COLS=cols; if(sweep>=COLS) sweep=0; }
+    const nb=Math.max(24, Math.floor(vizW/BAR_PITCH));
+    if(nb!==NB){ tMin=new Float32Array(nb); tMax=new Float32Array(nb); NB=nb; if(sweep>=NB) sweep=0; }
     readVizColors();
   }
   sizeViz();
   if(typeof ResizeObserver==='function'){ try{ new ResizeObserver(()=>sizeViz()).observe(wave); }catch(e){} }
-  const timeData = new Uint8Array(analyser.fftSize); // time-domain samples for the scope trace
-  const SWEEP_COLS = 2;   // trace columns advanced per animation frame — the sweep speed
-  const GAP_COLS   = 5;   // blanked columns just ahead of the head — the ECG "erase" gap
+  const timeData = new Uint8Array(analyser.fftSize); // time-domain samples for the waveform
+  const GAP_BARS = 2;    // blanked bars just ahead of the head — the monitor "erase" gap
   let spectrumRafId = null;
-  let vizEnv = 0;         // smoothed amplitude, so the head's glow swells on loud transients
+  let vizEnv = 0;        // smoothed amplitude, so the head bar's glow swells on loud transients
   function drawSpectrum(){
     analyser.getByteTimeDomainData(timeData);
-    // Write SWEEP_COLS new samples at the head. Each new column takes the max-|deviation|
-    // sample (with its sign) from its slice of the time-domain buffer, so the trace wiggles
-    // like a real scope and a transient punches a clean spike rather than averaging away.
-    const L=timeData.length; let frameAmp=0;
-    for(let s=0;s<SWEEP_COLS;s++){
-      const from=Math.floor((s/SWEEP_COLS)*L), to=Math.floor(((s+1)/SWEEP_COLS)*L);
-      let best=0; for(let i=from;i<to;i++){ const d=timeData[i]-128; if(Math.abs(d)>Math.abs(best)) best=d; }
-      let v=best/128; if(Math.abs(v)<0.02) v=0; // noise floor → true silence reads as a flat line
-      trace[sweep]=v; sweep=(sweep+1)%COLS;
-      if(Math.abs(v)>frameAmp) frameAmp=Math.abs(v);
-    }
-    vizEnv += (frameAmp - vizEnv)*0.3;
-    // ---- render ----
+    // Min & max sample of this frame (signed, -1..1) — exactly like the SAMPLE EDIT waveform's
+    // per-column min/max, so a loud transient makes a tall vertical bar and silence is a flat
+    // row of centre dots. One new bar per frame; the strip scrolls under a moving head.
+    let mn=1, mx=-1;
+    for(let i=0;i<timeData.length;i++){ const v=(timeData[i]-128)/128; if(v<mn)mn=v; if(v>mx)mx=v; }
+    if(mx<mn || (mx-mn)<0.02){ mn=0; mx=0; } // noise floor → true silence reads as a flat line
+    tMin[sweep]=mn; tMax[sweep]=mx; sweep=(sweep+1)%NB;
+    const amp=Math.max(Math.abs(mn),Math.abs(mx)); vizEnv += (amp-vizEnv)*0.3;
+    // ---- render: segmented min/max bars, blanking the erase gap ahead of the head ----
     if(++colFrame>=20){ colFrame=0; readVizColors(); }
     g2.clearRect(0,0,vizW,vizH);
-    const mid=vizH/2, yamp=mid-1;
-    // faint center baseline — the "flatline" reference
-    g2.strokeStyle='rgba(255,255,255,0.07)'; g2.lineWidth=1;
-    g2.beginPath(); g2.moveTo(0, mid+0.5); g2.lineTo(vizW, mid+0.5); g2.stroke();
-    // the trace: fixed x per column, blanking the erase gap immediately ahead of the head
-    g2.strokeStyle=colAccent; g2.lineWidth=1.6; g2.shadowColor=colAccent; g2.shadowBlur=6;
-    g2.beginPath();
-    let started=false;
-    for(let idx=0; idx<COLS; idx++){
-      if(((idx - sweep + COLS) % COLS) < GAP_COLS){ started=false; continue; } // erase gap
-      const x=(idx+0.5)/COLS*vizW, y=mid - trace[idx]*yamp;
-      if(!started){ g2.moveTo(x,y); started=true; } else g2.lineTo(x,y);
+    const mid=vizH/2, yamp=mid-1, pitch=vizW/NB, bw=Math.max(1, pitch-1);
+    g2.fillStyle='rgba(255,255,255,0.06)'; g2.fillRect(0, mid-0.5, vizW, 1); // faint centre baseline
+    g2.shadowColor=colAccent;
+    const headBar=(sweep-1+NB)%NB;
+    for(let b=0;b<NB;b++){
+      if(((b - sweep + NB) % NB) < GAP_BARS) continue; // erase gap
+      const y0=mid+tMin[b]*yamp, y1=mid+tMax[b]*yamp;
+      const head=(b===headBar);
+      g2.fillStyle=head?colFg:colAccent;
+      g2.shadowBlur=head?(5+vizEnv*7):2;
+      const x=b*pitch+(pitch-bw)/2;
+      g2.fillRect(x, y0, bw, Math.max(1, y1-y0)); // ≥1px so quiet bars still read as a centre dot
     }
-    g2.stroke();
-    // bright sweep head (the moving cursor), its glow swelling with the smoothed amplitude
-    const headIdx=(sweep-1+COLS)%COLS;
-    const hx=(headIdx+0.5)/COLS*vizW, hy=mid - trace[headIdx]*yamp;
-    g2.fillStyle=colFg; g2.shadowColor=colAccent; g2.shadowBlur=6+vizEnv*8;
-    g2.beginPath(); g2.arc(hx, hy, 1.7+vizEnv*1.2, 0, Math.PI*2); g2.fill();
     g2.shadowBlur=0;
     spectrumRafId = requestAnimationFrame(drawSpectrum);
   }
