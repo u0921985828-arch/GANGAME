@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v19 (design polish — lighting/texture/animation):
+    · Pad strike: a one-shot "impact" (@keyframes padImpact) — the tile pops slightly larger
+      and flares brighter on the first frame of every hit, then settles to its held glow, so
+      strikes feel struck rather than merely lit. Added to the reduced-motion off-list.
+    · LCD: soft amber phosphor bleed (outer glow) so the screen reads as genuinely lit, plus a
+      faint diagonal glass reflection (.lcd::before) off the top-left — low opacity, no cost to
+      legibility.
+    · All additive; the existing chassis lighting, skin patterns and breathing LEDs are intact,
+      and prefers-reduced-motion still silences every decorative animation.
   v18 (DJFX LOOPER fades out in ~1.5s on off):
     · makeWetDry gained an optional {offRelease} — on OFF the wet ramps to 0 over that many
       seconds instead of ringing out indefinitely. DJFX LOOPER (near-unity feedback) uses
@@ -685,6 +694,14 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     35%{ filter:brightness(1.18) saturate(.55); }
     100%{ filter:brightness(1) saturate(1); }
   }
+  /* Pad strike — a quick one-shot "impact": the tile pops a hair bigger and flares brighter
+     on the first frame, then settles to its held glow. Makes each hit feel struck, not just
+     lit. Replays on every press because .hit is re-added each time. translateZ(0) is kept in
+     the keyframe so the GPU-layer promotion (see .pad) survives the animation. */
+  @keyframes padImpact{
+    0%{ transform:translateZ(0) scale(1.045); filter:brightness(1.28); box-shadow:0 0 36px rgba(var(--skin-glow),.95), 0 3px 0 #7a4d1c; }
+    100%{ transform:translateZ(0) scale(1); filter:brightness(1); box-shadow:0 0 22px rgba(var(--skin-glow),.7), 0 3px 0 #7a4d1c; }
+  }
   /* Accessibility: anyone with reduced-motion set at the OS level gets every decorative
      animation switched off outright — the breathing LEDs, the skin-swap flash, all of
      it — rather than just slowed down. None of these carry functional information (the
@@ -693,7 +710,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   @media (prefers-reduced-motion: reduce){
     .logo span::after, .pad.toggle-active .toggle-dot, .unit.skin-transition,
     .fsBtn.on, .fxbtn.on, .padfoot.on, .keybtn.bank .activeHalf,
-    .quickFocus{
+    .quickFocus, .pad.hit{
       animation:none !important;
     }
     /* The rear-panel easter egg flips via transform TRANSITIONS (rotateX/translateY), not
@@ -959,13 +976,19 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     width:258px; height:188px; background:var(--lcd-bg); border-radius:4px; border:2px solid #050506;
     padding:10px 12px; font-family:'JetBrains Mono',monospace; color:var(--lcd-fg); font-size:16px;
     display:flex; flex-direction:column; justify-content:space-between;
-    box-shadow:inset 0 0 8px rgba(0,0,0,.7), inset 0 -14px 18px rgba(0,0,0,.3);
+    box-shadow:inset 0 0 8px rgba(0,0,0,.7), inset 0 -14px 18px rgba(0,0,0,.3), 0 0 18px rgba(var(--skin-glow),.16); /* + soft phosphor bleed so the screen reads as genuinely lit */
     position:relative; z-index:1;
   }
   .lcd::after{
     content:''; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
     background:repeating-linear-gradient(180deg, rgba(0,0,0,.22) 0px, rgba(0,0,0,.22) 1px, transparent 1px, transparent 3px);
     mix-blend-mode:multiply;
+  }
+  /* Glass reflection over the LCD — a faint diagonal sheen off the top-left, like light
+     catching the screen's cover glass. Very low opacity so it never hurts legibility. */
+  .lcd::before{
+    content:''; position:absolute; inset:0; pointer-events:none; border-radius:inherit; z-index:2;
+    background:linear-gradient(133deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,.025) 16%, transparent 40%);
   }
   .lcd-top{ display:flex; justify-content:space-between; font-size:14.5px; }
   .lcd-wave{ height:68px; display:flex; align-items:center; }
@@ -1066,7 +1089,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   .pad.ghosting .ghost{ opacity:.4; transition:none; }
   .pad .num{ font-family:'Oswald',sans-serif; font-weight:700; font-size:29px; color:var(--padbtn-text); line-height:1; position:relative; z-index:1; }
   .pad .fn{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--padbtn-subtext); letter-spacing:.3px; margin-top:3px; position:relative; z-index:1; max-width:92%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .pad.hit{ background:linear-gradient(160deg, var(--accent), var(--accent-dim)); box-shadow:0 0 22px rgba(var(--skin-glow),.7), 0 3px 0 #7a4d1c; }
+  .pad.hit{ background:linear-gradient(160deg, var(--accent), var(--accent-dim)); box-shadow:0 0 22px rgba(var(--skin-glow),.7), 0 3px 0 #7a4d1c; animation:padImpact .2s ease-out; }
   .pad.muted{ opacity:.35; filter:grayscale(.6); }
   .pad.hit .num, .pad.hit .fn{ color:#0a0b0d; }
   .pad .toggle-dot{
