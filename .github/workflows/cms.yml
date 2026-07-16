@@ -25,3 +25,10 @@ jobs:
             git --no-pager diff -- SEARCH_INDEX.json
             exit 1
           fi
+      - name: Build static site
+        run: node scripts/build-site.js
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: site/

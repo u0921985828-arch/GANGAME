@@ -10,8 +10,6 @@ summary: Primer post del CMS Markdown/Git.
 author: eddie
 ---
 
-# Bienvenida al CMS
-
 Este repositorio es un CMS donde los archivos `.md` son la base de datos,
 Git es la infraestructura de versionado y los hooks son el motor de
 automatización.

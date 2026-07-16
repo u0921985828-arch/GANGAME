@@ -8,6 +8,7 @@
     "validate": "node scripts/validate.js",
     "fix": "node scripts/validate.js --fix",
     "build": "node scripts/build-index.js",
+    "site": "node scripts/build-site.js",
     "new": "node scripts/new.js",
     "test": "node --test \"scripts/**/*.test.js\"",
     "hooks": "bash scripts/install-hooks.sh",
