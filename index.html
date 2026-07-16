@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0b1020" />
+  <meta name="description" content="Rutina diaria de ejercicios para relajar la vista y ejercitar los músculos oculares. Instalable y funciona sin conexión." />
+  <meta name="color-scheme" content="dark" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="VistaViva" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>VistaViva — Ejercicios para los ojos</title>
+</head>
+<body>
+  <!-- ============ PANTALLA: INICIO ============ -->
+  <main id="home" class="screen is-active" aria-label="Inicio">
+    <header class="home__top">
+      <div class="brand">
+        <span class="brand__logo" aria-hidden="true">
+          <svg viewBox="0 0 48 48" width="34" height="34"><use href="#logo-glyph"></use></svg>
+        </span>
+        <div>
+          <h1 class="brand__name">VistaViva</h1>
+          <p class="brand__tag">Ejercicios diarios para tus ojos</p>
+        </div>
+      </div>
+      <button id="btn-settings" class="icon-btn" aria-label="Ajustes" type="button">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.3 7.3 0 0 0-1.69-.98l-.38-2.65A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.38 2.65a7.3 7.3 0 0 0-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46a.5.5 0 0 0 .12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97L2.46 14.6a.5.5 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65A.49.49 0 0 0 10 22h4a.49.49 0 0 0 .49-.42l.38-2.65a7.3 7.3 0 0 0 1.69-.98l2.49 1a.5.5 0 0 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64Z"/></svg>
+      </button>
+    </header>
+
+    <section class="streak" aria-label="Tu progreso">
+      <div class="streak__flame">
+        <span id="streak-count" class="streak__count">0</span>
+        <span class="streak__unit">días<br>seguidos</span>
+      </div>
+      <div class="streak__meta">
+        <p id="streak-status" class="streak__status">Empieza tu racha hoy</p>
+        <div class="week" id="week-dots" aria-label="Últimos 7 días"></div>
+      </div>
+    </section>
+
+    <button id="btn-start" class="cta" type="button">
+      <span class="cta__title">Comenzar rutina</span>
+      <span id="routine-summary" class="cta__sub">9 ejercicios · ~5 min</span>
+    </button>
+
+    <section class="list" aria-label="Ejercicios">
+      <h2 class="list__head">La rutina de hoy</h2>
+      <ul id="exercise-list" class="exercises"></ul>
+    </section>
+
+    <p class="disclaimer">
+      Estos ejercicios ayudan a relajar la vista y a reducir la fatiga visual.
+      No sustituyen la revisión de un profesional ni corrigen problemas como
+      la miopía. Si notas dolor, mareo o visión borrosa persistente, detente y
+      consulta a tu oftalmólogo.
+    </p>
+  </main>
+
+  <!-- ============ PANTALLA: REPRODUCTOR ============ -->
+  <section id="player" class="screen player" aria-label="Reproductor de ejercicios" aria-hidden="true">
+    <canvas id="stage" class="stage"></canvas>
+
+    <div class="player__ui">
+      <header class="player__top">
+        <button id="btn-exit" class="chip" type="button" aria-label="Salir de la rutina">✕</button>
+        <div class="progress">
+          <div id="progress-bar" class="progress__bar"></div>
+        </div>
+        <div id="ex-timer" class="chip chip--time" aria-live="off">0:30</div>
+      </header>
+
+      <div class="player__mid">
+        <p id="ex-index" class="ex-index">1 / 9</p>
+        <h2 id="ex-name" class="ex-name">Ejercicio</h2>
+        <p id="ex-instruction" class="ex-instruction">Instrucción</p>
+      </div>
+
+      <footer class="player__bottom">
+        <button id="btn-prev" class="ctl" type="button" aria-label="Anterior">
+          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+        </button>
+        <button id="btn-pause" class="ctl ctl--main" type="button" aria-label="Pausar">
+          <svg id="ic-pause" viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+          <svg id="ic-play" viewBox="0 0 24 24" width="34" height="34" aria-hidden="true" hidden><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button id="btn-next" class="ctl" type="button" aria-label="Siguiente">
+          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg>
+        </button>
+      </footer>
+    </div>
+  </section>
+
+  <!-- ============ PANTALLA: FIN ============ -->
+  <section id="done" class="screen done" aria-label="Rutina completada" aria-hidden="true">
+    <div class="done__badge" aria-hidden="true">
+      <svg viewBox="0 0 48 48" width="72" height="72"><use href="#logo-glyph"></use></svg>
+    </div>
+    <h2 class="done__title">¡Rutina completada!</h2>
+    <p id="done-sub" class="done__sub">Tus ojos te lo agradecen.</p>
+    <div class="done__stats">
+      <div class="stat"><span id="done-streak" class="stat__num">1</span><span class="stat__lbl">días seguidos</span></div>
+      <div class="stat"><span id="done-total" class="stat__num">1</span><span class="stat__lbl">rutinas totales</span></div>
+      <div class="stat"><span id="done-mins" class="stat__num">5</span><span class="stat__lbl">min de descanso</span></div>
+    </div>
+    <button id="btn-home" class="cta cta--ghost" type="button"><span class="cta__title">Volver al inicio</span></button>
+  </section>
+
+  <!-- ============ DIÁLOGO: AJUSTES ============ -->
+  <dialog id="settings" class="sheet" aria-label="Ajustes">
+    <form method="dialog" class="sheet__inner">
+      <div class="sheet__grip" aria-hidden="true"></div>
+      <h2 class="sheet__title">Ajustes</h2>
+
+      <label class="row row--toggle">
+        <span><strong>Sonidos</strong><small>Aviso al cambiar de ejercicio</small></span>
+        <input id="set-sound" type="checkbox" class="switch" />
+      </label>
+
+      <label class="row row--toggle">
+        <span><strong>Vibración</strong><small>Si tu dispositivo lo permite</small></span>
+        <input id="set-haptics" type="checkbox" class="switch" />
+      </label>
+
+      <label class="row row--toggle">
+        <span><strong>Movimiento reducido</strong><small>Animaciones más suaves y lentas</small></span>
+        <input id="set-reduced" type="checkbox" class="switch" />
+      </label>
+
+      <label class="row">
+        <span><strong>Duración de la rutina</strong><small>Ajusta el tiempo de cada ejercicio</small></span>
+        <select id="set-intensity" class="select">
+          <option value="0.6">Corta</option>
+          <option value="1" selected>Normal</option>
+          <option value="1.5">Larga</option>
+        </select>
+      </label>
+
+      <button class="btn-secondary" id="set-reset" type="button">Reiniciar progreso</button>
+      <button class="btn-primary" value="close" type="submit">Listo</button>
+      <p class="sheet__ver">VistaViva · funciona sin conexión</p>
+    </form>
+  </dialog>
+
+  <!-- Definiciones SVG reutilizables -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <g id="logo-glyph">
+        <circle cx="24" cy="24" r="22" fill="none" stroke="currentColor" stroke-width="3"/>
+        <path d="M6 24c6-9 30-9 36 0-6 9-30 9-36 0Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="24" cy="24" r="6" fill="currentColor"/>
+      </g>
+    </defs>
+  </svg>
+
+  <script src="exercises.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
