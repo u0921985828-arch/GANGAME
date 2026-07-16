@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v16 (sample editor zoom up to 32x):
+    · The SAMPLE EDIT waveform ZOOM button now cycles 1x → 2x → 4x → 8x → 16x → 32x → 1x
+      (added 16x and 32x). Window math (seWindowWidth = 1/seZoom) and pan clamp already
+      supported it; the jog wheel likewise reaches these levels.
   v15 (full app verification + polish):
     · Visualizer: denser bars (BAR_PITCH 2.6→1.7) so more waveform detail shows across the
       fixed window ("más espectro").
@@ -1818,7 +1822,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       <div class="seEmpty" id="seEmpty">SIN SAMPLE — usa REPLACE para cargar uno</div>
     </div>
     <div class="seZoomRow">
-      <button class="stepDivBtn" id="seZoomBtn" title="Zoom de la forma de onda — cicla 1x → 2x → 4x → 8x → 1x">ZOOM 1x</button>
+      <button class="stepDivBtn" id="seZoomBtn" title="Zoom de la forma de onda — cicla 1x → 2x → 4x → 8x → 16x → 32x → 1x">ZOOM 1x</button>
       <div class="editScrollbar seZoomScrollbar" id="seZoomScrollbar"><div class="thumb" id="seZoomThumb"></div></div>
     </div>
     <div class="seSliceHint">Toca la onda para poner un punto de corte (Chop) — mantén pulsado uno para borrarlo.</div>
@@ -5876,7 +5880,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     syncSeZoomThumb();
   }
   document.getElementById('seZoomBtn').addEventListener('pointerdown', ()=>{
-    const LEVELS=[1,2,4,8];
+    const LEVELS=[1,2,4,8,16,32];
     // seZoom can also be set by the jog wheel to any value 1-64 (continuous), not just one of
     // these presets — indexOf would miss those and silently reset to 1x. Stepping to the next
     // preset strictly above the current zoom (wrapping to the first once past the top) works
