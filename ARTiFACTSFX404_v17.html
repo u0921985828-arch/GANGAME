@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v17 (FX tails ring out after turning an effect off):
+    · Turning a time-based effect OFF now lets its residual (delay repeats, reverb/resonator
+      tail, DJFX loop) ring out and decay naturally instead of being chopped. The wet/dry
+      graph now gates the SEND into each effect (input feed) on off, leaving the wet OUTPUT
+      open so whatever is still circulating decays through it. Applied to makeWetDry (DELAY,
+      ISOLATOR, DJFX) and the custom RESONATOR and MFX. Insert effects with no tail (ISOLATOR,
+      FILTER+DRIVE) are unaffected. Note: DJFX LOOPER uses near-unity feedback by design, so
+      its residual sustains notably longer than the others.
   v16 (sample editor zoom up to 32x):
     · The SAMPLE EDIT waveform ZOOM button now cycles 1x → 2x → 4x → 8x → 16x → 32x → 1x
       (added 16x and 32x). Window math (seWindowWidth = 1/seZoom) and pan clamp already
@@ -2246,14 +2254,22 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     const input = ctx.createGain();
     const output = ctx.createGain();
     const dry = ctx.createGain(); dry.gain.value = 1;
+    // `send` feeds INTO the effect; `wet` is the effect's output mix. Turning the effect OFF
+    // ramps the SEND down (stops feeding new signal) while leaving `wet` open, so whatever is
+    // still circulating inside a time-based effect (delay repeats, reverb tail) rings out and
+    // decays naturally instead of being cut. Ramping `wet` to 0 on off (the old behaviour)
+    // chopped that residual off abruptly.
+    const send = ctx.createGain(); send.gain.value = 0;
     const wet = ctx.createGain(); wet.gain.value = 0;
     input.connect(dry); dry.connect(output);
-    const effOut = effectBuildFn(input);
+    input.connect(send);
+    const effOut = effectBuildFn(send);
     effOut.connect(wet); wet.connect(output);
     return { input, output, setWet:(v)=>{
-      const t=ctx.currentTime;
-      wet.gain.cancelScheduledValues(t); wet.gain.setValueAtTime(wet.gain.value,t); wet.gain.linearRampToValueAtTime(v, t+0.015);
-      const dryTarget = 1 - v*0.5;
+      const t=ctx.currentTime, on = v>0.0001;
+      send.gain.cancelScheduledValues(t); send.gain.setValueAtTime(send.gain.value,t); send.gain.linearRampToValueAtTime(on?1:0, t+0.015);
+      if(on){ wet.gain.cancelScheduledValues(t); wet.gain.setValueAtTime(wet.gain.value,t); wet.gain.linearRampToValueAtTime(v, t+0.015); } // on off, leave wet as-is so the tail decays through it
+      const dryTarget = on ? (1 - v*0.5) : 1;
       dry.gain.cancelScheduledValues(t); dry.gain.setValueAtTime(dry.gain.value,t); dry.gain.linearRampToValueAtTime(dryTarget, t+0.015);
     } };
   }
@@ -2272,8 +2288,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     const damp = ctx.createBiquadFilter(); damp.type='lowpass'; damp.frequency.value=3000; // tames harsh buildup circulating in the feedback loop
     const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=900; bp.Q.value=8;
     const makeup = ctx.createGain(); makeup.gain.value=1; // compensates level as feedback rises, so higher resonance doesn't just mean louder/quieter unpredictably
-    input.connect(delay); delay.connect(damp); damp.connect(fb); fb.connect(delay);
-    input.connect(bp);
+    const send = ctx.createGain(); send.gain.value = 0; // feed into the comb; turning OFF ramps this down so the ring keeps decaying through the still-open wet path
+    input.connect(send);
+    send.connect(delay); delay.connect(damp); damp.connect(fb); fb.connect(delay);
+    send.connect(bp);
     const mixer = ctx.createGain();
     bp.connect(mixer); delay.connect(mixer); mixer.connect(makeup); makeup.connect(wet); wet.connect(output);
     return {
@@ -2287,9 +2305,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         makeup.gain.setTargetAtTime(1 + clamped*0.4, t, 0.01); // more feedback = more energy circulating = compensate so it stays comparably audible instead of swinging wildly
       },
       setWet(v){
-        const t=ctx.currentTime;
-        wet.gain.cancelScheduledValues(t); wet.gain.setValueAtTime(wet.gain.value,t); wet.gain.linearRampToValueAtTime(v, t+0.015);
-        const dryTarget = 1 - v*0.5;
+        const t=ctx.currentTime, on = v>0.0001;
+        send.gain.cancelScheduledValues(t); send.gain.setValueAtTime(send.gain.value,t); send.gain.linearRampToValueAtTime(on?1:0, t+0.015);
+        if(on){ wet.gain.cancelScheduledValues(t); wet.gain.setValueAtTime(wet.gain.value,t); wet.gain.linearRampToValueAtTime(v, t+0.015); } // off → leave wet open so the comb ring decays out
+        const dryTarget = on ? (1 - v*0.5) : 1;
         dry.gain.cancelScheduledValues(t); dry.gain.setValueAtTime(dry.gain.value,t); dry.gain.linearRampToValueAtTime(dryTarget, t+0.015);
       }
     };
@@ -2342,11 +2361,12 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   // would actually cause the click a menu like this is supposed to avoid. =====
   let mfxType = 'crush';
   const mfxFX = (function(){
-    const input = ctx.createGain();
+    const inputOuter = ctx.createGain(); // exposed to the master; always-on feed to the dry path
+    const input = ctx.createGain(); input.gain.value = 0; // GATED feed into every effect chain — turning MFX off ramps this to 0 so no NEW signal enters, but the reverb/flanger/etc. tail rings out through the still-open wet path
     const output = ctx.createGain();
     const dry = ctx.createGain(); dry.gain.value = 1;
     const wet = ctx.createGain(); wet.gain.value = 0;
-    input.connect(dry); dry.connect(output); wet.connect(output); // wet was missing this connection entirely — every type's processed signal dead-ended here and never reached the output
+    inputOuter.connect(dry); dry.connect(output); wet.connect(output); inputOuter.connect(input); // wet reaches output; every type's chain is fed via the gated `input`
     const solos = {};
     const nodes = {}; // per-type live-adjustable nodes, read by setMfxParam() below
 
@@ -2488,10 +2508,11 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       });
       mfxType=type;
     }
-    return { input, output, setMfxType, setMfxParam, setWet:(v)=>{
-      const t=ctx.currentTime;
-      wet.gain.cancelScheduledValues(t); wet.gain.setValueAtTime(wet.gain.value,t); wet.gain.linearRampToValueAtTime(v, t+0.015);
-      const dryTarget = 1 - v*0.5;
+    return { input: inputOuter, output, setMfxType, setMfxParam, setWet:(v)=>{
+      const t=ctx.currentTime, on = v>0.0001;
+      input.gain.cancelScheduledValues(t); input.gain.setValueAtTime(input.gain.value,t); input.gain.linearRampToValueAtTime(on?1:0, t+0.015); // gate the chain feed; off → tail rings out
+      if(on){ wet.gain.cancelScheduledValues(t); wet.gain.setValueAtTime(wet.gain.value,t); wet.gain.linearRampToValueAtTime(v, t+0.015); }
+      const dryTarget = on ? (1 - v*0.5) : 1;
       dry.gain.cancelScheduledValues(t); dry.gain.setValueAtTime(dry.gain.value,t); dry.gain.linearRampToValueAtTime(dryTarget, t+0.015);
     } };
   })();
