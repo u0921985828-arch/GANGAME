@@ -34,7 +34,8 @@ function extract(raw) {
   }
   const fmText = text.slice(FENCE.length + 1, end);
   let rest = text.slice(end + 1 + FENCE.length);
-  if (rest.startsWith('\n')) rest = rest.slice(1);
+  rest = rest.replace(/^\n/, ''); // closing-fence line terminator
+  rest = rest.replace(/^\n/, ''); // conventional blank separator line
   return { fmText, body: rest, hasFrontmatter: true, eol };
 }
 

@@ -1,0 +1,27 @@
+name: CMS
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests
+        run: node --test "scripts/**/*.test.js"
+      - name: Validate frontmatter + links (strict)
+        run: node scripts/validate.js
+      - name: Search index is committed and current
+        run: |
+          node scripts/build-index.js
+          if ! git diff --quiet -- SEARCH_INDEX.json; then
+            echo "::error::SEARCH_INDEX.json is stale — run 'npm run build' and commit."
+            git --no-pager diff -- SEARCH_INDEX.json
+            exit 1
+          fi

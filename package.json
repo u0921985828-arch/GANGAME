@@ -8,8 +8,10 @@
     "validate": "node scripts/validate.js",
     "fix": "node scripts/validate.js --fix",
     "build": "node scripts/build-index.js",
+    "new": "node scripts/new.js",
+    "test": "node --test \"scripts/**/*.test.js\"",
     "hooks": "bash scripts/install-hooks.sh",
-    "check": "node scripts/validate.js && node scripts/build-index.js"
+    "check": "node --test \"scripts/**/*.test.js\" && node scripts/validate.js && node scripts/build-index.js"
   },
   "engines": {
     "node": ">=16"
