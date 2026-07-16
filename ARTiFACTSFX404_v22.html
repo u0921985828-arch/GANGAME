@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v22 (fix: PLAYLIST track labels no longer vanish when scrolling right):
+    · The sticky TRACK-label column (1..10) slid off and disappeared once the grid was scrolled
+      past ~bar 17 (sooner on narrow screens). Cause: .plTracks took the scrollport width, so
+      the sticky column's containing block ended at the viewport edge and released. Fix:
+      .plTracks{ width:max-content } so the grid box spans its full content and the labels stay
+      pinned across the entire horizontal scroll.
   v21 (tutorial rewritten to match every real function):
     · Reworked the guided tour (INTRO_STEPS) so it accurately reflects the actual app. Fixes:
       CTRL 1/2/3 are contextual to the last-enabled effect (not just the filter); the screen is
@@ -1386,7 +1392,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
      lanes. Column 1 is a sticky label gutter (same trick as .editRowLabel) so labels never
      scroll away, but — being a real grid column, not an overlay — it never collides with
      block content either, which starts cleanly at column 2. */
-  .plTracks{ display:grid; grid-auto-rows:50px; }
+  .plTracks{ display:grid; grid-auto-rows:50px; width:max-content; } /* size the grid box to its full content (not the scrollport) so the sticky track-label column stays pinned across the WHOLE horizontal scroll — otherwise its containing block ends at the viewport edge and the labels slide off past ~bar 17 on narrow screens */
   .plRulerCell{ font-size:8px; color:var(--popup-text-dim); text-align:center; align-self:end; padding-bottom:2px; height:16px; grid-row:1 !important; }
   .plTrackLabel{
     position:sticky; left:0; z-index:2; background:var(--popup-key-alt); display:flex; align-items:center;
