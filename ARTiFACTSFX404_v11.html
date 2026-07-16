@@ -4,6 +4,27 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v11 (keyboard focus management + robustness):
+    ACCESSIBILITY — modal focus (WCAG 2.4.3 / 4.1.2 / 2.1.2)
+      · Central modal-focus manager (MutationObserver on each overlay's 'show' class): on open
+        it remembers the opener, makes the front panel inert (background non-interactive for
+        pointer AND assistive tech), and moves focus inside; on close it lifts inert (only once
+        no overlay remains — nested menus stay safe) and restores focus to the opener. A global
+        Tab handler traps focus within the topmost open overlay.
+      · All 9 overlays declared role="dialog" aria-modal="true" with an accessible name.
+      · Menu rows (UTILITY/EXPORT/MFX/ROW TOOLS) made keyboard-operable (role=button + tabindex
+        + aria-label) — previously a keyboard user could reach only the × once a menu opened.
+      · Intro/tour SIGUIENTE & SALTAR were pointerdown-only native buttons (keyboard-dead) —
+        rewired to click so Enter/Space work.
+      · Rear connections panel: Escape now backs out of it, and the hidden front face is made
+        inert so you can't Tab into invisible controls behind it.
+      · Side toggle buttons (MUTE BUS / HOLD / EXT) expose aria-pressed state.
+    ROBUSTNESS
+      · Imported/autosaved bpm is clamped to 40–300 (a corrupt 0/NaN/huge value would make the
+        scheduler's step duration Infinite and break the clock).
+    Known low-severity (documented, not changed — need an ear to verify): a few MFX/ISOLATOR
+    LFO depths can drive an AudioParam below its floor at extreme knob settings (browser-clamped
+    to 0, so degenerate-but-safe asymmetric modulation, no NaN/crash).
   v10 (audio-clock hardening + remaining pending items):
     AUDIO CLOCK (now robust to mid-playback change)
       · The scheduler publishes an authoritative time→step log; the LCD display and live
@@ -1667,7 +1688,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="importInput" multiple accept="audio/*,.wav,.mp3,.aiff,.zip" style="display:none">
 <div class="dropOverlay" id="dropOverlay">SUELTA AQUÍ<br><span>.zip o archivos de audio → banco <b id="dropBankLabel">A</b></span></div>
-<div class="utilOverlay" id="utilOverlay">
+<div class="utilOverlay" id="utilOverlay" role="dialog" aria-modal="true" aria-label="Menú de utilidad">
   <div class="utilCard">
     <div class="popupX" id="utilCloseBtn" role="button" tabindex="0" aria-label="Cerrar menú de utilidades">×</div>
     <div class="utilTitle">UTILITY</div>
@@ -1682,7 +1703,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   </div>
 </div>
 <input type="file" id="projectImportInput" accept=".fx404" style="display:none">
-<div class="utilOverlay" id="exportOverlay">
+<div class="utilOverlay" id="exportOverlay" role="dialog" aria-modal="true" aria-label="Formato de exportación">
   <div class="utilCard">
     <div class="popupX" id="exportCloseBtn" role="button" tabindex="0" aria-label="Cerrar menú de formato de exportación">×</div>
     <div class="utilTitle">EXPORT FORMAT</div>
@@ -1696,7 +1717,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     <div class="utilHint">Toca un formato para renderizar la Playlist y descargarla al momento.</div>
   </div>
 </div>
-<div class="utilOverlay" id="mfxOverlay">
+<div class="utilOverlay" id="mfxOverlay" role="dialog" aria-modal="true" aria-label="Tipo de MFX">
   <div class="utilCard">
     <div class="popupX" id="mfxCloseBtn" role="button" tabindex="0" aria-label="Cerrar menú de efectos">×</div>
     <div class="utilTitle">MFX TYPE</div>
@@ -1713,7 +1734,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     <div class="utilHint">Toca un tipo para aplicarlo — el cambio es instantáneo y sin clicks.</div>
   </div>
 </div>
-<div class="utilOverlay" id="rowToolsOverlay">
+<div class="utilOverlay" id="rowToolsOverlay" role="dialog" aria-modal="true" aria-label="Herramientas de fila">
   <div class="utilCard">
     <div class="popupX" id="rowToolsCloseBtn" role="button" tabindex="0" aria-label="Cerrar herramientas de fila">×</div>
     <div class="utilTitle">ROW TOOLS</div>
@@ -1732,7 +1753,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     <div class="utilHint">EUCLIDEAN reemplaza la fila entera con golpes repartidos uniformemente. Mantén pulsada la etiqueta de un pad en PATTERN EDIT para abrir esto.</div>
   </div>
 </div>
-<div class="utilOverlay" id="groupsOverlay">
+<div class="utilOverlay" id="groupsOverlay" role="dialog" aria-modal="true" aria-label="Grupos de pads (LINK / MUTE)">
   <div class="utilCard groupsCard">
     <div class="popupX" id="groupsCloseBtn" role="button" tabindex="0" aria-label="Cerrar menú de grupos">×</div>
     <div class="utilTitle">GROUPS</div>
@@ -1741,7 +1762,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     <div class="utilHint">Toca un pad dentro de un grupo para desenlazarlo (permanente, uno a uno). DESACTIVAR pausa el grupo entero sin borrar los enlaces — se puede reactivar. BORRAR lo elimina del todo (toca dos veces para confirmar).</div>
   </div>
 </div>
-<div class="sampleEditOverlay" id="sampleEditOverlay">
+<div class="sampleEditOverlay" id="sampleEditOverlay" role="dialog" aria-modal="true" aria-label="Editor de sample">
   <div class="sampleEditCard">
     <div class="popupX" id="seClose" role="button" tabindex="0" aria-label="Cerrar editor de sample">×</div>
     <div class="editHead">
@@ -1810,7 +1831,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   </div>
 </div>
 <input type="file" id="seReplaceInput" accept="audio/*,.wav,.mp3,.aiff,.flac,.ogg" style="display:none">
-<div class="introOverlay" id="introOverlay">
+<div class="introOverlay" id="introOverlay" role="dialog" aria-modal="true" aria-label="Tutorial guiado">
   <div class="introSpot" id="introSpot"></div>
   <div class="introCard" id="introCard">
     <div class="popupX" id="introCloseX" role="button" tabindex="0" aria-label="Cerrar tutorial">×</div>
@@ -1824,7 +1845,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   </div>
 </div>
 
-<div class="editOverlay" id="editOverlay">
+<div class="editOverlay" id="editOverlay" role="dialog" aria-modal="true" aria-label="Editor de patrón">
   <div class="editCard">
     <div class="popupX" id="editCloseBtn" role="button" tabindex="0" aria-label="Cerrar editor de patrón">×</div>
     <div class="editHead">
@@ -1860,7 +1881,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   </div>
 </div>
 
-<div class="chainOverlay" id="chainOverlay">
+<div class="chainOverlay" id="chainOverlay" role="dialog" aria-modal="true" aria-label="Playlist / cadena de patrones">
   <div class="chainCard">
     <div class="popupX" id="chainCloseBtn" role="button" tabindex="0" aria-label="Cerrar playlist">×</div>
     <div class="chainToolbar">
@@ -2028,11 +2049,14 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     try{ localStorage.setItem('fx404_intro_seen','1'); }catch(e){}
   }
   window.addEventListener('resize', ()=>{ if(introOverlay.classList.contains('show')) positionSpotlight(INTRO_STEPS[introStep].target); });
-  introNext.addEventListener('pointerdown', ()=>{
+  // 'click' (not 'pointerdown') so these native <button>s also respond to keyboard Enter/Space
+  // — the keyboard-activation bridge deliberately skips native buttons, so pointerdown-only
+  // wiring left SIGUIENTE/SALTAR operable by pointer only. click fires for pointer AND keyboard.
+  introNext.addEventListener('click', ()=>{
     if(introStep<INTRO_STEPS.length-1){ introStep++; renderIntroStep(); }
     else closeIntro();
   });
-  introSkip.addEventListener('pointerdown', closeIntro);
+  introSkip.addEventListener('click', closeIntro);
   document.getElementById('introCloseX').addEventListener('pointerdown', closeIntro);
   (function initIntro(){
     let seen=false;
@@ -2087,8 +2111,17 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   // a "back side" of the same object. =====
   let rearHoldTimer=null;
   const modelEl=document.querySelector('.model');
+  const frontFaceEl=document.querySelector('.frontFace');
+  // Single source of truth for the rear panel: toggling the class also makes the (now
+  // invisible, opacity:0) front face inert, so a keyboard/AT user can't Tab into front-panel
+  // controls they can't see while the connections panel is up. Escape closes it (see below).
+  function setRearActive(active){
+    unitEl.classList.toggle('rear-active', active);
+    if(frontFaceEl) frontFaceEl.inert = active;
+  }
   function toggleRearChassis(){
-    const active = unitEl.classList.toggle('rear-active');
+    const active = !unitEl.classList.contains('rear-active');
+    setRearActive(active);
     toast(active ? 'PANEL DE CONEXIONES' : 'PANEL FRONTAL');
   }
   if(modelEl){
@@ -2098,10 +2131,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     ['pointerup','pointerleave','pointercancel'].forEach(ev=> modelEl.addEventListener(ev, ()=> clearTimeout(rearHoldTimer)));
   }
   const rcCloseBtn=document.getElementById('rcCloseBtn');
-  if(rcCloseBtn) rcCloseBtn.addEventListener('pointerdown', ()=> unitEl.classList.remove('rear-active'));
+  if(rcCloseBtn) rcCloseBtn.addEventListener('pointerdown', ()=> setRearActive(false));
   const rcTutBtn=document.getElementById('rcTutBtn');
   if(rcTutBtn) rcTutBtn.addEventListener('pointerdown', ()=>{
-    unitEl.classList.remove('rear-active'); // back to the control screen — the tour's coachmarks target front-panel elements
+    setRearActive(false); // back to the control screen — the tour's coachmarks target front-panel elements
     setTimeout(showIntro, 620); // wait out the .5s screen transition so the spotlight doesn't measure element positions mid-transition
   });
 
@@ -4742,16 +4775,21 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     padSection.appendChild(btn);
   }
 
+  // These three side buttons are toggles — expose their on/off state to AT via aria-pressed
+  // (like the .fxbtn toggles), not just the 'on' class.
+  ['sideBus','sideHold','sideExt'].forEach(id=>{ const el=document.getElementById(id); if(el) el.setAttribute('aria-pressed','false'); });
   document.getElementById('sideBus').addEventListener('pointerdown', function(){
     this.classList.toggle('on');
-    ch2Gain.gain.value = this.classList.contains('on') ? 0 : 1;
-    toast('MUTE BUS (CH2) '+(this.classList.contains('on')?'ON':'OFF'));
+    const on = this.classList.contains('on');
+    this.setAttribute('aria-pressed', on?'true':'false');
+    ch2Gain.gain.value = on ? 0 : 1;
+    toast('MUTE BUS (CH2) '+(on?'ON':'OFF'));
   });
   document.getElementById('sideHold').addEventListener('pointerdown', function(){
-    holdMode=!holdMode; this.classList.toggle('on',holdMode); toast('HOLD '+(holdMode?'ON':'OFF'));
+    holdMode=!holdMode; this.classList.toggle('on',holdMode); this.setAttribute('aria-pressed', holdMode?'true':'false'); toast('HOLD '+(holdMode?'ON':'OFF'));
   });
   document.getElementById('sideExt').addEventListener('pointerdown', function(){
-    toggleExtSource(); const self=this; setTimeout(()=> self.classList.toggle('on', extOn), 50);
+    toggleExtSource(); const self=this; setTimeout(()=>{ self.classList.toggle('on', extOn); self.setAttribute('aria-pressed', extOn?'true':'false'); }, 50);
   });
   document.getElementById('sideSub').addEventListener('pointerdown', ()=>{
     const banksWithSamples = Object.keys(bankSamples).filter(b=> bankSamples[b] && bankSamples[b].some(Boolean));
@@ -5327,7 +5365,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         // (playlistPosition can never reach an Infinite/oversized total, so the render never
         // ends). Import/autosave bypass placeBlock, so re-apply the same guard here.
         tracks = Array.isArray(manifest.tracks) ? manifest.tracks.map(t=> ({blocks:(Array.isArray(t.blocks)?t.blocks:[]).filter(b=> b && Number.isFinite(b.start) && b.start>=0 && Number.isFinite(b.length) && b.length>=1)})) : Array.from({length:TRACK_COUNT}, ()=>({blocks:[]}));
-        bpm = (typeof manifest.bpm==='number') ? manifest.bpm : bpm;
+        bpm = (typeof manifest.bpm==='number' && isFinite(manifest.bpm)) ? Math.min(300, Math.max(40, manifest.bpm)) : bpm; // clamp: a corrupt bpm (0/NaN/huge) would make 60/bpm Infinite and break the scheduler clock
         syncDelayTempo();
         syncDjfxTempo();
         if(typeof manifest.swingAmount==='number') swingAmount = manifest.swingAmount;
@@ -6530,7 +6568,11 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     }
     return false;
   }
-  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeTopmostOverlay(); });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key!=='Escape') return;
+    if(closeTopmostOverlay()) return; // an overlay was open — closed it
+    if(unitEl.classList.contains('rear-active')) setRearActive(false); // otherwise Escape backs out of the rear connections panel too
+  });
 
   // ===== KEYBOARD ACTIVATION (WCAG 2.1.1) — the custom controls here are <div role="button">
   // (pads, sequencer, banks, sample-mode, pad-tools) or .fxbtn, all wired to pointerdown ONLY,
@@ -6557,6 +6599,68 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   CLOSEABLE_OVERLAY_IDS.forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('pointerdown', (e)=>{ if(e.target===el) closeOverlayById(id); });
+  });
+
+  // ===== MODAL FOCUS MANAGEMENT (WCAG 2.4.3 / 4.1.2 / 2.1.2) — the overlays above are
+  // full-screen modal dialogs, but opening one never moved keyboard focus into it, never
+  // trapped Tab, and never restored focus on close, so a keyboard/AT user Tabbing while a
+  // modal was open walked onto the (visually covered) front-panel controls behind it. This
+  // central manager watches each overlay's 'show' class and, on OPEN: remembers the opener,
+  // makes the front panel inert (background non-interactive for pointer AND assistive tech),
+  // and moves focus inside; on CLOSE: lifts inert (only once NO overlay remains — nested menus
+  // stay safe) and restores focus to the opener. A global Tab handler cycles focus within the
+  // topmost open overlay. Driven by a MutationObserver so the scattered classList.add('show')
+  // call sites don't each need rewiring. =====
+  (function modalFocus(){
+    const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"]),[role="button"],[role="slider"],[role="option"]';
+    const openerFor = new Map();
+    const isVisible = el => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+    const focusablesIn = c => Array.from(c.querySelectorAll(FOCUSABLE)).filter(el=> !el.hasAttribute('disabled') && el.getAttribute('aria-hidden')!=='true' && isVisible(el));
+    const anyOpen = ()=> CLOSEABLE_OVERLAY_IDS.some(id=>{ const e=document.getElementById(id); return e && e.classList.contains('show'); });
+    const topmost = ()=>{ for(const id of CLOSEABLE_OVERLAY_IDS){ const e=document.getElementById(id); if(e && e.classList.contains('show')) return e; } return null; };
+    function onOpen(el){
+      openerFor.set(el, document.activeElement);
+      if(unitEl) unitEl.inert = true;
+      const f = focusablesIn(el);
+      let target = f[0];
+      if(!target){ if(!el.hasAttribute('tabindex')) el.setAttribute('tabindex','-1'); target = el; }
+      setTimeout(()=>{ try{ target.focus(); }catch(e){} }, 0); // defer so display/layout has settled
+    }
+    function onClose(el){
+      const opener = openerFor.get(el); openerFor.delete(el);
+      if(!anyOpen() && unitEl) unitEl.inert = false; // keep background inert while a nested overlay is still up
+      setTimeout(()=>{ try{ if(opener && document.contains(opener) && isVisible(opener)) opener.focus(); }catch(e){} }, 0);
+    }
+    CLOSEABLE_OVERLAY_IDS.forEach(id=>{
+      const el = document.getElementById(id); if(!el) return;
+      let shown = el.classList.contains('show');
+      new MutationObserver(()=>{
+        const now = el.classList.contains('show');
+        if(now===shown) return;
+        shown = now;
+        if(now) onOpen(el); else onClose(el);
+      }).observe(el, {attributes:true, attributeFilter:['class']});
+    });
+    document.addEventListener('keydown', (e)=>{
+      if(e.key!=='Tab') return;
+      const el = topmost(); if(!el) return;
+      const f = focusablesIn(el);
+      if(!f.length){ e.preventDefault(); try{ el.focus(); }catch(_){ } return; }
+      const first=f[0], last=f[f.length-1], a=document.activeElement;
+      if(!el.contains(a)){ e.preventDefault(); first.focus(); }
+      else if(e.shiftKey && a===first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && a===last){ e.preventDefault(); first.focus(); }
+    });
+  })();
+
+  // Make the menu rows (UTILITY / EXPORT / MFX / ROW TOOLS) keyboard-operable: role=button +
+  // tabindex lets Tab reach them and the keyboard-activation bridge synthesize the pointerdown
+  // they're already wired for; aria-label (from their own text) announces the choice to AT.
+  // Without this, once a menu opened a keyboard user could reach only its × close button.
+  document.querySelectorAll('.utilRow').forEach(r=>{
+    r.setAttribute('role','button');
+    if(!r.hasAttribute('tabindex')) r.setAttribute('tabindex','0');
+    if(!r.hasAttribute('aria-label')){ const t=(r.textContent||'').trim(); if(t) r.setAttribute('aria-label', t); }
   });
 
   const jog=document.getElementById('jogwheel');
@@ -6694,7 +6798,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       return { id:p.id, name:(typeof p.name==='string'?p.name:'PATTERN'), bank:(typeof p.bank==='string'?p.bank:'A'), pattern: validGrid ? p.pattern : emptyPatternGrid() };
     }) : patternPool;
     tracks = Array.isArray(snap.tracks) ? snap.tracks.map(t=> ({blocks:(Array.isArray(t.blocks)?t.blocks:[]).filter(b=> b && Number.isFinite(b.start) && b.start>=0 && Number.isFinite(b.length) && b.length>=1)})) : tracks; // same block guard as importProject — a corrupted autosave can't poison playlistTotalLoops()/hang BOUNCE
-    bpm = (typeof snap.bpm==='number') ? snap.bpm : bpm;
+    bpm = (typeof snap.bpm==='number' && isFinite(snap.bpm)) ? Math.min(300, Math.max(40, snap.bpm)) : bpm; // same clamp as import — a corrupt autosave can't Infinity-break the clock
     if(typeof snap.swingAmount==='number') swingAmount = snap.swingAmount;
     Object.keys(padLinkGroup).forEach(k=> delete padLinkGroup[k]); importGroupMap(padLinkGroup, snap.padLinkGroup); // validate (not raw Object.assign) — a tampered autosave can't smuggle a bad bank key into the GROUPS markup either
     Object.keys(padMuteGroup).forEach(k=> delete padMuteGroup[k]); importGroupMap(padMuteGroup, snap.padMuteGroup);
