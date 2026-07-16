@@ -208,6 +208,78 @@ button { font-family: inherit; cursor: pointer; }
 .btn-secondary { background: transparent; color: var(--danger); border: 1px solid #f8717155; border-radius: 14px; padding: 13px; font-weight: 700; }
 .sheet__ver { text-align: center; color: var(--muted-2); font-size: 0.72rem; }
 
+/* ============ ESCRITORIO / PANTALLAS GRANDES ============ */
+/* El reproductor siempre ocupa toda la ventana, sin quedar encajonado en la
+   columna central; así el punto recorre toda la pantalla (mejor rango ocular). */
+#player.is-active {
+  position: fixed;
+  inset: 0;
+  max-width: none;
+  width: 100vw;
+  margin: 0;
+  z-index: 50;
+}
+
+.player__hint { display: none; }
+
+@media (min-width: 900px) {
+  /* La app deja de ser una columna estrecha y usa el ancho disponible. */
+  body { max-width: 1060px; }
+
+  #home {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+    grid-template-areas:
+      "top    top"
+      "streak list"
+      "cta    list"
+      "note   list";
+    column-gap: 44px;
+    row-gap: 16px;
+    align-content: start;
+    padding-top: calc(var(--safe-t) + 40px);
+  }
+  .home__top { grid-area: top; margin-bottom: 8px; }
+  .streak    { grid-area: streak; margin-top: 0; }
+  .cta       { grid-area: cta; margin-top: 4px; }
+  .list      { grid-area: list; margin-top: 0; align-self: start; }
+  .disclaimer { grid-area: note; margin-top: 4px; align-self: start; }
+
+  /* Un poco más de presencia en el héroe. */
+  .brand__name { font-size: 1.7rem; }
+  .streak { padding: 22px 24px; }
+  .streak__flame { width: 96px; height: 96px; }
+  .streak__count { font-size: 2.3rem; }
+  .cta { padding: 22px 24px; }
+  .cta__title { font-size: 1.35rem; }
+  .cta:hover { box-shadow: 0 16px 40px -14px #f59e0baa; transform: translateY(-1px); }
+
+  /* Tarjetas de ejercicio con hover en escritorio. */
+  .exercises li { padding: 14px 16px; transition: border-color .15s, background .15s, transform .12s; }
+  .exercises li:hover { background: var(--surface-2); border-color: #3a4a70; transform: translateX(2px); }
+
+  /* Reproductor: escenario centrado y acotado para que el barrido no obligue a
+     girar la cabeza en monitores anchos (la vista debe moverse, no el cuello). */
+  .stage {
+    inset: 0 auto 0 50%;
+    width: min(940px, 100vw);
+    transform: translateX(-50%);
+    border-inline: 1px solid #ffffff0d;
+  }
+  .player__ui { max-width: 900px; margin-inline: auto; }
+}
+
+@media (min-width: 900px) and (pointer: fine) {
+  .player__hint {
+    display: block; text-align: center; margin: 16px auto 0; color: var(--muted-2);
+    font-size: 0.82rem; letter-spacing: .01em;
+  }
+  .player__hint kbd {
+    display: inline-block; background: #ffffff14; border: 1px solid #ffffff26;
+    border-radius: 6px; padding: 1px 7px; font: inherit; font-size: 0.78rem; color: var(--text);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }

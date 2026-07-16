@@ -222,7 +222,8 @@
 
   function drawBlink(close, accent) {
     const cx = cssW / 2, cy = cssH / 2;
-    const w = Math.min(cssW, cssH) * 0.34;
+    // Acotado para que en pantallas grandes no invada el texto inferior.
+    const w = Math.min(Math.min(cssW, cssH) * 0.34, 230);
     const openH = w * 0.6 * (1 - close * 0.92);
     ctx.save();
     ctx.translate(cx, cy);
