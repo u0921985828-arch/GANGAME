@@ -3,9 +3,8 @@ name: Deploy PWA to GitHub Pages
 on:
   push:
     branches:
-      - claude/new-session-ybotnp        # rama por defecto
-      - claude/eye-exercise-pwa-app-s6lgwx
-  workflow_dispatch:
+      - claude/new-session-ybotnp        # rama por defecto (despliega al fusionar)
+  workflow_dispatch:                     # o lánzalo a mano desde la pestaña Actions
 
 permissions:
   contents: read
