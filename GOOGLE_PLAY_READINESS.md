@@ -147,7 +147,7 @@ firma, ficha). Ver checklist.
 
 **Proyecto Android (wrapper) — CÓDIGO LISTO en `android/` (compilar en Android Studio)**
 - [x] Módulo Gradle: `minSdk 24`, `targetSdk`/`compileSdk 36`, `applicationId com.artifacts.fx404`, `versionCode/Name`
-- [x] `MainActivity` + `WebViewAssetLoader` (origen seguro) cargando el HTML de `assets/` (v56 embebido)
+- [x] `MainActivity` + `WebViewAssetLoader` (origen seguro) cargando el HTML de `assets/` (v57 embebido)
 - [x] WebView: JS + DOM storage ON; `onShowFileChooser`; **back → cierra overlays antes de salir** (`__fx404Back`)
 - [x] Descargas *blob* → **SAF `ACTION_CREATE_DOCUMENT`** (el usuario elige destino; sin permiso en ninguna API)
 - [x] `AndroidManifest.xml` con **cero permisos** (ni `RECORD_AUDIO` ni almacenamiento)
