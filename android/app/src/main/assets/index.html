@@ -4,6 +4,31 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v46 (LCD: el zoom del osciloscopio ahora es efectivo):
+    · Al hacer zoom (2x…10x) el scope se veía disperso/vacío ("no queda nada"): añadía 1 columna por frame
+      pero con el zoom cada columna cubría <2 ms → se descartaba casi todo el audio entre frames. Ahora
+      consume el mismo tramo reciente (~1 frame de audio) y lo subdivide en k≈zoom sub-columnas finas por
+      frame → la onda queda densa y contigua a cualquier zoom, con más detalle cuanto más se acerca. A 1x
+      es idéntico al scroll de v45. Mismo coste de escaneo por frame (sostiene el refresco).
+    · Además, una columna de baja varianza pero fuerte (una cresta/valle de una onda grave al hacer zoom)
+      ya no se colapsa al centro (se veía como un hueco vacío): se dibuja a su altura real → el trazo de la
+      onda se ve completo a cualquier zoom. Silencio real sigue en el centro.
+  v45 (LCD: el espectro se DESPLAZA (osciloscopio) → se ve vivo):
+    · El visualizador de la LCD dejaba una onda estática (con la ventana larga apenas cambiaba por frame,
+      parecía que no refrescaba). Ahora hace SCROLL: cada frame añade una columna nueva por la derecha y
+      desplaza el resto → barre como un osciloscopio, se ve fluido a cualquier ventana. Además solo escanea
+      una columna por frame (más barato → sostiene el refresco). reduced-motion mantiene una vista estática.
+  v44 (jog: zoom con sentido — horario +zoom, antihorario -zoom):
+    · El jog deja de usar |ángulo| (ambos sentidos subían el zoom): ahora en sentido HORARIO acerca (+zoom)
+      y ANTIHORARIO aleja (-zoom), con suelo en 1x (no baja de la base). Solo afecta al visual/zoom; el
+      grafo de audio no se toca (sin cortes ni errores).
+  v43 (LCD: la base del zoom arranca más lejos):
+    · El visualizador de audio de la LCD arranca más alejado: analyser.fftSize 16384→32768 (el máximo del
+      AnalyserNode) → la ventana base pasa de ≈0.37s a ≈0.74s. El tope de zoom sigue en x10.
+  v42 (LCD: el zoom del visualizador de audio topa en x10):
+    · El zoom del visualizador de la LCD (jog) deja de llegar a x64 (mostraba un tramo minúsculo e inútil)
+      y ahora tope x10. La base sigue en 1x (ventana completa ≈0.37s, la vista más alejada). El editor de
+      sample conserva su zoom. Parte de v40 (variante de MFX preferida; se descarta v41).
   v40 (MFX como envío radio: arranca sin efecto, el menú manda):
     · MFX arranca SIN ningún efecto activo (el envío pasa SECO siempre; antes CRUSH venía pre-armado).
       El menú es radio: elegir un tipo lo activa (y desactiva el anterior); "MFX OFF — bypass" vuelve a
@@ -3073,7 +3098,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   limiter.connect(ctx.destination);
   limiter.connect(recDest);
   const analyser = ctx.createAnalyser();
-  analyser.fftSize = 16384; // ~0.37s of time-domain samples at 44.1kHz — the LCD visualizer shows a fixed window of this, zoomable with the jogw
+  analyser.fftSize = 32768; // MAX AnalyserNode window (~0.74s at 44.1kHz) — the LCD visualizer's 1x base shows this whole span, so the base starts as far-OUT as the analyser allows; jog zooms IN from here (cap x10)
   analyser.smoothingTimeConstant = 0.35; // kept low on purpose — attack speed lives here, the release/trail character is handled explicitly in drawSpectrum()'s own decay curve below, not by blurring the raw FFT data further
   limiter.connect(analyser);
 
@@ -7592,6 +7617,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   sizeViz();
   if(typeof ResizeObserver==='function'){ try{ new ResizeObserver(()=>sizeViz()).observe(wave); }catch(e){} }
   const timeData = new Uint8Array(analyser.fftSize); // time-domain samples for the waveform
+  let scopeCols = null; // scrolling-scope history: [mn0,mx0, mn1,mx1, …] length NB*2, newest column on the right
   let spectrumRafId = null;
   // WCAG 2.3 — honor prefers-reduced-motion in JS (the CSS media query can't reach this rAF loop):
   // draw a single static frame instead of an animated one when the user asked for reduced motion.
@@ -7599,23 +7625,44 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   function drawSpectrum(){
     analyser.getByteTimeDomainData(timeData);
     if(++colFrame>=20){ colFrame=0; readVizColors(); }
-    // Display the most-recent `win` samples of the buffer (jog zoom shortens it), split evenly
-    // across the fixed NB bars. Each bar spans its slice's min→max sample — a stationary
-    // waveform that refreshes in place, never sweeping across the screen.
     const total=timeData.length;
-    const win=Math.max(NB*2, Math.min(total, Math.round(total/vizZoom)));
-    const startI=total-win, per=win/NB;
+    if(!scopeCols || scopeCols.length!==NB*2) scopeCols=new Float32Array(NB*2);
+    if(reduceMotion.matches){
+      // Reduced motion: no scrolling — fill every column from the current window (a stationary snapshot).
+      const win=Math.max(NB*2, Math.min(total, Math.round(total/vizZoom))), startI=total-win, per=win/NB;
+      for(let b=0;b<NB;b++){
+        let mn=1,mx=-1; const s0=startI+Math.floor(b*per), s1=startI+Math.floor((b+1)*per);
+        for(let i=s0;i<s1;i++){ const v=(timeData[i]-128)/128; if(v<mn)mn=v; if(v>mx)mx=v; }
+        if(mx<mn){ mn=0; mx=0; } // only the degenerate no-samples case snaps to centre; a low-variance column keeps its real position (a loud waveform peak/trough must draw at its height, not collapse to the centre — that was the "empty at zoom" artifact)
+        scopeCols[b*2]=mn; scopeCols[b*2+1]=mx;
+      }
+    } else {
+      // SCROLLING SCOPE: each frame consume the SAME recent chunk of audio (~total/NB ≈ one frame's worth)
+      // and split it into k fine sub-columns, appending all k on the right while shifting the history left.
+      // k grows with the jog zoom, so zooming in subdivides that recent audio more finely (more time
+      // resolution / detail) instead of dropping samples — the scope stays dense and contiguous at any zoom.
+      // At 1x, k=1 → identical to the plain one-column-per-frame sweep. Scans ~total/NB samples/frame either
+      // way (cheap), so it holds the display refresh rate regardless of fftSize.
+      const colSpan=Math.max(1, Math.round((total/vizZoom)/NB)); // samples per column (finer as we zoom in)
+      const k=Math.max(1, Math.min(NB, Math.round(vizZoom)));     // new columns per frame ≈ zoom
+      const span=colSpan*k;                    // ≈ total/NB: same recent chunk of audio regardless of zoom
+      let base=total-span; if(base<0) base=0;
+      scopeCols.copyWithin(0, k*2);            // shift history left by k columns
+      for(let c=0;c<k;c++){
+        let mn=1,mx=-1; const s0=base+c*colSpan, s1=s0+colSpan;
+        for(let i=s0;i<s1;i++){ const v=(timeData[i]-128)/128; if(v<mn)mn=v; if(v>mx)mx=v; }
+        if(mx<mn){ mn=0; mx=0; } // only the degenerate no-samples case snaps to centre; a low-variance column keeps its real position (a loud waveform peak/trough must draw at its height, not collapse to the centre — that was the "empty at zoom" artifact)
+        const dst=(NB-k+c)*2; scopeCols[dst]=mn; scopeCols[dst+1]=mx; // k newest columns, in order, on the right
+      }
+    }
     g2.clearRect(0,0,vizW,vizH);
     const mid=vizH/2, yamp=mid-1, pitch=vizW/NB, bw=Math.max(1, pitch-1);
     g2.fillStyle='rgba(255,255,255,0.06)'; g2.fillRect(0, mid-0.5, vizW, 1); // faint centre baseline
     g2.fillStyle=colAccent; g2.shadowColor=colAccent; g2.shadowBlur=2;
     for(let b=0;b<NB;b++){
-      const s0=startI+Math.floor(b*per), s1=startI+Math.floor((b+1)*per);
-      let mn=1, mx=-1;
-      for(let i=s0;i<s1;i++){ const v=(timeData[i]-128)/128; if(v<mn)mn=v; if(v>mx)mx=v; }
-      if(mx<mn || (mx-mn)<0.02){ mn=0; mx=0; } // noise floor → silence reads as a flat centre line
-      const y0=mid+mn*yamp, y1=mid+mx*yamp, x=b*pitch+(pitch-bw)/2;
-      g2.fillRect(x, y0, bw, Math.max(1, y1-y0)); // ≥1px so quiet slices still read as a centre dot
+      const cmn=scopeCols[b*2], cmx=scopeCols[b*2+1];
+      const y0=mid+cmn*yamp, y1=mid+cmx*yamp, x=b*pitch+(pitch-bw)/2;
+      g2.fillRect(x, y0, bw, Math.max(1, y1-y0)); // ≥1px so a flat column still reads as a dot at its true height (peak/trough/centre)
     }
     g2.shadowBlur=0;
     spectrumRafId = reduceMotion.matches ? null : requestAnimationFrame(drawSpectrum); // reduced-motion: draw once, don't self-schedule
@@ -7769,7 +7816,9 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       while(jogMenuAccum <= -36){ jogMenuAccum += 36; utilSelIndex=(utilSelIndex-1+rows.length)%rows.length; syncUtilSelection(rows); }
       return;
     }
-    const zoom = Math.max(1, Math.min(64, Math.round(1+Math.abs(jogAngle)/20)));
+    // Signed by rotation direction: CW (jogAngle grows → clockwise spin) = +zoom (in); CCW = -zoom (out).
+    // Clamped at 1 so counter-clockwise can't go below the base (the most zoomed-OUT view).
+    const zoom = Math.max(1, Math.min(64, Math.round(1+jogAngle/20)));
     document.getElementById('lcdEnc').textContent='ENC:ZOOM('+zoom+'x)';
     // Actually drive the sample editor's waveform zoom/pan when it's open — this block used
     // to only update the LCD readout above, never touching seZoom/seZoomOffset, so the wheel
@@ -7786,7 +7835,11 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       if(zoomChanged) seZoomBtnEl.textContent = 'ZOOM '+zoom+'x';
       if(zoomChanged || offsetChanged) refreshSeWaveformView();
     } else {
-      vizZoom = zoom; // sample editor closed → the jog zooms the live LCD waveform window instead
+      // LCD live visualizer caps at x10 — x64 zoomed into a uselessly short sliver of the window.
+      // Base stays 1x (the whole ~0.37s analyser window = the most zoomed-OUT view).
+      const lcdZoom = Math.min(10, zoom);
+      document.getElementById('lcdEnc').textContent='ENC:ZOOM('+lcdZoom+'x)';
+      vizZoom = lcdZoom; // sample editor closed → the jog zooms the live LCD waveform window instead
     }
   });
   jog.addEventListener('pointerup', ()=>{ jogDragging=false; jog.classList.remove('active'); });
