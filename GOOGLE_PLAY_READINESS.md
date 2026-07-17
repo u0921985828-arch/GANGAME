@@ -1,7 +1,7 @@
 # Auditoría de preparación para Google Play — ARTiFACTS FX-404
 
 App: sampler/groovebox estilo SP-404, **un solo fichero HTML autocontenido**
-(`ARTiFACTSFX404_v49.html`). Este informe evalúa qué falta para publicarla en Google Play
+(`ARTiFACTSFX404_v50.html`). Este informe evalúa qué falta para publicarla en Google Play
 como app Android, con severidades y un checklist accionable al final.
 
 **Veredicto:** base excelente. La app ya es **100 % offline, sin red, sin permisos peligrosos y con
@@ -147,7 +147,7 @@ firma, ficha). Ver checklist.
 
 **Proyecto Android (wrapper) — CÓDIGO LISTO en `android/` (compilar en Android Studio)**
 - [x] Módulo Gradle: `minSdk 24`, `targetSdk`/`compileSdk 35`, `applicationId com.artifacts.fx404`, `versionCode/Name`
-- [x] `MainActivity` + `WebViewAssetLoader` (origen seguro) cargando el HTML de `assets/` (v49 embebido)
+- [x] `MainActivity` + `WebViewAssetLoader` (origen seguro) cargando el HTML de `assets/` (v50 embebido)
 - [x] WebView: JS + DOM storage ON; `onShowFileChooser`; **back → cierra overlays antes de salir** (`__fx404Back`)
 - [x] Descargas *blob* → **SAF `ACTION_CREATE_DOCUMENT`** (el usuario elige destino; sin permiso en ninguna API)
 - [x] `AndroidManifest.xml` con **cero permisos** (ni `RECORD_AUDIO` ni almacenamiento)
