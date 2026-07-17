@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "com.artifacts.fx404"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.artifacts.fx404"
         minSdk = 24                 // WebViewAssetLoader + modern WebView; covers ~99% of devices
-        targetSdk = 35              // keep within Google Play's required window (raise as Play bumps it)
-        versionCode = 10
-        versionName = "1.9"
+        targetSdk = 36              // API 36 (Android 16) — within Play's required window for new/updated apps (2026)
+        versionCode = 11
+        versionName = "1.10"
     }
 
     buildTypes {

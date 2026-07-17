@@ -1,7 +1,8 @@
 # ARTiFACTS FX-404 — Android (WebView wrapper)
 
 Native shell that packages the single-file web app (`app/src/main/assets/index.html`, a copy of
-`ARTiFACTSFX404_v54.html`) as an installable Android app for Google Play. Fully offline.
+`ARTiFACTSFX404_v55.html`) as an installable Android app for Google Play. Fully offline.
+Third-party license notices are bundled at `app/src/main/assets/THIRD_PARTY_LICENSES.md`.
 
 ## Build — abrir y darle a Run (no hay que crear ni tocar nada)
 Este proyecto es **autocontenido**: incluye el Gradle Wrapper completo (`gradlew`, `gradlew.bat` y

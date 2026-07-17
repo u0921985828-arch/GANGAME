@@ -29,4 +29,4 @@ La app no está dirigida a recopilar datos de menores ni de ningún usuario; no 
 Si esta política cambia, se actualizará esta página y la fecha de "Última actualización".
 
 ## Contacto
-Para cualquier duda: **<tu-email>**
+Para cualquier duda: **eddierealting@gmail.com**

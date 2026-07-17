@@ -32,9 +32,9 @@ Dos vías válidas para llevar un web-app a Play:
 - **Formato:** Android App Bundle (**.aab**), no APK.
 - **Firma:** **Play App Signing** (subes una *upload key*; Google gestiona la *signing key*).
 - **Nivel de API objetivo:** `targetSdk`/`compileSdk` deben estar dentro de la ventana que exige Play
-  (a fecha de hoy **API 35 / Android 15** para apps nuevas; **verifica el mínimo vigente** al publicar,
-  Google lo sube cada año). `minSdk` sugerido **24 (Android 7)** — cubre WebView moderno y el
-  `WebViewAssetLoader`.
+  (el proyecto ya apunta a **API 36 / Android 16**, la ventana vigente para apps nuevas y actualizaciones
+  en 2026; **verifica el mínimo vigente** al publicar, Google lo sube cada año). `minSdk` sugerido
+  **24 (Android 7)** — cubre WebView moderno y el `WebViewAssetLoader`.
 - **64-bit:** cumplido automáticamente (no hay librerías nativas; todo es WebView).
 - **Tamaño:** trivial (~930 KB de HTML) → sin problemas de límite.
 
@@ -64,7 +64,7 @@ La app **no necesita ningún permiso peligroso**. Verificado en el código:
   > *ARTiFACTS FX-404 no recopila, transmite ni comparte datos personales. Todo el contenido que creas
   > (samples, patrones y proyectos) se almacena únicamente en el almacenamiento local de tu dispositivo
   > y nunca se envía a ningún servidor. La app funciona completamente sin conexión. No se usan servicios
-  > de analítica, publicidad ni de terceros. Contacto: <tu-email>.*
+  > de analítica, publicidad ni de terceros. Contacto: eddierealting@gmail.com.*
 
   Publícalo en cualquier URL estable (una página, un Gist, GitHub Pages) y pégala en la ficha.
 
@@ -124,7 +124,7 @@ sensible, sin compras, sin contenido generado compartido en línea).
 - ✅ **Offline total**, self-contained (fuentes y librerías JSZip/lamejs embebidas en `data:`).
 - ✅ **CSP estricta same-origin** (`default-src 'self'` … `object-src 'none'`, sin orígenes remotos).
 - ✅ **Sin red**: sin `fetch`/XHR/WebSocket/analítica/CDN.
-- ✅ `viewport` con `viewport-fit=cover`, `theme-color #0a0a0b`, apple-metas, **manifest standalone**.
+- ✅ `viewport` con `viewport-fit=cover`, `theme-color #0a0a0b`, apple-mobile-web-app metas (modo standalone en iOS). El icono/nombre de la app Android vienen de `res/mipmap` + `strings.xml`, no de un web-manifest.
 - ✅ **0 errores de consola**; accesibilidad de teclado/foco trabajada (overlays, panel trasero).
 - ✅ **v36 añade**: `<meta name="description">`, `<meta name="application-name">`, icono del manifest
   marcado `purpose: "any maskable"`, y la **pantalla de inicio**.
@@ -146,8 +146,8 @@ firma, ficha). Ver checklist.
 - [x] Pantalla de inicio (splash) en estilo del aparato
 
 **Proyecto Android (wrapper) — CÓDIGO LISTO en `android/` (compilar en Android Studio)**
-- [x] Módulo Gradle: `minSdk 24`, `targetSdk`/`compileSdk 35`, `applicationId com.artifacts.fx404`, `versionCode/Name`
-- [x] `MainActivity` + `WebViewAssetLoader` (origen seguro) cargando el HTML de `assets/` (v54 embebido)
+- [x] Módulo Gradle: `minSdk 24`, `targetSdk`/`compileSdk 36`, `applicationId com.artifacts.fx404`, `versionCode/Name`
+- [x] `MainActivity` + `WebViewAssetLoader` (origen seguro) cargando el HTML de `assets/` (v55 embebido)
 - [x] WebView: JS + DOM storage ON; `onShowFileChooser`; **back → cierra overlays antes de salir** (`__fx404Back`)
 - [x] Descargas *blob* → **SAF `ACTION_CREATE_DOCUMENT`** (el usuario elige destino; sin permiso en ninguna API)
 - [x] `AndroidManifest.xml` con **cero permisos** (ni `RECORD_AUDIO` ni almacenamiento)
