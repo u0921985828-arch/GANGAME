@@ -3,18 +3,27 @@
 Native shell that packages the single-file web app (`app/src/main/assets/index.html`, a copy of
 `ARTiFACTSFX404_v54.html`) as an installable Android app for Google Play. Fully offline.
 
-## Build
-1. Open the `android/` folder in **Android Studio** (Giraffe or newer).
-2. Android Studio will sync Gradle and generate the Gradle wrapper JAR automatically. (From a terminal
-   with a system Gradle you can instead run `gradle wrapper` once, then `./gradlew`.)
-3. Run on a device/emulator, or build the release bundle:
-   ```
-   ./gradlew bundleRelease      # → app/build/outputs/bundle/release/app-release.aab  (upload to Play)
-   ```
-4. Configure **Play App Signing** in the Play Console (recommended) and sign the upload key.
+## Build — abrir y darle a Run (no hay que crear ni tocar nada)
+Este proyecto es **autocontenido**: incluye el Gradle Wrapper completo (`gradlew`, `gradlew.bat` y
+`gradle/wrapper/gradle-wrapper.jar`), todos los módulos, recursos e iconos.
 
-> The build was authored but **not compiled in this environment** (no Android SDK here). Open it in
-> Android Studio to build; the Kotlin/XML is idiomatic and self-contained.
+1. Abre la carpeta `android/` en **Android Studio** (Giraffe o posterior).
+2. Android Studio detecta el SDK y **crea `local.properties` automáticamente** (un clic; ver nota abajo),
+   sincroniza Gradle y descarga las dependencias.
+3. Pulsa **Run ▶** para instalarlo en un móvil/emulador. O desde terminal:
+   ```
+   ./gradlew assembleDebug       # → app/build/outputs/apk/debug/app-debug.apk  (para probar)
+   ./gradlew bundleRelease       # → app/build/outputs/bundle/release/app-release.aab  (subir a Play)
+   ```
+4. Para publicar: configura **Play App Signing** en la Play Console y firma la clave de subida.
+
+> **Único fichero que NO viene incluido — y es correcto que así sea:** `local.properties` (contiene la ruta
+> del Android SDK de TU ordenador, `sdk.dir=...`). Es específico de cada máquina; si viniera relleno con una
+> ruta ajena, fallaría. **Android Studio lo genera solo** la primera vez que abres el proyecto — no hay que
+> programar nada. (Todo lo demás sí viene relleno.)
+>
+> Nota: el APK/AAB no se compiló en este entorno (no hay Android SDK aquí). El wrapper se verificó: arranca y
+> resuelve Gradle 8.7 correctamente. La compilación final la hace tu Android Studio.
 
 ## What it does
 - Serves the HTML from `assets/` via **`WebViewAssetLoader`** at a secure origin
@@ -36,6 +45,6 @@ Blob exports cross the JS↔native boundary as base64 in one call; very large ex
 exceed the renderer transaction size. If you hit that, chunk the transfer in `injectBridge()` /
 `DownloadBridge.saveFile()`. Typical samples/loops/patterns are well within limits.
 
-## Not committed
-`local.properties` (your `sdk.dir`), `.gradle/`, `build/`, and the generated `gradle-wrapper.jar` —
-Android Studio recreates these.
+## Generado por Android Studio (no incluido a propósito)
+Solo `local.properties` (tu `sdk.dir`), y las carpetas de caché/salida `.gradle/` y `build/`. Android Studio
+los crea/recrea solo. El **Gradle Wrapper sí está incluido** (`gradlew`, `gradlew.bat`, `gradle-wrapper.jar`).
