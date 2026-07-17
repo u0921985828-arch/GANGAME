@@ -1,7 +1,7 @@
 # ARTiFACTS FX-404 — Android (WebView wrapper)
 
 Native shell that packages the single-file web app (`app/src/main/assets/index.html`, a copy of
-`ARTiFACTSFX404_v48.html`) as an installable Android app for Google Play. Fully offline.
+`ARTiFACTSFX404_v49.html`) as an installable Android app for Google Play. Fully offline.
 
 ## Build
 1. Open the `android/` folder in **Android Studio** (Giraffe or newer).
