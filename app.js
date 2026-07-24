@@ -49,25 +49,55 @@
 
   let state = loadState();
 
-  // ---------- Audio (cue corto) ----------
-  let audioCtx = null;
-  function beep(freq = 660, dur = 0.12, vol = 0.06) {
-    if (!state.settings.sound) return;
+  // ---------- Audio (motor de cues suaves con WebAudio) ----------
+  let audioCtx = null, masterGain = null;
+  function ensureAudio() {
+    if (!state.settings.sound) return null;
     try {
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.5;
+        // suavizado de agudos para un timbre menos “pitido”
+        const lp = audioCtx.createBiquadFilter();
+        lp.type = 'lowpass'; lp.frequency.value = 2600; lp.Q.value = 0.6;
+        masterGain.connect(lp).connect(audioCtx.destination);
+      }
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + dur + 0.02);
+      return audioCtx;
+    } catch { return null; }
+  }
+  // Una nota con envolvente suave (ataque corto, caída exponencial).
+  function tone(freq, dur, vol, type = 'triangle', delay = 0) {
+    const ac = ensureAudio();
+    if (!ac) return;
+    try {
+      const t0 = ac.currentTime + delay;
+      const osc = ac.createOscillator();
+      const g = ac.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g).connect(masterGain);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.03);
     } catch { /* audio no disponible */ }
   }
+  // Cues con nombre (timbre y musicalidad cuidados).
+  function sfx(name) {
+    switch (name) {
+      case 'tick':  tone(392, 0.06, 0.05, 'sine'); break;                 // preparación (sol)
+      case 'count': tone(523, 0.07, 0.05, 'sine'); break;                 // últimos 3 s (do)
+      case 'go':    tone(587, 0.10, 0.06, 'triangle'); tone(880, 0.14, 0.05, 'triangle', 0.09); break; // re→la
+      case 'jump':  tone(680, 0.045, 0.045, 'sine'); break;               // salto sacádico
+      case 'win':   [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.28, 0.06, 'triangle', i * 0.11)); break; // do-mi-sol-do
+      case 'toggle': tone(523, 0.05, 0.04, 'sine'); break;
+    }
+  }
+  // Compatibilidad: llamadas antiguas beep(freq,dur,vol).
+  function beep(freq = 660, dur = 0.12, vol = 0.06) { tone(freq, dur, vol, 'sine'); }
   function haptic(ms = 20) {
     if (state.settings.haptics && navigator.vibrate) { try { navigator.vibrate(ms); } catch {} }
   }
@@ -83,6 +113,7 @@
     exTimer: $('#ex-timer'), progressBar: $('#progress-bar'), ringFg: $('#ring-fg'),
     icPause: $('#ic-pause'), icPlay: $('#ic-play'),
     doneStreak: $('#done-streak'), doneTotal: $('#done-total'), doneMins: $('#done-mins'), doneSub: $('#done-sub'),
+    doneSkills: $('#done-skills'),
   };
 
   // ---------- Navegación de pantallas ----------
@@ -279,7 +310,7 @@
       order = [0, 1, 2, 3, 4, 2, 0, 3, 1, 4];
     }
     const active = order[idx % order.length];
-    if (idx !== player.saccadeIdx) { player.saccadeIdx = idx; beep(600, 0.05, 0.045); }
+    if (idx !== player.saccadeIdx) { player.saccadeIdx = idx; sfx('jump'); }
     pts.forEach((p, i) => { if (i !== active) drawGhostDot(p[0], p[1], 0.7, ex.accent); });
     // pulso al aparecer
     const frac = (t % interval) / interval;
@@ -466,11 +497,29 @@
       drawCenterTextBelow(s.near > 0.5 ? 'Cerca' : 'Lejos', ex.accent);
       return;
     }
-    // Seguimientos: estela + objetivo.
-    player.trail.push({ x: s.x, y: s.y });
-    if (player.trail.length > 16) player.trail.shift();
-    drawTrail(ex.accent);
+    // Seguimientos: estela (salvo movimiento reducido) + objetivo.
+    if (!state.settings.reduced) {
+      player.trail.push({ x: s.x, y: s.y });
+      if (player.trail.length > 16) player.trail.shift();
+      drawTrail(ex.accent);
+    }
     drawTarget(s.x, s.y, s.r || 1, ex.accent);
+  }
+
+  // Superposición al pausar.
+  function drawPausedOverlay() {
+    const { cx, cy } = norm2px(0, 0);
+    ctx.save();
+    ctx.fillStyle = 'rgba(5,7,15,0.6)';
+    ctx.fillRect(0, 0, cssW, cssH);
+    const s = Math.min(cssW, cssH) * 0.05;
+    ctx.fillStyle = '#eef2fb';
+    ctx.fillRect(cx - s * 0.7, cy - s, s * 0.5, s * 2);
+    ctx.fillRect(cx + s * 0.2, cy - s, s * 0.5, s * 2);
+    ctx.font = `700 ${Math.min(cssW, cssH) * 0.045}px ${getComputedStyle(document.body).fontFamily}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('En pausa', cx, cy + s * 3);
+    ctx.restore();
   }
 
   // Pantalla de preparación: aro que se llena + cuenta atrás.
@@ -534,11 +583,12 @@
     if (player.phase === 'ready') {
       if (!player.paused) player.readyElapsed += dt;
       const n = Math.max(1, Math.ceil(readySecs - player.readyElapsed));
-      if (n !== player.lastReadyTick) { player.lastReadyTick = n; beep(440, 0.05, 0.035); }
+      if (n !== player.lastReadyTick) { player.lastReadyTick = n; sfx('tick'); }
       renderReady(ex, player.readyElapsed / readySecs);
       el.exTimer.textContent = '···';
       el.progressBar.style.width = `${overallPct(0)}%`;
       setRing(0, ex.accent);
+      if (player.paused) drawPausedOverlay();
       if (player.readyElapsed >= readySecs) enterActive();
       player.rafId = requestAnimationFrame(loop);
       return;
@@ -552,17 +602,18 @@
     const wholeRemain = Math.ceil(remain);
     if (wholeRemain !== player.lastWholeSec) {
       player.lastWholeSec = wholeRemain;
-      if (wholeRemain <= 3 && wholeRemain >= 1) beep(520, 0.08, 0.05);
+      if (wholeRemain <= 3 && wholeRemain >= 1) sfx('count');
     }
 
     renderFrame(ex, player.exElapsed);
-    // transición de entrada (aparición desde negro)
+    // transición de entrada (aparición desde negro), salvo movimiento reducido
     const fade = clamp(player.exElapsed / 0.45, 0, 1);
-    if (fade < 1) { ctx.save(); ctx.fillStyle = `rgba(5,7,15,${1 - fade})`; ctx.fillRect(0, 0, cssW, cssH); ctx.restore(); }
+    if (fade < 1 && !state.settings.reduced) { ctx.save(); ctx.fillStyle = `rgba(5,7,15,${1 - fade})`; ctx.fillRect(0, 0, cssW, cssH); ctx.restore(); }
 
     el.exTimer.textContent = fmtTime(Math.max(remain, 0));
     el.progressBar.style.width = `${overallPct(clamp(player.exElapsed / dur, 0, 1))}%`;
     setRing(player.exElapsed / dur, ex.accent);
+    if (player.paused) drawPausedOverlay();
 
     if (player.exElapsed >= dur) { advance(1); }
 
@@ -575,7 +626,7 @@
     player.lastWholeSec = -1;
     player.trail.length = 0;
     player.saccadeIdx = -1;
-    beep(700, 0.12, 0.06);
+    sfx('go');
     haptic(20);
   }
 
@@ -650,10 +701,7 @@
     renderDone();
     show('done');
     haptic([30, 40, 60]);
-    // acorde final (do–mi–sol)
-    beep(660, 0.16, 0.06);
-    setTimeout(() => beep(830, 0.16, 0.06), 120);
-    setTimeout(() => beep(990, 0.22, 0.06), 240);
+    sfx('win');
   }
 
   // ---------- Registro de progreso ----------
@@ -673,6 +721,10 @@
     saveState();
   }
 
+  const SKILL_LABEL = {
+    calentamiento: 'Calentamiento', seguimiento: 'Seguimiento', sacadicos: 'Sacádicos',
+    enfoque: 'Enfoque', convergencia: 'Convergencia', periferia: 'Periferia', habitos: 'Descanso',
+  };
   function renderDone() {
     el.doneStreak.textContent = state.streak;
     el.doneTotal.textContent = state.total;
@@ -680,6 +732,21 @@
     el.doneSub.textContent = state.streak > 1
       ? `¡${state.streak} días seguidos! Sigue así.`
       : 'Tus ojos te lo agradecen.';
+
+    // Resumen de habilidades entrenadas (categorías presentes + conteo).
+    const order = [], byCat = {};
+    EXERCISES.forEach((ex) => {
+      if (!byCat[ex.category]) { byCat[ex.category] = { n: 0, accent: ex.accent }; order.push(ex.category); }
+      byCat[ex.category].n += 1;
+    });
+    el.doneSkills.innerHTML = '';
+    order.forEach((cat) => {
+      const chip = document.createElement('span');
+      chip.className = 'skill';
+      chip.innerHTML = `<span class="skill__dot" style="background:${byCat[cat].accent}"></span>`;
+      chip.appendChild(document.createTextNode(`${SKILL_LABEL[cat] || cat} · ${byCat[cat].n}`));
+      el.doneSkills.appendChild(chip);
+    });
   }
 
   // ============================================================
@@ -697,7 +764,7 @@
     setInputs.intensity.value = String(state.settings.intensity);
   }
   function bindSettings() {
-    setInputs.sound.addEventListener('change', (e) => { state.settings.sound = e.target.checked; saveState(); if (e.target.checked) beep(); });
+    setInputs.sound.addEventListener('change', (e) => { state.settings.sound = e.target.checked; saveState(); if (e.target.checked) sfx('toggle'); });
     setInputs.haptics.addEventListener('change', (e) => { state.settings.haptics = e.target.checked; saveState(); haptic(); });
     setInputs.reduced.addEventListener('change', (e) => { state.settings.reduced = e.target.checked; saveState(); });
     setInputs.intensity.addEventListener('change', (e) => { state.settings.intensity = parseFloat(e.target.value) || 1; saveState(); renderHome(); });

@@ -98,3 +98,16 @@ Estos ejercicios ayudan a **relajar la vista y reducir la fatiga visual** por
 pantallas. **No** curan ni corrigen defectos refractivos (miopía, astigmatismo,
 etc.) ni sustituyen la revisión de un profesional. Si notas dolor, mareo o
 visión borrosa persistente, detente y consulta a tu oftalmólogo.
+
+## Changelog
+
+- **v3** — Pulido de reproductor:
+  - Motor de audio WebAudio con envolventes suaves y cues con nombre (preparación,
+    inicio, salto sacádico, acorde final); filtro paso-bajo para timbre agradable.
+  - Overlay «En pausa» y respeto de *movimiento reducido* (sin estela ni fundido).
+  - Pantalla final con resumen de habilidades entrenadas (chips por categoría).
+- **v2** — Coach de entrenamiento visual: 14 ejercicios en 7 categorías basados en
+  evidencia (pursuits, sacádicos, acomodación, convergencia/Brock, periferia,
+  hábitos), ficha honesta «¿Puedo dejar las gafas?», cuenta atrás «Prepárate»,
+  anillo de progreso, Wake Lock, layout de escritorio a dos columnas.
+- **v1** — PWA inicial: 9 ejercicios, reproductor, rachas, ajustes, offline.
