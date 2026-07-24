@@ -104,8 +104,6 @@
       case 'toggle': tone(523, 0.05, 0.04, 'sine'); break;
     }
   }
-  // Compatibilidad: llamadas antiguas beep(freq,dur,vol).
-  function beep(freq = 660, dur = 0.12, vol = 0.06) { tone(freq, dur, vol, 'sine'); }
   function haptic(ms = 20) {
     if (state.settings.haptics && navigator.vibrate) { try { navigator.vibrate(ms); } catch {} }
   }
@@ -358,7 +356,7 @@
     const far = Math.floor(t / half) % 2 === 0;
     const { cx, cy } = norm2px(0, 0);
     if (far) {
-      const R = Math.min(cssW, cssH) * 0.22;
+      const R = Math.min(Math.min(cssW, cssH) * 0.22, 140);
       ctx.save();
       ctx.strokeStyle = ex.accent; ctx.lineWidth = 4;
       ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
@@ -398,7 +396,7 @@
   }
 
   function drawBlink(close, accent) {
-    const cx = cssW / 2, cy = cssH / 2;
+    const { cx, cy } = norm2px(0, 0);   // centro del campo (reserva el texto inferior)
     // Acotado para que en pantallas grandes no invada el texto inferior.
     const w = Math.min(Math.min(cssW, cssH) * 0.34, 230);
     const openH = w * 0.6 * (1 - close * 0.92);
@@ -426,9 +424,9 @@
     const inhale = phase < 0.5;
     const p = inhale ? phase / 0.5 : 1 - (phase - 0.5) / 0.5; // 0..1..0
     const eased = 0.5 - 0.5 * Math.cos(p * Math.PI);
-    const cx = cssW / 2, cy = cssH / 2;
-    const rMin = Math.min(cssW, cssH) * 0.12;
-    const rMax = Math.min(cssW, cssH) * 0.30;
+    const { cx, cy } = norm2px(0, 0);   // centro del campo (reserva el texto inferior)
+    const rMin = Math.min(cssW, cssH) * 0.11;
+    const rMax = Math.min(Math.min(cssW, cssH) * 0.24, 210);
     const r = rMin + (rMax - rMin) * eased;
     ctx.strokeStyle = accent + '55'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(cx, cy, rMax, 0, TAU); ctx.stroke();
@@ -442,10 +440,11 @@
   }
 
   function drawCenterText(text, accent) {
+    const { cx, cy } = norm2px(0, 0);
     ctx.fillStyle = '#eef2fb';
     ctx.font = `600 ${Math.min(cssW, cssH) * 0.06}px ${FONT}`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(text, cssW / 2, cssH / 2);
+    ctx.fillText(text, cx, cy);
   }
 
   // Tinte ambiental sutil del color del ejercicio (profundidad).
@@ -556,11 +555,16 @@
     ctx.fillText(String(n), cx, cy + 2);
   }
 
+  // Rótulo de estado dinámico (Cerca/Lejos, Inspira/Espira…): anclado al borde
+  // superior del campo — siempre bajo la barra y sobre el elemento, en cualquier
+  // proporción de pantalla, sin invadir el texto del DOM.
   function drawCenterTextBelow(text, accent) {
+    const top = norm2px(0, -1);   // borde superior del campo de juego
+    const fs = Math.min(cssW, cssH) * 0.05;
     ctx.fillStyle = accent;
-    ctx.font = `700 ${Math.min(cssW, cssH) * 0.055}px ${FONT}`;
+    ctx.font = `700 ${fs}px ${FONT}`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(text, cssW / 2, cssH * 0.78);
+    ctx.fillText(text, top.cx, top.cy + fs * 0.9);
   }
 
   // ---------- Wake Lock (evita que la pantalla se apague al entrenar) ----------
@@ -635,7 +639,7 @@
     player.exElapsed = 0;
     player.lastWholeSec = -1;
     player.trail.length = 0;
-    player.saccadeIdx = -1;
+    player.saccadeIdx = 0;   // evita un tic extra en el primer fotograma de sacádicos
     sfx('go');
     haptic(20);
   }
@@ -661,7 +665,7 @@
   function advance(dir) {
     const next = player.index + dir;
     if (next >= EXERCISES.length) { finishRoutine(); return; }
-    if (next < 0) { player.exElapsed = 0; player.phase = 'active'; return; }
+    if (next < 0) { loadExercise(0); return; }   // en el primer ejercicio, reinicia su cuenta atrás
     player.index = next;
     loadExercise(next);
   }
@@ -678,6 +682,7 @@
     resizeCanvas();
     loadExercise(0);
     setPaused(false);
+    ensureAudio();     // desbloquea el audio dentro del gesto (necesario en iOS)
     acquireWake();
     cancelAnimationFrame(player.rafId);
     player.rafId = requestAnimationFrame(loop);

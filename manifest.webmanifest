@@ -4,6 +4,7 @@
   "description": "Rutina diaria de ejercicios para relajar la vista y ejercitar los músculos oculares.",
   "lang": "es",
   "dir": "ltr",
+  "id": ".",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
