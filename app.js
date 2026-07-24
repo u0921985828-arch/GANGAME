@@ -29,10 +29,18 @@
     settings: { sound: true, haptics: true, reduced: false, intensity: 1 },
   };
 
+  const prefersReducedMotion = () => {
+    try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch { return false; }
+  };
   function loadState() {
     try {
       const raw = localStorage.getItem(STORE_KEY);
-      if (!raw) return structuredClone(DEFAULT_STATE);
+      if (!raw) {
+        // Primer arranque: respeta la preferencia del sistema.
+        const s = structuredClone(DEFAULT_STATE);
+        s.settings.reduced = prefersReducedMotion();
+        return s;
+      }
       const parsed = JSON.parse(raw);
       return {
         ...structuredClone(DEFAULT_STATE),
@@ -106,6 +114,8 @@
   const screens = { home: $('#home'), player: $('#player'), done: $('#done') };
   const canvas = $('#stage');
   const ctx = canvas.getContext('2d');
+  // Fuente del canvas cacheada (leerla por frame forzaría reflow).
+  let FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
   const el = {
     streakCount: $('#streak-count'), streakStatus: $('#streak-status'), weekDots: $('#week-dots'),
     routineSummary: $('#routine-summary'), exerciseList: $('#exercise-list'),
@@ -433,7 +443,7 @@
 
   function drawCenterText(text, accent) {
     ctx.fillStyle = '#eef2fb';
-    ctx.font = `600 ${Math.min(cssW, cssH) * 0.06}px ${getComputedStyle(document.body).fontFamily}`;
+    ctx.font = `600 ${Math.min(cssW, cssH) * 0.06}px ${FONT}`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(text, cssW / 2, cssH / 2);
   }
@@ -516,7 +526,7 @@
     ctx.fillStyle = '#eef2fb';
     ctx.fillRect(cx - s * 0.7, cy - s, s * 0.5, s * 2);
     ctx.fillRect(cx + s * 0.2, cy - s, s * 0.5, s * 2);
-    ctx.font = `700 ${Math.min(cssW, cssH) * 0.045}px ${getComputedStyle(document.body).fontFamily}`;
+    ctx.font = `700 ${Math.min(cssW, cssH) * 0.045}px ${FONT}`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('En pausa', cx, cy + s * 3);
     ctx.restore();
@@ -528,7 +538,7 @@
     drawAmbient(ex.accent);
     const { cx, cy } = norm2px(0, 0);
     const R = Math.min(Math.min(cssW, cssH) * 0.16, 118);
-    const font = getComputedStyle(document.body).fontFamily;
+    const font = FONT;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     // "Prepárate" encima del aro (zona despejada, no invade la cabecera)
     ctx.fillStyle = ex.accent;
@@ -548,7 +558,7 @@
 
   function drawCenterTextBelow(text, accent) {
     ctx.fillStyle = accent;
-    ctx.font = `700 ${Math.min(cssW, cssH) * 0.055}px ${getComputedStyle(document.body).fontFamily}`;
+    ctx.font = `700 ${Math.min(cssW, cssH) * 0.055}px ${FONT}`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(text, cssW / 2, cssH * 0.78);
   }
@@ -837,6 +847,7 @@
 
   // ---------- Init ----------
   function init() {
+    try { FONT = getComputedStyle(document.body).fontFamily || FONT; } catch {}
     renderHome();
     bindEvents();
     bindSettings();
