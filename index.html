@@ -119,8 +119,8 @@
       </header>
 
       <div class="player__mid">
-        <p id="ex-index" class="ex-index">1 / 9</p>
-        <h2 id="ex-name" class="ex-name">Ejercicio</h2>
+        <p id="ex-index" class="ex-index">1 / 14</p>
+        <h2 id="ex-name" class="ex-name" aria-live="polite">Ejercicio</h2>
         <p id="ex-instruction" class="ex-instruction">Instrucción</p>
       </div>
 
@@ -128,10 +128,16 @@
         <button id="btn-prev" class="ctl" type="button" aria-label="Anterior">
           <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
         </button>
-        <button id="btn-pause" class="ctl ctl--main" type="button" aria-label="Pausar">
-          <svg id="ic-pause" viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
-          <svg id="ic-play" viewBox="0 0 24 24" width="34" height="34" aria-hidden="true" hidden><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
-        </button>
+        <div class="pausewrap">
+          <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="ring__bg" cx="50" cy="50" r="46"></circle>
+            <circle id="ring-fg" class="ring__fg" cx="50" cy="50" r="46"></circle>
+          </svg>
+          <button id="btn-pause" class="ctl ctl--main" type="button" aria-label="Pausar">
+            <svg id="ic-pause" viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+            <svg id="ic-play" viewBox="0 0 24 24" width="34" height="34" aria-hidden="true" hidden><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+          </button>
+        </div>
         <button id="btn-next" class="ctl" type="button" aria-label="Siguiente">
           <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg>
         </button>

@@ -80,7 +80,7 @@
     streakCount: $('#streak-count'), streakStatus: $('#streak-status'), weekDots: $('#week-dots'),
     routineSummary: $('#routine-summary'), exerciseList: $('#exercise-list'),
     exIndex: $('#ex-index'), exName: $('#ex-name'), exInstruction: $('#ex-instruction'),
-    exTimer: $('#ex-timer'), progressBar: $('#progress-bar'),
+    exTimer: $('#ex-timer'), progressBar: $('#progress-bar'), ringFg: $('#ring-fg'),
     icPause: $('#ic-pause'), icPlay: $('#ic-play'),
     doneStreak: $('#done-streak'), doneTotal: $('#done-total'), doneMins: $('#done-mins'), doneSub: $('#done-sub'),
   };
@@ -146,14 +146,20 @@
   // ============================================================
   //  MOTOR DE ANIMACIÓN (canvas)
   // ============================================================
+  const READY_SECS = 3;              // cuenta atrás "prepárate" antes de cada ejercicio
   const player = {
     index: 0,
-    exElapsed: 0,    // segundos transcurridos del ejercicio actual
+    phase: 'ready',                  // 'ready' | 'active'
+    exElapsed: 0,                    // segundos transcurridos (fase activa)
+    readyElapsed: 0,                 // segundos transcurridos (cuenta atrás)
     paused: false,
     running: false,
     lastTs: 0,
     rafId: 0,
     lastWholeSec: -1,
+    lastReadyTick: -1,
+    saccadeIdx: -1,                  // para el tic al saltar en sacádicos
+    trail: [],                       // estela del objetivo (seguimientos)
   };
 
   let cssW = 0, cssH = 0;
@@ -273,6 +279,7 @@
       order = [0, 1, 2, 3, 4, 2, 0, 3, 1, 4];
     }
     const active = order[idx % order.length];
+    if (idx !== player.saccadeIdx) { player.saccadeIdx = idx; beep(600, 0.05, 0.045); }
     pts.forEach((p, i) => { if (i !== active) drawGhostDot(p[0], p[1], 0.7, ex.accent); });
     // pulso al aparecer
     const frac = (t % interval) / interval;
@@ -400,8 +407,36 @@
     ctx.fillText(text, cssW / 2, cssH / 2);
   }
 
+  // Tinte ambiental sutil del color del ejercicio (profundidad).
+  function drawAmbient(accent) {
+    const { cx, cy } = norm2px(0, 0);
+    const R = Math.max(cssW, cssH) * 0.7;
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+    g.addColorStop(0, accent + '14');
+    g.addColorStop(1, accent + '00');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, cssW, cssH);
+  }
+
+  // Estela del objetivo en los seguimientos (facilita el seguimiento suave).
+  function drawTrail(accent) {
+    const n = player.trail.length;
+    const base = Math.min(cssW, cssH) * 0.05;
+    for (let i = 0; i < n; i++) {
+      const p = player.trail[i];
+      const k = (i + 1) / n;             // 0 (viejo) → 1 (reciente)
+      const { cx, cy } = norm2px(p.x, p.y);
+      ctx.save();
+      ctx.globalAlpha = 0.10 * k;
+      ctx.fillStyle = accent;
+      ctx.beginPath(); ctx.arc(cx, cy, base * (0.35 + 0.5 * k), 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+  }
+
   function renderFrame(ex, t) {
     ctx.clearRect(0, 0, cssW, cssH);
+    drawAmbient(ex.accent);
     // Tipos con dibujo propio (no pasan por evaluate).
     switch (ex.motion.type) {
       case 'saccade': drawSaccade(ex, t); return;
@@ -431,7 +466,35 @@
       drawCenterTextBelow(s.near > 0.5 ? 'Cerca' : 'Lejos', ex.accent);
       return;
     }
+    // Seguimientos: estela + objetivo.
+    player.trail.push({ x: s.x, y: s.y });
+    if (player.trail.length > 16) player.trail.shift();
+    drawTrail(ex.accent);
     drawTarget(s.x, s.y, s.r || 1, ex.accent);
+  }
+
+  // Pantalla de preparación: aro que se llena + cuenta atrás.
+  function renderReady(ex, prog) {
+    ctx.clearRect(0, 0, cssW, cssH);
+    drawAmbient(ex.accent);
+    const { cx, cy } = norm2px(0, 0);
+    const R = Math.min(Math.min(cssW, cssH) * 0.16, 118);
+    const font = getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    // "Prepárate" encima del aro (zona despejada, no invade la cabecera)
+    ctx.fillStyle = ex.accent;
+    ctx.font = `700 ${R * 0.34}px ${font}`;
+    ctx.fillText('Prepárate', cx, cy - R - R * 0.5);
+    ctx.save();
+    ctx.strokeStyle = '#ffffff1f'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = ex.accent; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(prog, 0, 1)); ctx.stroke();
+    ctx.restore();
+    const n = Math.max(1, Math.ceil(READY_SECS - prog * READY_SECS));
+    ctx.fillStyle = '#eef2fb';
+    ctx.font = `800 ${R * 0.9}px ${font}`;
+    ctx.fillText(String(n), cx, cy + 2);
   }
 
   function drawCenterTextBelow(text, accent) {
@@ -441,6 +504,22 @@
     ctx.fillText(text, cssW / 2, cssH * 0.78);
   }
 
+  // ---------- Wake Lock (evita que la pantalla se apague al entrenar) ----------
+  let wakeLock = null;
+  async function acquireWake() {
+    try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch { /* no disponible */ }
+  }
+  function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch {} wakeLock = null; }
+
+  // ---------- Anillo de progreso del ejercicio (alrededor del botón) ----------
+  const RING_C = 2 * Math.PI * 46;
+  function setRing(p, accent) {
+    if (!el.ringFg) return;
+    el.ringFg.style.stroke = accent;
+    el.ringFg.style.strokeDashoffset = String(RING_C * (1 - clamp(p, 0, 1)));
+  }
+  const overallPct = (frac) => ((player.index + frac) / EXERCISES.length) * 100;
+
   // ---------- Bucle principal ----------
   function loop(ts) {
     if (!player.running) return;
@@ -449,11 +528,26 @@
     player.lastTs = ts;
 
     const ex = EXERCISES[player.index];
-    const dur = effDuration(ex);
+    const readySecs = state.settings.reduced ? READY_SECS + 0.5 : READY_SECS;
 
+    // --- Fase: prepárate (cuenta atrás) ---
+    if (player.phase === 'ready') {
+      if (!player.paused) player.readyElapsed += dt;
+      const n = Math.max(1, Math.ceil(readySecs - player.readyElapsed));
+      if (n !== player.lastReadyTick) { player.lastReadyTick = n; beep(440, 0.05, 0.035); }
+      renderReady(ex, player.readyElapsed / readySecs);
+      el.exTimer.textContent = '···';
+      el.progressBar.style.width = `${overallPct(0)}%`;
+      setRing(0, ex.accent);
+      if (player.readyElapsed >= readySecs) enterActive();
+      player.rafId = requestAnimationFrame(loop);
+      return;
+    }
+
+    // --- Fase: activo ---
+    const dur = effDuration(ex);
     if (!player.paused) player.exElapsed += dt;
 
-    // aviso sonoro en los últimos 3 segundos
     const remain = dur - player.exElapsed;
     const wholeRemain = Math.ceil(remain);
     if (wholeRemain !== player.lastWholeSec) {
@@ -462,12 +556,27 @@
     }
 
     renderFrame(ex, player.exElapsed);
+    // transición de entrada (aparición desde negro)
+    const fade = clamp(player.exElapsed / 0.45, 0, 1);
+    if (fade < 1) { ctx.save(); ctx.fillStyle = `rgba(5,7,15,${1 - fade})`; ctx.fillRect(0, 0, cssW, cssH); ctx.restore(); }
+
     el.exTimer.textContent = fmtTime(Math.max(remain, 0));
-    el.progressBar.style.width = `${clamp((player.exElapsed / dur) * 100, 0, 100)}%`;
+    el.progressBar.style.width = `${overallPct(clamp(player.exElapsed / dur, 0, 1))}%`;
+    setRing(player.exElapsed / dur, ex.accent);
 
     if (player.exElapsed >= dur) { advance(1); }
 
     player.rafId = requestAnimationFrame(loop);
+  }
+
+  function enterActive() {
+    player.phase = 'active';
+    player.exElapsed = 0;
+    player.lastWholeSec = -1;
+    player.trail.length = 0;
+    player.saccadeIdx = -1;
+    beep(700, 0.12, 0.06);
+    haptic(20);
   }
 
   function loadExercise(i) {
@@ -476,19 +585,28 @@
     el.exName.textContent = ex.name;
     el.exInstruction.textContent = ex.instruction;
     el.progressBar.style.background = ex.accent;
+    player.phase = 'ready';
+    player.readyElapsed = 0;
     player.exElapsed = 0;
+    player.lastReadyTick = -1;
     player.lastWholeSec = -1;
-    beep(700, 0.1, 0.06);
-    haptic(25);
+    player.trail.length = 0;
+    player.saccadeIdx = -1;
+    el.exTimer.textContent = '···';
+    setRing(0, ex.accent);
+    haptic(15);
   }
 
   function advance(dir) {
     const next = player.index + dir;
     if (next >= EXERCISES.length) { finishRoutine(); return; }
-    if (next < 0) { player.exElapsed = 0; return; }
+    if (next < 0) { player.exElapsed = 0; player.phase = 'active'; return; }
     player.index = next;
     loadExercise(next);
   }
+
+  // Salta la cuenta atrás y empieza ya el ejercicio.
+  function skipReady() { if (player.running && player.phase === 'ready') enterActive(); }
 
   function startRoutine() {
     player.index = 0;
@@ -499,9 +617,9 @@
     resizeCanvas();
     loadExercise(0);
     setPaused(false);
+    acquireWake();
     cancelAnimationFrame(player.rafId);
     player.rafId = requestAnimationFrame(loop);
-    if (screen.orientation) { /* sin bloqueo forzado */ }
   }
 
   function stopLoop() {
@@ -520,17 +638,22 @@
 
   function exitToHome() {
     stopLoop();
+    releaseWake();
     renderHome();
     show('home');
   }
 
   function finishRoutine() {
     stopLoop();
+    releaseWake();
     recordCompletion();
     renderDone();
     show('done');
     haptic([30, 40, 60]);
-    beep(880, 0.18, 0.07);
+    // acorde final (do–mi–sol)
+    beep(660, 0.16, 0.06);
+    setTimeout(() => beep(830, 0.16, 0.06), 120);
+    setTimeout(() => beep(990, 0.22, 0.06), 240);
   }
 
   // ---------- Registro de progreso ----------
@@ -599,10 +722,13 @@
     $('#btn-pause').addEventListener('click', () => { setPaused(!player.paused); haptic(); });
     $('#btn-next').addEventListener('click', () => advance(1));
     $('#btn-prev').addEventListener('click', () => {
-      // si llevamos >2s, reinicia el actual; si no, retrocede
-      if (player.exElapsed > 2) { player.exElapsed = 0; player.lastWholeSec = -1; }
-      else advance(-1);
+      // en cuenta atrás o en los primeros 2s → retrocede; si no, reinicia el actual
+      if (player.phase === 'active' && player.exElapsed > 2) {
+        player.exElapsed = 0; player.lastWholeSec = -1; player.trail.length = 0; player.saccadeIdx = -1;
+      } else advance(-1);
     });
+    // tocar el lienzo salta la cuenta atrás
+    canvas.addEventListener('pointerdown', skipReady);
     $('#btn-settings').addEventListener('click', () => { syncSettingsUI(); dlg.showModal(); });
 
     const coach = $('#coach');
@@ -613,13 +739,19 @@
 
     window.addEventListener('resize', () => { if (player.running) resizeCanvas(); });
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden && player.running && !player.paused) setPaused(true);
+      if (document.hidden) {
+        if (player.running && !player.paused) setPaused(true);
+      } else if (player.running) {
+        acquireWake();               // el Wake Lock se libera al ocultar: re-adquirir
+      }
     });
     // teclado (accesibilidad de escritorio)
     document.addEventListener('keydown', (e) => {
       if (!player.running) return;
-      if (e.key === ' ') { e.preventDefault(); setPaused(!player.paused); }
-      else if (e.key === 'ArrowRight') advance(1);
+      if (e.key === ' ') {
+        e.preventDefault();
+        if (player.phase === 'ready') skipReady(); else setPaused(!player.paused);
+      } else if (e.key === 'ArrowRight') advance(1);
       else if (e.key === 'ArrowLeft') advance(-1);
       else if (e.key === 'Escape') exitToHome();
     });
