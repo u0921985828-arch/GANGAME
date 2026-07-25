@@ -11,7 +11,7 @@ on:
       - '.github/workflows/build-apk.yml'
 
 permissions:
-  contents: read
+  contents: write   # para publicar el APK en un Release (enlace de descarga directo)
 
 jobs:
   build:
@@ -44,3 +44,16 @@ jobs:
           name: ARTiFACTS-FX404-apk
           path: ARTiFACTS-FX404-debug.apk
           if-no-files-found: error
+
+      # Publica el APK en un Release con tag fijo → enlace de descarga directo y permanente,
+      # mucho más fácil de encontrar (sobre todo en el móvil) que los artifacts de Actions.
+      - name: Publish APK to a Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-latest
+          name: APK de prueba (debug) — última build
+          body: |
+            APK debug instalable de ARTiFACTS FX-404 (se actualiza en cada build).
+            Descárgalo abajo (`ARTiFACTS-FX404-debug.apk`) e instálalo en el móvil.
+          files: ARTiFACTS-FX404-debug.apk
+          make_latest: false
