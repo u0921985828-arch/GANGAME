@@ -9,6 +9,11 @@ name: Build Release AAB
 #   RELEASE_KEY_PASSWORD     — contraseña de la clave
 on:
   workflow_dispatch:
+  push:
+    branches: [ claude/new-session-q3zb92 ]
+    paths:
+      - 'android/**'
+      - '.github/workflows/build-release.yml'
 
 permissions:
   contents: read
