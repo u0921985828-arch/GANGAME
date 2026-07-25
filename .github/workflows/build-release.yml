@@ -1,0 +1,61 @@
+name: Build Release AAB
+
+# Compila el bundle de release (.aab) para subir a Google Play, firmado con la clave de subida.
+# Manual (Actions ▸ Build Release AAB ▸ Run workflow). Requiere estos secrets del repo para firmar
+# (Settings ▸ Secrets and variables ▸ Actions); sin ellos el build sale SIN firmar (no publicable):
+#   RELEASE_KEYSTORE_BASE64  — el keystore de subida en base64
+#   RELEASE_STORE_PASSWORD   — contraseña del almacén
+#   RELEASE_KEY_ALIAS        — alias de la clave
+#   RELEASE_KEY_PASSWORD     — contraseña de la clave
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Decode signing keystore (if configured)
+        env:
+          KS: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > android/release.keystore
+            echo "Keystore de firma escrito → build FIRMADO."
+          else
+            echo "::warning::Sin RELEASE_KEYSTORE_BASE64 — el .aab saldrá SIN firmar (no publicable en Play)."
+          fi
+
+      - name: Build release bundle + APK
+        working-directory: android
+        env:
+          RELEASE_KEYSTORE_PATH: release.keystore
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon --stacktrace bundleRelease assembleRelease
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ARTiFACTS-FX404-release
+          path: |
+            android/app/build/outputs/bundle/release/*.aab
+            android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error

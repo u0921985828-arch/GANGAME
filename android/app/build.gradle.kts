@@ -3,6 +3,11 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+// Release (upload) keystore for Play — provided by CI from GitHub secrets (never committed).
+// If it isn't present (e.g. a local/debug build, or CI without the signing secrets set), the
+// release build is simply left unsigned instead of failing. The debug build is unaffected.
+val releaseKeystore = rootProject.file(System.getenv("RELEASE_KEYSTORE_PATH") ?: "release.keystore")
+
 android {
     namespace = "com.artifacts.fx404"
     compileSdk = 36
@@ -15,6 +20,17 @@ android {
         versionName = "1.28"
     }
 
+    signingConfigs {
+        if (releaseKeystore.exists()) {
+            create("release") {
+                storeFile = releaseKeystore
+                storePassword = System.getenv("RELEASE_STORE_PASSWORD")
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -23,6 +39,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Sign with the upload key only when the keystore is present (CI with secrets set);
+            // otherwise the release artifact stays unsigned rather than failing the build.
+            if (releaseKeystore.exists()) signingConfig = signingConfigs.getByName("release")
         }
     }
 
