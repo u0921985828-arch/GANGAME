@@ -49,8 +49,11 @@ La app **no necesita ningún permiso peligroso**. Verificado en el código:
   **sin permiso de almacenamiento**.
 - **Exportar (WAV/MP3/.fx404):** descargas *blob*; intercéptalas y escribe con **MediaStore →
   Downloads** (Android 10+, *scoped storage*) → **sin permiso**.
-- **Red:** la app no hace `fetch`/XHR/WebSocket y sirve de `assets/` → **`INTERNET` innecesario**.
-  Decláralo solo si una futura versión lo requiere.
+- **Red:** la app no hace `fetch`/XHR/WebSocket (CSP `connect-src 'self'`). **PERO** `INTERNET` **sí es
+  necesario**: WebViewAssetLoader sirve desde un origen `https://` virtual y el WebView enruta esa carga
+  por su pila de red — sin `INTERNET` aborta con `net::ERR_CACHE_MISS`. Es un permiso *normal* (sin prompt,
+  no peligroso) y **no transmite datos**, así que el "no se comparten datos" del Data Safety sigue siendo
+  cierto. Ya declarado en el manifiesto.
 
 > Resultado: manifiesto con **cero permisos peligrosos** → historia de privacidad inmejorable.
 

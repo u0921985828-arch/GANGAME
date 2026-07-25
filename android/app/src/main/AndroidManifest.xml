@@ -2,13 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
-      NO permissions declared. The app is fully offline:
-        · Content is served from assets/ via WebViewAssetLoader (no INTERNET needed).
+      INTERNET is REQUIRED even though the app is fully offline: WebViewAssetLoader serves the app
+      from a virtual https origin (https://appassets.androidhost/…), and the WebView routes that
+      https load through its network stack — without the INTERNET permission it aborts the main-frame
+      load with net::ERR_CACHE_MISS before the asset handler can respond. The app still makes NO real
+      network requests (CSP: connect-src 'self'; no fetch/XHR/WebSocket), so "no data transmitted"
+      remains true for the Data Safety form. No dangerous permissions:
+        · Content served from assets/ via WebViewAssetLoader (secure https origin).
         · Audio import uses the WebView file chooser → Storage Access Framework (no permission).
         · Audio export/save uses ACTION_CREATE_DOCUMENT (SAF) → the user picks the location,
           no storage permission on any API level.
         · "REC / RESAMPLE" records the internal audio bus (recDest), NOT the microphone → no RECORD_AUDIO.
     -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
