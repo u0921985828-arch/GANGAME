@@ -59,6 +59,11 @@ class MainActivity : ComponentActivity() {
         configureWebView(webView)
 
         val assetLoader = WebViewAssetLoader.Builder()
+            // MUST match the host in loadUrl() below. Without this, the loader defaults to
+            // "appassets.androidplatform.net", so a request to appassets.androidhost is NOT
+            // intercepted → the WebView tries to resolve that fake host over the network
+            // (net::ERR_NAME_NOT_RESOLVED, or ERR_CACHE_MISS with no INTERNET permission).
+            .setDomain("appassets.androidhost")
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
 
