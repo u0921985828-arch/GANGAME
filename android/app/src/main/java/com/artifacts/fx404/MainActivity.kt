@@ -71,6 +71,16 @@ class MainActivity : ComponentActivity() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
                 assetLoader.shouldInterceptRequest(request.url)
 
+            // Lock main-frame navigation to the app's own asset origin. The AndroidDownloader JS bridge is
+            // attached to this WebView globally, so if any content/link ever navigated it off-origin, that
+            // remote page would run in the privileged context with the bridge exposed. Keep in-app asset
+            // navigation in the WebView; hand anything else to the system browser (or just refuse it).
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                if (request.url.host == "appassets.androidhost") return false   // our own origin → load normally
+                try { startActivity(Intent(Intent.ACTION_VIEW, request.url)) } catch (e: Exception) { /* no handler → just refuse */ }
+                return true
+            }
+
             override fun onPageFinished(view: WebView, url: String) {
                 injectBridge(view)          // download + back-button helpers
             }
@@ -92,6 +102,10 @@ class MainActivity : ComponentActivity() {
                     false
                 }
             }
+
+            // Deny popups / window.open — the app never opens secondary windows; a new WebView window would
+            // not carry our WebViewClient (no navigation lockdown) and must never be created.
+            override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message): Boolean = false
         }
 
         webView.addJavascriptInterface(DownloadBridge(), "AndroidDownloader")
@@ -270,13 +284,17 @@ class MainActivity : ComponentActivity() {
             val comma = dataUrl.indexOf(',')
             val b64 = if (comma >= 0) dataUrl.substring(comma + 1) else dataUrl
             val bytes = try { Base64.decode(b64, Base64.DEFAULT) } catch (e: Exception) { return }
+            // Defensive normalisation of the JS-supplied strings before they reach the system file picker:
+            // strip any path separators from the suggested filename, and only honour a well-formed MIME type.
+            val safeName = name.replace('/', '_').replace('\\', '_').ifBlank { "export" }
+            val safeMime = if (mime.matches(Regex("^[\\w.+-]+/[\\w.+-]+$"))) mime else "application/octet-stream"
             runOnUiThread {
                 pendingBytes = bytes
-                pendingMime = mime.ifEmpty { "application/octet-stream" }
+                pendingMime = safeMime
                 val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
                     type = pendingMime
-                    putExtra(Intent.EXTRA_TITLE, name)
+                    putExtra(Intent.EXTRA_TITLE, safeName)
                 }
                 try {
                     saveDocLauncher.launch(intent)
