@@ -87,6 +87,18 @@ jobs:
           echo "APK de release: $apk"
           cp "$apk" ARTiFACTS-FX404-release.apk
 
+      # BARRERA: no publicar nunca un APK sin firmar (Android lo rechaza con "paquete no es válido").
+      # Si faltan los secrets del keystore, Gradle produce app-release-unsigned.apk y apksigner falla aquí,
+      # cortando el build ANTES de publicar. Se arregla añadiendo los 4 secrets RELEASE_* del repo.
+      - name: Verify the release APK is signed (fail before publishing if not)
+        run: |
+          apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          echo "apksigner: $apksigner"
+          if ! "$apksigner" verify --print-certs ARTiFACTS-FX404-release.apk; then
+            echo "::error::El APK de release NO está firmado. Añade los secrets RELEASE_KEYSTORE_BASE64, RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS y RELEASE_KEY_PASSWORD en Settings ▸ Secrets ▸ Actions."
+            exit 1
+          fi
+
       # Publica el APK de RELEASE (firmado con la clave de subida) en un Release con tag fijo → enlace de
       # descarga directo y permanente. Al ser release firmado y no debug, Play Protect lo marca mucho menos.
       - name: Publish APK to a Release
