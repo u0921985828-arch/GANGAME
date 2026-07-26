@@ -139,8 +139,11 @@ class MainActivity : ComponentActivity() {
             mediaPlaybackRequiresUserGesture = false   // the app still resumes AudioContext on first gesture
             allowFileAccess = false                    // assets come via the loader, not file://
             allowContentAccess = false
-            setSupportZoom(false)
-            builtInZoomControls = false
+            // Allow pinch-zoom for accessibility (WCAG 1.4.4 resize-text): the chassis is scaled down a lot
+            // on small phones, so low-vision users need to be able to magnify. builtInZoomControls enables
+            // the pinch gesture; displayZoomControls=false hides the legacy on-screen +/- buttons.
+            setSupportZoom(true)
+            builtInZoomControls = true
             displayZoomControls = false
         }
         // Allow devtools (chrome://inspect) only on debuggable builds.
