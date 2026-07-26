@@ -4,6 +4,21 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v85 (LCD — osciloscopio del master como SILUETA DE ONDA rellena, no línea colapsada):
+    · El scope deja de colapsar cada columna a su pico dominante (que se veía como una banda casi plana) y
+      pasa a rellenar la BANDA entre el mínimo y el máximo de cada columna → la forma de onda real del master,
+      simétrica al centro, gruesa donde suena fuerte y fina donde calla, vibrando con la señal (como el
+      waveform de un DAW/SP-404). Relleno de acento tenue (0.20) + bordes superior/inferior trazados, sin glow.
+      Ventana FIJA de todo el ancho (se ve la onda entera al instante, refrescando en sitio, en vez del barrido
+      lento) + zoom del jog (ENC:ZOOM) y color del skin. (Sustituye el experimento de analizador FFT de v84,
+      que se leía como curva de EQ, por la onda del MASTER que se pidió.)
+  v83 (LCD — scanlines más suaves y al doble de densidad):
+    · Las scanlines CRT de la LCD (.lcd::after) bajan de opacidad (.22→.10) y doblan la resolución (periodo
+      3px→1.5px) → líneas más finas y numerosas, efecto más realista y sin ensuciar el osciloscopio.
+  v82 (LCD — osciloscopio como línea suave + área tenue, sin glow):
+    · El scope pasa de barras min/max con brillo a una sola traza continua (pico dominante por columna, para
+      que reaccione con audio real), suavizada con curvas y un relleno tenue hasta la línea central. Sin
+      iluminación/glow (más limpio y algo más barato en gama baja). Mantiene el scroll y el gating de batería.
   v81 (PAD SETTINGS — tiradores tipo "escuadra": banderín superior espejado, enmarcan la selección):
     · Cada tirador (inicio/fin) lleva un banderín/escuadra en la esquina superior que apunta hacia dentro
       de la región; el del fin va espejado (scaleX -1) para que ambos enmarquen la selección. Sólo se
@@ -1473,7 +1488,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   }
   .lcd::after{
     content:''; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
-    background:repeating-linear-gradient(180deg, rgba(0,0,0,.22) 0px, rgba(0,0,0,.22) 1px, transparent 1px, transparent 3px);
+    background:repeating-linear-gradient(180deg, rgba(0,0,0,.10) 0px, rgba(0,0,0,.10) 0.75px, transparent 0.75px, transparent 1.5px); /* softer (.22→.10) + double density (period 3px→1.5px) → finer, more real CRT scanlines */
     mix-blend-mode:multiply;
   }
   /* Glass reflection over the LCD — a faint diagonal sheen off the top-left, like light
@@ -8449,44 +8464,37 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
     if(++colFrame>=20){ colFrame=0; readVizColors(); }
     const total=timeData.length;
     if(!scopeCols || scopeCols.length!==NB*2) scopeCols=new Float32Array(NB*2);
-    if(reduceMotion.matches){
-      // Reduced motion: no scrolling — fill every column from the current window (a stationary snapshot).
-      const win=Math.max(NB*2, Math.min(total, Math.round(total/vizZoom))), startI=total-win, per=win/NB;
-      for(let b=0;b<NB;b++){
-        let mn=1,mx=-1; const s0=startI+Math.floor(b*per), s1=startI+Math.floor((b+1)*per);
-        for(let i=s0;i<s1;i++){ const v=(timeData[i]-128)/128; if(v<mn)mn=v; if(v>mx)mx=v; }
-        if(mx<mn){ mn=0; mx=0; } // only the degenerate no-samples case snaps to centre; a low-variance column keeps its real position (a loud waveform peak/trough must draw at its height, not collapse to the centre — that was the "empty at zoom" artifact)
-        scopeCols[b*2]=mn; scopeCols[b*2+1]=mx;
-      }
-    } else {
-      // SCROLLING SCOPE: each frame consume the SAME recent chunk of audio (~total/NB ≈ one frame's worth)
-      // and split it into k fine sub-columns, appending all k on the right while shifting the history left.
-      // k grows with the jog zoom, so zooming in subdivides that recent audio more finely (more time
-      // resolution / detail) instead of dropping samples — the scope stays dense and contiguous at any zoom.
-      // At 1x, k=1 → identical to the plain one-column-per-frame sweep. Scans ~total/NB samples/frame either
-      // way (cheap), so it holds the display refresh rate regardless of fftSize.
-      const colSpan=Math.max(1, Math.round((total/vizZoom)/NB)); // samples per column (finer as we zoom in)
-      const k=Math.max(1, Math.min(NB, Math.round(vizZoom)));     // new columns per frame ≈ zoom
-      const span=colSpan*k;                    // ≈ total/NB: same recent chunk of audio regardless of zoom
-      let base=total-span; if(base<0) base=0;
-      scopeCols.copyWithin(0, k*2);            // shift history left by k columns
-      for(let c=0;c<k;c++){
-        let mn=1,mx=-1; const s0=base+c*colSpan, s1=s0+colSpan;
-        for(let i=s0;i<s1;i++){ const v=(timeData[i]-128)/128; if(v<mn)mn=v; if(v>mx)mx=v; }
-        if(mx<mn){ mn=0; mx=0; } // only the degenerate no-samples case snaps to centre; a low-variance column keeps its real position (a loud waveform peak/trough must draw at its height, not collapse to the centre — that was the "empty at zoom" artifact)
-        const dst=(NB-k+c)*2; scopeCols[dst]=mn; scopeCols[dst+1]=mx; // k newest columns, in order, on the right
-      }
+    // FIXED-WINDOW fill: every frame rebuild all NB columns from the current analyser window (min/max per
+    // column) so the whole waveform shows at once and refreshes in place — the master's real signal shape,
+    // not a slow left-to-right sweep. The jog (vizZoom) sets how much of the window spans the display.
+    const win=Math.max(NB, Math.min(total, Math.round(total/vizZoom))), startI=total-win, per=win/NB;
+    for(let b=0;b<NB;b++){
+      let mn=1,mx=-1; const s0=startI+Math.floor(b*per), s1=startI+Math.floor((b+1)*per);
+      for(let i=s0;i<s1;i++){ const v=(timeData[i]-128)/128; if(v<mn)mn=v; if(v>mx)mx=v; }
+      if(mx<mn){ mn=0; mx=0; } // only the degenerate no-samples case snaps to centre; a loud column keeps its real height
+      scopeCols[b*2]=mn; scopeCols[b*2+1]=mx;
     }
     g2.clearRect(0,0,vizW,vizH);
-    const mid=vizH/2, yamp=mid-1, pitch=vizW/NB, bw=Math.max(1, pitch-1);
+    const mid=vizH/2, yamp=mid-1, pitch=vizW/NB;
     g2.fillStyle='rgba(255,255,255,0.06)'; g2.fillRect(0, mid-0.5, vizW, 1); // faint centre baseline
-    g2.fillStyle=colAccent; g2.shadowColor=colAccent; g2.shadowBlur=PERF.vizShadow; // per-bar canvas glow — dropped to 0 on low-end (shadowBlur on fills is costly on weak GPUs)
-    for(let b=0;b<NB;b++){
-      const cmn=scopeCols[b*2], cmx=scopeCols[b*2+1];
-      const y0=mid+cmn*yamp, y1=mid+cmx*yamp, x=b*pitch+(pitch-bw)/2;
-      g2.fillRect(x, y0, bw, Math.max(1, y1-y0)); // ≥1px so a flat column still reads as a dot at its true height (peak/trough/centre)
-    }
-    g2.shadowBlur=0;
+    // Master WAVEFORM silhouette: per column, fill the band between its min and max excursion (the real
+    // signal envelope, symmetric around centre) — thick where loud, thin where quiet, moving with the
+    // master output. Faint accent fill + stroked top/bottom edges. No glow (cheaper + cleaner).
+    const px=(b)=> b*pitch + pitch/2;
+    const yUp=(b)=> mid + scopeCols[b*2]*yamp;    // min (≤0) → upper edge
+    const yDn=(b)=> mid + scopeCols[b*2+1]*yamp;  // max (≥0) → lower edge
+    g2.lineJoin='round'; g2.lineCap='round';
+    // filled band between the two envelopes
+    g2.beginPath();
+    g2.moveTo(px(0), yUp(0));
+    for(let b=1;b<NB;b++) g2.lineTo(px(b), yUp(b));
+    for(let b=NB-1;b>=0;b--) g2.lineTo(px(b), yDn(b));
+    g2.closePath();
+    g2.globalAlpha=0.20; g2.fillStyle=colAccent; g2.fill(); g2.globalAlpha=1;
+    // crisp top + bottom edges
+    g2.strokeStyle=colAccent; g2.lineWidth=1.4;
+    g2.beginPath(); g2.moveTo(px(0), yUp(0)); for(let b=1;b<NB;b++) g2.lineTo(px(b), yUp(b)); g2.stroke();
+    g2.beginPath(); g2.moveTo(px(0), yDn(0)); for(let b=1;b<NB;b++) g2.lineTo(px(b), yDn(b)); g2.stroke();
     spectrumRafId = (reduceMotion.matches || !lcdShouldAnimate()) ? null : requestAnimationFrame(drawSpectrum); // reduced-motion → draw once; idle/hidden/overlay-covered → pause (the watchdog + kickLCD resume it)
   }
   function startSpectrumLoop(){ if(reduceMotion.matches){ drawSpectrum(); return; } if(spectrumRafId==null) spectrumRafId = requestAnimationFrame(drawSpectrum); }
