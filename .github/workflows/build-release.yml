@@ -18,7 +18,7 @@ on:
       - '.github/workflows/build-release.yml'
 
 permissions:
-  contents: read
+  contents: write   # publica el APK de release (firmado) en un Release → enlace de descarga directo
 
 jobs:
   build:
@@ -79,3 +79,23 @@ jobs:
             android/app/build/outputs/bundle/release/*.aab
             android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
+
+      - name: Rename release APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk ARTiFACTS-FX404-release.apk
+
+      # Publica el APK de RELEASE (firmado con la clave de subida) en un Release con tag fijo → enlace de
+      # descarga directo y permanente. Al ser release firmado y no debug, Play Protect lo marca mucho menos.
+      - name: Publish APK to a Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-latest
+          name: APK de ARTiFACTS FX-404 — última build (release firmada)
+          body: |
+            APK de **release** firmado con la clave de subida (se actualiza en cada build).
+            Descárgalo abajo (`ARTiFACTS-FX404-release.apk`) e instálalo en el móvil.
+
+            ⚠️ Si ya tenías puesta una versión ANTERIOR de prueba (debug), desinstálala UNA vez
+            antes de instalar ésta (usan firmas distintas → si no, sale "app no instalada").
+            A partir de aquí las siguientes actualizaciones se instalan encima sin desinstalar.
+          files: ARTiFACTS-FX404-release.apk
+          make_latest: false

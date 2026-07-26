@@ -1,6 +1,8 @@
 name: Build APK
 
-# Compila el APK (debug, instalable) de ARTiFACTS FX-404 desde el WebView wrapper en android/.
+# Compila el APK (debug, instalable) de ARTiFACTS FX-404 desde el WebView wrapper en android/ y lo sube
+# SÓLO como artifact de la ejecución (para depurar). El enlace de descarga directo permanente (tag
+# apk-latest) lo publica build-release.yml con el APK de RELEASE firmado — no el debug de aquí.
 # Se dispara manualmente (Actions ▸ Run workflow) o al empujar cambios del proyecto Android.
 on:
   workflow_dispatch:
@@ -13,7 +15,7 @@ on:
       - '.github/workflows/build-apk.yml'
 
 permissions:
-  contents: write   # para publicar el APK en un Release (enlace de descarga directo)
+  contents: read   # sólo sube el APK debug como artifact; el enlace fijo apk-latest lo publica build-release.yml (release firmado)
 
 jobs:
   build:
@@ -60,16 +62,3 @@ jobs:
           name: ARTiFACTS-FX404-apk
           path: ARTiFACTS-FX404-debug.apk
           if-no-files-found: error
-
-      # Publica el APK en un Release con tag fijo → enlace de descarga directo y permanente,
-      # mucho más fácil de encontrar (sobre todo en el móvil) que los artifacts de Actions.
-      - name: Publish APK to a Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: apk-latest
-          name: APK de prueba (debug) — última build
-          body: |
-            APK debug instalable de ARTiFACTS FX-404 (se actualiza en cada build).
-            Descárgalo abajo (`ARTiFACTS-FX404-debug.apk`) e instálalo en el móvil.
-          files: ARTiFACTS-FX404-debug.apk
-          make_latest: false
