@@ -49,15 +49,32 @@ jobs:
           npm i --no-audit --no-fund
           node obfuscate-build.mjs
 
-      - name: Decode signing keystore (if configured)
+      # Persist the auto-generated DEV keystore across runs so the sideload APK keeps the SAME signature
+      # build-to-build (installs update in place). Only used when no upload-key secret is configured.
+      - name: Cache dev signing keystore
+        uses: actions/cache@v4
+        with:
+          path: android/release.keystore
+          key: fx404-dev-keystore-v1
+
+      - name: Prepare signing keystore
         env:
           KS: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
         run: |
           if [ -n "$KS" ]; then
             echo "$KS" | base64 -d > android/release.keystore
-            echo "Keystore de firma escrito → build FIRMADO."
+            echo "SIGN_MODE=upload-secret" >> "$GITHUB_ENV"
+            echo "Keystore de subida (secret) → firma de Play, estable."
+          elif [ -f android/release.keystore ]; then
+            echo "SIGN_MODE=dev-cached" >> "$GITHUB_ENV"
+            echo "Keystore de DEV restaurado de caché → firma estable (sin secrets)."
           else
-            echo "::warning::Sin RELEASE_KEYSTORE_BASE64 — el .aab saldrá SIN firmar (no publicable en Play)."
+            echo "::warning::Sin secrets RELEASE_* — genero un keystore de DEV (se cachea) para que el APK salga FIRMADO e instalable. Para publicar en Play, añade los 4 secrets RELEASE_*."
+            keytool -genkeypair -v -keystore android/release.keystore -alias fx404 \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass fx404dev -keypass fx404dev \
+              -dname "CN=ARTiFACTS FX-404 DEV, OU=App, O=ARTiFACTS, C=ES"
+            echo "SIGN_MODE=dev-new" >> "$GITHUB_ENV"
           fi
 
       - name: Build release bundle + APK
@@ -68,6 +85,12 @@ jobs:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
+          # When signing with the auto DEV keystore (no upload-key secret), use its fixed dev passwords.
+          if [ "${SIGN_MODE}" != "upload-secret" ]; then
+            export RELEASE_STORE_PASSWORD=fx404dev
+            export RELEASE_KEY_ALIAS=fx404
+            export RELEASE_KEY_PASSWORD=fx404dev
+          fi
           chmod +x gradlew
           ./gradlew --no-daemon --stacktrace bundleRelease assembleRelease
 
