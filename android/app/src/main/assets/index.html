@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v80 (PAD SETTINGS — topes del tirador con forma redondeada/soft, no rectángulos):
+    · Los dos topes de cada tirador pasan de rectángulos a pastillas redondeadas (border-radius). La línea
+      fina central se dibuja ahora sobre el propio tirador; los topes siguen SÓLO iluminándose al tocar
+      (brillo acento, mismo tamaño, sin blanco).
+  v79 (PAD SETTINGS — los topes del tirador SÓLO se iluminan al tocar, sin ensanchar ni blanco):
+    · Ajuste sobre v78: al tocar un tirador, los dos topes de los extremos ya no se ensanchan ni usan
+      halo blanco; sólo se iluminan con un brillo del mismo color de la barra (acento). Mismo tamaño.
+  v78 (PAD SETTINGS — feedback táctil de los tiradores de recorte por topes, no por toda la barra):
+    · Antes, al tocar un tirador (inicio/fin) del editor de sample, se ensanchaba e iluminaba TODA la línea
+      vertical. Ahora la línea se queda fina y sólo engrosan/brillan dos topes (grips) en los extremos
+      arriba y abajo — feedback más limpio y preciso, estilo asa de recorte. Sólo CSS, sin cambio de lógica.
   v77 (pendientes de pulido — legibilidad de reglas, lector de pantalla en knobs, limpieza CSS):
     · LEGIBILIDAD: las cifras de la regla de compases (.plRulerCell) y de la cabecera de pasos del piano
       roll (.pnColHead) suben de 8px a 9/9.5px — caben de sobra en el ancho de columna (16/24px) y ya no
@@ -2009,13 +2020,18 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   .seHandle{
     position:absolute; top:0; bottom:0; width:44px; margin-left:-22px;
     cursor:ew-resize; touch-action:none;
+    background:linear-gradient(var(--accent),var(--accent)) center/2px 100% no-repeat; /* thin centre line on the handle itself, freeing both pseudos for the two rounded end grips */
   }
-  .seHandle::after{
-    content:''; position:absolute; top:0; bottom:0; left:50%; width:3px; margin-left:-1.5px;
-    background:var(--accent); box-shadow:0 0 6px var(--accent); border-radius:0;
-    transition:transform .12s ease, box-shadow .12s ease;
+  /* Two SOFT rounded end grips (top + bottom). They only LIGHT UP on touch (accent glow) — no widening,
+     no white — so it reads as "this end is active" without changing size. */
+  .seHandle::before, .seHandle::after{
+    content:''; position:absolute; left:50%; width:9px; height:11px; margin-left:-4.5px; z-index:1;
+    background:var(--accent); border-radius:5px; /* rounded pill, not a hard rectangle */
+    transition:box-shadow .12s ease;
   }
-  .seHandle.active::after{ transform:scaleX(1.6); box-shadow:0 0 10px var(--accent), 0 0 2px #fff; }
+  .seHandle::before{ top:3px; }
+  .seHandle::after{ bottom:3px; }
+  .seHandle.active::before, .seHandle.active::after{ box-shadow:0 0 5px var(--accent), 0 0 10px var(--accent); }
   /* Playhead — the "now playing" cursor while PLAY previews the sample. White (not accent) so it
      reads as motion distinct from the accent-coloured trim handles. pointer-events:none so it never
      blocks a handle drag; hidden until playback starts. */

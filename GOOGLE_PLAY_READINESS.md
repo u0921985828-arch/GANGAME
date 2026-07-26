@@ -150,7 +150,7 @@ firma, ficha). Ver checklist.
 
 **Proyecto Android (wrapper) — CÓDIGO LISTO en `android/` (compilar en Android Studio)**
 - [x] Módulo Gradle: `minSdk 24`, `targetSdk`/`compileSdk 36`, `applicationId com.artifacts.fx404`, `versionCode/Name`
-- [x] `MainActivity` + `WebViewAssetLoader` (origen seguro) cargando el HTML de `assets/` (v77 embebido)
+- [x] `MainActivity` + `WebViewAssetLoader` (origen seguro) cargando el HTML de `assets/` (v80 embebido, ofuscado en CI)
 - [x] WebView: JS + DOM storage ON; `onShowFileChooser`; **back → cierra overlays antes de salir** (`__fx404Back`)
 - [x] Descargas *blob* → **SAF `ACTION_CREATE_DOCUMENT`** (el usuario elige destino; sin permiso en ninguna API)
 - [x] `AndroidManifest.xml` con **cero permisos** (ni `RECORD_AUDIO` ni almacenamiento)
@@ -176,3 +176,27 @@ firma, ficha). Ver checklist.
 ---
 *Empaquetado Android = siguiente paso (código para Android Studio; no compilable/verificable en este
 entorno web). Nada de lo anterior exige cambiar la app: v36 ya está lista para bundle.*
+
+---
+
+## Protección del código / anti-copia (opción A)
+
+Realidad técnica (sin humo): una WebView ejecuta el JS, así que el código SIEMPRE viaja en el APK
+(`assets/index.html`) y **no existe forma de volverlo 100% indecompilable ni de "encriptarlo" de verdad**
+— cualquier cifrado se deshace porque el descifrador va incluido. Lo que sí se hace es subir mucho el
+coste de copiarlo:
+
+- **Ofuscación del JS propio (CI):** `tools/obfuscate-build.mjs` regenera el `assets/index.html` que se
+  publica a partir del `ARTiFACTSFX404_v*.html` legible. Ofusca SÓLO las 2 IIFE propias (deja JSZip/lamejs,
+  ya minificadas): identificadores → hex, string-array base64 + split, control-flow flattening, object-keys
+  transform, numbers-to-expressions, self-defending. El `_vN` sigue legible para desarrollar; lo que sale a
+  tienda es un blob. Perfil calibrado para NO penalizar la gama baja (arranque ~1.8× vs legible, no ~3.2×
+  del perfil agresivo). Verificado con Playwright: 0 errores y 0 regresiones sobre el build ofuscado.
+- **R8/ProGuard (ya activo):** `isMinifyEnabled` + `isShrinkResources` en release; `proguard-rules.pro`
+  conserva el `@JavascriptInterface` del bridge. El shell Kotlin ya sale ofuscado.
+- **Debug de WebView apagado en release** (sólo en builds `debuggable`). Nada de `chrome://inspect` en tienda.
+- **Play App Signing** (automático al subir a Play) impide que alguien re-firme y republique tu APK.
+- **Opcional — Play Integrity API:** para una app 100% offline aporta poco sin un backend que verifique el
+  token; se puede activar la "protección de integridad automática" desde Play Console si se desea.
+
+Nota honesta: esto NO hace la app indecompilable; hace que copiarla/leerla pase de trivial a caro.

@@ -1,0 +1,8 @@
+{
+  "name": "fx404-build",
+  "private": true,
+  "type": "module",
+  "description": "Build tooling: obfuscate the shipped WebView asset from the canonical single-file app.",
+  "scripts": { "build:asset": "node obfuscate-build.mjs" },
+  "dependencies": { "javascript-obfuscator": "^4.2.2" }
+}

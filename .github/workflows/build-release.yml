@@ -13,6 +13,8 @@ on:
     branches: [ claude/new-session-q3zb92 ]
     paths:
       - 'android/**'
+      - 'ARTiFACTSFX404_v*.html'
+      - 'tools/**'
       - '.github/workflows/build-release.yml'
 
 permissions:
@@ -33,6 +35,19 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Regenerate the SHIPPED asset as an OBFUSCATED build from the latest readable ARTiFACTSFX404_v*.html
+      # before Gradle packages it — the Play bundle never ships readable app source.
+      - name: Obfuscate & regenerate shipped WebView asset
+        working-directory: tools
+        run: |
+          npm i --no-audit --no-fund
+          node obfuscate-build.mjs
 
       - name: Decode signing keystore (if configured)
         env:
