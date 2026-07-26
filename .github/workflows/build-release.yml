@@ -81,7 +81,11 @@ jobs:
           if-no-files-found: error
 
       - name: Rename release APK
-        run: cp android/app/build/outputs/apk/release/app-release.apk ARTiFACTS-FX404-release.apk
+        run: |
+          ls -l android/app/build/outputs/apk/release/
+          apk=$(ls android/app/build/outputs/apk/release/*.apk | head -1)
+          echo "APK de release: $apk"
+          cp "$apk" ARTiFACTS-FX404-release.apk
 
       # Publica el APK de RELEASE (firmado con la clave de subida) en un Release con tag fijo → enlace de
       # descarga directo y permanente. Al ser release firmado y no debug, Play Protect lo marca mucho menos.
