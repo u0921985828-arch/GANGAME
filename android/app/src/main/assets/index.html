@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <!--
   ARTiFACTS FX-404 — changelog
+  v81 (PAD SETTINGS — tiradores tipo "escuadra": banderín superior espejado, enmarcan la selección):
+    · Cada tirador (inicio/fin) lleva un banderín/escuadra en la esquina superior que apunta hacia dentro
+      de la región; el del fin va espejado (scaleX -1) para que ambos enmarquen la selección. Sólo se
+      ilumina al tocar (brillo acento, sin ensanchar ni blanco). Línea central fina como guía.
   v80 (PAD SETTINGS — topes del tirador con forma redondeada/soft, no rectángulos):
     · Los dos topes de cada tirador pasan de rectángulos a pastillas redondeadas (border-radius). La línea
       fina central se dibuja ahora sobre el propio tirador; los topes siguen SÓLO iluminándose al tocar
@@ -2020,18 +2024,18 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
   .seHandle{
     position:absolute; top:0; bottom:0; width:44px; margin-left:-22px;
     cursor:ew-resize; touch-action:none;
-    background:linear-gradient(var(--accent),var(--accent)) center/2px 100% no-repeat; /* thin centre line on the handle itself, freeing both pseudos for the two rounded end grips */
+    background:linear-gradient(var(--accent),var(--accent)) center/2px 100% no-repeat; /* thin centre line on the handle itself */
   }
-  /* Two SOFT rounded end grips (top + bottom). They only LIGHT UP on touch (accent glow) — no widening,
-     no white — so it reads as "this end is active" without changing size. */
-  .seHandle::before, .seHandle::after{
-    content:''; position:absolute; left:50%; width:9px; height:11px; margin-left:-4.5px; z-index:1;
-    background:var(--accent); border-radius:5px; /* rounded pill, not a hard rectangle */
-    transition:box-shadow .12s ease;
+  /* Corner "escuadra" flag at the top of each handle, jutting INTO the region. The end handle is mirrored
+     (scaleX(-1)) so the pair frames the selection like two set-square brackets facing each other. It only
+     LIGHTS UP on touch (accent glow) — no resize, no white. */
+  .seHandle::before{
+    content:''; position:absolute; top:0; left:50%;
+    width:0; height:0; border-top:14px solid var(--accent); border-right:11px solid transparent;
+    transition:filter .12s ease;
   }
-  .seHandle::before{ top:3px; }
-  .seHandle::after{ bottom:3px; }
-  .seHandle.active::before, .seHandle.active::after{ box-shadow:0 0 5px var(--accent), 0 0 10px var(--accent); }
+  #seHandleEnd::before{ transform:scaleX(-1); transform-origin:left top; } /* mirror → points the other way */
+  .seHandle.active::before{ filter:drop-shadow(0 0 4px var(--accent)) drop-shadow(0 0 8px var(--accent)); }
   /* Playhead — the "now playing" cursor while PLAY previews the sample. White (not accent) so it
      reads as motion distinct from the accent-coloured trim handles. pointer-events:none so it never
      blocks a handle drag; hidden until playback starts. */
