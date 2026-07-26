@@ -103,3 +103,19 @@ jobs:
             A partir de aquí las siguientes actualizaciones se instalan encima sin desinstalar.
           files: ARTiFACTS-FX404-release.apk
           make_latest: false
+
+      # Deja el Release apk-latest SÓLO con el APK de release firmado: borra cualquier otro asset
+      # (p.ej. un ARTiFACTS-FX404-debug.apk antiguo) para que no haya confusión al descargar.
+      - name: Prune stale APKs from the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          rel=$(curl -s -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/releases/tags/apk-latest")
+          echo "$rel" | jq -r '.assets[] | select(.name != "ARTiFACTS-FX404-release.apk") | "\(.id) \(.name)"' \
+          | while read -r id name; do
+              echo "Borrando asset obsoleto: $name ($id)"
+              curl -s -X DELETE -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/$REPO/releases/assets/$id"
+            done
