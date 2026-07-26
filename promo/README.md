@@ -25,3 +25,13 @@ en cada fichero) o clonando el repo.
 `unit_ivory.png` · `unit_ghost.png` · `unit_neon.png` · `unit_arctic.png` · `unit_wave.png`
 
 Colócalos sobre cualquier fondo. `unit_wave.png` muestra la LCD con la onda del master.
+
+## Piezas de campaña (nuevas)
+| Fichero | Tamaño | Uso |
+|---|---|---|
+| `PROMO_mockup.png` | 2160×2700 | Móvil + "MACHACA BEATS" + CTA |
+| `PROMO_cta_story.png` | 2160×3840 | "DALE PLAY" + CTA (story/reel) |
+| `PROMO_howto.png` | 2160×2700 | Cómo funciona en 3 pasos |
+| `PROMO_feat_chop.png` | 2160×2700 | Spotlight AUTO-CHOP |
+| `PROMO_feat_wave.png` | 2160×2700 | Spotlight onda del master |
+| `app_phone_neon.png` / `app_phone_ivory.png` | captura a pantalla de móvil |
