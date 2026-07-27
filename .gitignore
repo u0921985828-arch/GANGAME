@@ -1,3 +1,6 @@
 
 # build tooling deps (installed in CI)
 tools/node_modules/
+
+# session scratch / throwaway test scripts
+scratchpad/
