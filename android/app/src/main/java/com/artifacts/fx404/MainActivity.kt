@@ -51,6 +51,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
     private lateinit var saveDocLauncher: ActivityResultLauncher<Intent>
+    private lateinit var openProjectLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()               // Android-12 splash (back-compat), before super/setContentView
@@ -180,6 +181,33 @@ class MainActivity : ComponentActivity() {
                     Toast.makeText(this, "No se pudo guardar", Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+
+        // PROJECT LOAD: read the picked .fx404 and stream its bytes to the web app in base64 chunks
+        // (begin → chunk* → end), symmetric to the chunked save. Reading + encoding runs off the UI
+        // thread; each evaluateJavascript call is posted back to the UI thread in order.
+        openProjectLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            val uri = if (result.resultCode == RESULT_OK) result.data?.data else null
+            if (uri == null) { webView.evaluateJavascript("window.__fx404RecvProjectCancel&&window.__fx404RecvProjectCancel()", null); return@registerForActivityResult }
+            Thread {
+                try {
+                    val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: ByteArray(0)
+                    runOnUiThread { webView.evaluateJavascript("window.__fx404RecvProjectBegin&&window.__fx404RecvProjectBegin()", null) }
+                    val chunk = 384 * 1024
+                    var i = 0
+                    while (i < bytes.size) {
+                        val end = minOf(i + chunk, bytes.size)
+                        val b64 = Base64.encodeToString(bytes.copyOfRange(i, end), Base64.NO_WRAP) // NO_WRAP → no newlines to break the JS string literal
+                        runOnUiThread { webView.evaluateJavascript("window.__fx404RecvProjectChunk&&window.__fx404RecvProjectChunk('$b64')", null) }
+                        i = end
+                    }
+                    runOnUiThread { webView.evaluateJavascript("window.__fx404RecvProjectEnd&&window.__fx404RecvProjectEnd()", null) }
+                } catch (e: Exception) {
+                    runOnUiThread { webView.evaluateJavascript("window.__fx404RecvProjectCancel&&window.__fx404RecvProjectCancel()", null) }
+                }
+            }.start()
         }
     }
 
@@ -323,6 +351,29 @@ class MainActivity : ComponentActivity() {
             chunkBuffer = null
             val bytes = buf.toByteArray(); val name = chunkName; val mime = chunkMime
             if (!saveToDocumentsFX404(bytes, name, mime)) launchSave(bytes, name, mime)
+        }
+
+        // PROJECT LOAD: open the system file explorer STARTING at Documents/FX-404 (the default
+        // projects folder), but the user can still browse anywhere (a downloaded/shared .fx404).
+        @JavascriptInterface
+        fun openProject() {
+            runOnUiThread {
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "*/*"                       // .fx404 has no registered MIME → don't filter it out
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        try {
+                            val initial = android.provider.DocumentsContract.buildDocumentUri(
+                                "com.android.externalstorage.documents",
+                                "primary:" + android.os.Environment.DIRECTORY_DOCUMENTS + "/FX-404"
+                            )
+                            putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, initial) // a hint; most file pickers honour it
+                        } catch (e: Exception) { /* initial-folder hint is best-effort */ }
+                    }
+                }
+                try { openProjectLauncher.launch(intent) }
+                catch (e: Exception) { Toast.makeText(this@MainActivity, "No se pudo abrir el explorador", Toast.LENGTH_SHORT).show() }
+            }
         }
 
         // --- Single-shot (kept for small files / older callers) -------------------------------
