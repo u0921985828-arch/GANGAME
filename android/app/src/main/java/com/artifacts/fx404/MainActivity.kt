@@ -264,7 +264,7 @@ class MainActivity : ComponentActivity() {
           window.__fx404Back = function(){
             try {
               var ids = ['pianoOverlay','exportOverlay','rowToolsOverlay','mfxOverlay','groupsOverlay',
-                         'utilOverlay','sampleEditOverlay','editOverlay','chainOverlay','introOverlay'];
+                         'utilOverlay','settingsOverlay','sampleEditOverlay','editOverlay','chainOverlay','introOverlay'];
               for (var i=0;i<ids.length;i++){
                 var el = document.getElementById(ids[i]);
                 if (el && el.classList.contains('show')) {
