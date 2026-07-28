@@ -44,6 +44,11 @@ class MainActivity : ComponentActivity() {
     private var pendingBytes: ByteArray? = null
     private var pendingMime: String = "application/octet-stream"
 
+    // Chunked-save reassembly state (see DownloadBridge.beginFile/appendBase64/endFile).
+    private var chunkBuffer: java.io.ByteArrayOutputStream? = null
+    private var chunkName: String = "export"
+    private var chunkMime: String = "application/octet-stream"
+
     private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
     private lateinit var saveDocLauncher: ActivityResultLauncher<Intent>
 
@@ -282,29 +287,60 @@ class MainActivity : ComponentActivity() {
 
     /** Bridge exposed to the page as `AndroidDownloader`. */
     inner class DownloadBridge {
+        // --- CHUNKED transfer (beginFile → appendBase64* → endFile) ---------------------------
+        // A whole project/export (several MB of sample audio) passed as ONE @JavascriptInterface
+        // string overruns the renderer transaction and hangs the WebView (ANR). The web app now
+        // streams the file in ~256KB base64 pieces which we reassemble here, then open the SAF
+        // picker once. @JavascriptInterface methods arrive on the JavaBridge thread and the web
+        // app issues them strictly in order, so appending to a single buffer is safe.
+        @JavascriptInterface
+        fun beginFile(name: String, mime: String) {
+            chunkBuffer = java.io.ByteArrayOutputStream()
+            chunkName = name.replace('/', '_').replace('\\', '_').ifBlank { "export" }
+            chunkMime = if (mime.matches(Regex("^[\\w.+-]+/[\\w.+-]+$"))) mime else "application/octet-stream"
+        }
+
+        @JavascriptInterface
+        fun appendBase64(chunk: String) {
+            val buf = chunkBuffer ?: return
+            try { buf.write(Base64.decode(chunk, Base64.DEFAULT)) }
+            catch (e: Exception) { chunkBuffer = null }   // abort the whole transfer on a bad chunk
+        }
+
+        @JavascriptInterface
+        fun endFile() {
+            val buf = chunkBuffer ?: return
+            chunkBuffer = null
+            launchSave(buf.toByteArray(), chunkName, chunkMime)
+        }
+
+        // --- Single-shot (kept for small files / older callers) -------------------------------
         @JavascriptInterface
         fun saveFile(name: String, mime: String, dataUrl: String) {
             val comma = dataUrl.indexOf(',')
             val b64 = if (comma >= 0) dataUrl.substring(comma + 1) else dataUrl
             val bytes = try { Base64.decode(b64, Base64.DEFAULT) } catch (e: Exception) { return }
-            // Defensive normalisation of the JS-supplied strings before they reach the system file picker:
-            // strip any path separators from the suggested filename, and only honour a well-formed MIME type.
             val safeName = name.replace('/', '_').replace('\\', '_').ifBlank { "export" }
             val safeMime = if (mime.matches(Regex("^[\\w.+-]+/[\\w.+-]+$"))) mime else "application/octet-stream"
-            runOnUiThread {
-                pendingBytes = bytes
-                pendingMime = safeMime
-                val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                    addCategory(Intent.CATEGORY_OPENABLE)
-                    type = pendingMime
-                    putExtra(Intent.EXTRA_TITLE, safeName)
-                }
-                try {
-                    saveDocLauncher.launch(intent)
-                } catch (e: Exception) {
-                    pendingBytes = null
-                    Toast.makeText(this@MainActivity, "No hay app para guardar archivos", Toast.LENGTH_SHORT).show()
-                }
+            launchSave(bytes, safeName, safeMime)
+        }
+    }
+
+    /** Stash the bytes and open the system "Save as…" (SAF) picker. Shared by both transfer paths. */
+    private fun launchSave(bytes: ByteArray, safeName: String, safeMime: String) {
+        runOnUiThread {
+            pendingBytes = bytes
+            pendingMime = safeMime
+            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = pendingMime
+                putExtra(Intent.EXTRA_TITLE, safeName)
+            }
+            try {
+                saveDocLauncher.launch(intent)
+            } catch (e: Exception) {
+                pendingBytes = null
+                Toast.makeText(this@MainActivity, "No hay app para guardar archivos", Toast.LENGTH_SHORT).show()
             }
         }
     }
