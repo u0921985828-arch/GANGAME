@@ -16,8 +16,8 @@ android {
         applicationId = "com.artifacts.fx404"
         minSdk = 24                 // WebViewAssetLoader + modern WebView; covers ~99% of devices
         targetSdk = 36              // API 36 (Android 16) — within Play's required window for new/updated apps (2026)
-        versionCode = 83
-        versionName = "1.82"
+        versionCode = 84
+        versionName = "1.83"
     }
 
     signingConfigs {
