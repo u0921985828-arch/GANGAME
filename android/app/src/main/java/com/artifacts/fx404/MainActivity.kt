@@ -314,6 +314,17 @@ class MainActivity : ComponentActivity() {
             launchSave(buf.toByteArray(), chunkName, chunkMime)
         }
 
+        // Auto-save straight to a default, user-visible folder (Documents/FX-404) with NO picker —
+        // used by PROJECT SAVE. Falls back to the SAF picker on any failure or on Android 9-, so a
+        // save is never silently lost.
+        @JavascriptInterface
+        fun endFileToProjects() {
+            val buf = chunkBuffer ?: return
+            chunkBuffer = null
+            val bytes = buf.toByteArray(); val name = chunkName; val mime = chunkMime
+            if (!saveToDocumentsFX404(bytes, name, mime)) launchSave(bytes, name, mime)
+        }
+
         // --- Single-shot (kept for small files / older callers) -------------------------------
         @JavascriptInterface
         fun saveFile(name: String, mime: String, dataUrl: String) {
@@ -324,6 +335,31 @@ class MainActivity : ComponentActivity() {
             val safeMime = if (mime.matches(Regex("^[\\w.+-]+/[\\w.+-]+$"))) mime else "application/octet-stream"
             launchSave(bytes, safeName, safeMime)
         }
+    }
+
+    /**
+     * Write bytes to a fixed, user-visible folder (Documents/FX-404) via MediaStore — no picker,
+     * no runtime permission (scoped storage, Android 10+/API 29). The folder is created on demand.
+     * Returns false if it can't (older Android or any error) so the caller can fall back to SAF.
+     */
+    private fun saveToDocumentsFX404(bytes: ByteArray, safeNameIn: String, safeMime: String): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false   // pre-scoped-storage → let SAF handle it
+        val safeName = safeNameIn.replace('/', '_').replace('\\', '_').ifBlank { "Proyecto FX-404.fx404" }
+        return try {
+            val values = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, safeName)
+                put(android.provider.MediaStore.MediaColumns.MIME_TYPE, safeMime)
+                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOCUMENTS + "/FX-404")
+                put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+            val collection = android.provider.MediaStore.Files.getContentUri(android.provider.MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val uri = contentResolver.insert(collection, values) ?: return false
+            contentResolver.openOutputStream(uri)?.use { it.write(bytes) } ?: run { contentResolver.delete(uri, null, null); return false }
+            values.clear(); values.put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
+            contentResolver.update(uri, values, null, null)
+            runOnUiThread { Toast.makeText(this@MainActivity, "Guardado en Documentos/FX-404", Toast.LENGTH_SHORT).show() }
+            true
+        } catch (e: Exception) { false }
     }
 
     /** Stash the bytes and open the system "Save as…" (SAF) picker. Shared by both transfer paths. */
