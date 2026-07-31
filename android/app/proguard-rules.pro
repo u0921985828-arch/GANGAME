@@ -4,3 +4,8 @@
     @android.webkit.JavascriptInterface <methods>;
 }
 -keepattributes JavascriptInterface
+# R8 full mode (android.enableR8.fullMode=true) es más agresivo: fijamos también la CLASE del bridge
+# (no solo sus miembros) para que el enlace addJavascriptInterface(...,"AndroidDownloader") no se vea
+# afectado por optimizaciones de clase. Los nombres de método deben conservarse porque el JS los llama
+# por nombre (AndroidDownloader.saveFile/beginFile/appendBase64/endFile/endFileToProjects/openProject).
+-keep class com.artifacts.fx404.MainActivity$DownloadBridge { *; }

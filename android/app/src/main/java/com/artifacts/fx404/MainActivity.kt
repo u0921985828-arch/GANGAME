@@ -151,6 +151,12 @@ class MainActivity : ComponentActivity() {
             setSupportZoom(true)
             builtInZoomControls = true
             displayZoomControls = false
+            // Safe Browsing OFF (refuerzo del meta-data del manifest): app offline, no navega a URLs
+            // remotas → la comprobación de Safe Browsing no aporta y añade coste de init. API 26+.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                @Suppress("DEPRECATION")
+                safeBrowsingEnabled = false
+            }
         }
         // Allow devtools (chrome://inspect) only on debuggable builds.
         if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {

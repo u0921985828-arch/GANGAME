@@ -27,6 +27,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.App.Starting">
 
+        <!--
+          Safe Browsing OFF: la app es 100% offline (contenido servido desde assets/ por
+          WebViewAssetLoader, CSP connect-src 'self', sin fetch/XHR/WebSocket). Safe Browsing
+          inicializa un componente de GMS y hace comprobaciones de URL que aquí no protegen de
+          nada → se desactiva para no pagar ese coste en el arranque. Pre-init vía meta-data
+          (cubre todas las API); además se refuerza en runtime en configureWebView (API 26+).
+        -->
+        <meta-data
+            android:name="android.webkit.WebView.EnableSafeBrowsing"
+            android:value="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -16,8 +16,8 @@ android {
         applicationId = "com.artifacts.fx404"
         minSdk = 24                 // WebViewAssetLoader + modern WebView; covers ~99% of devices
         targetSdk = 36              // API 36 (Android 16) — within Play's required window for new/updated apps (2026)
-        versionCode = 150
-        versionName = "2.49"
+        versionCode = 151
+        versionName = "2.50"
     }
 
     signingConfigs {
@@ -55,6 +55,13 @@ android {
     // The web app is already minified/compressed; don't let AAPT re-compress the .html asset.
     androidResources {
         noCompress += "html"
+    }
+
+    // No incluir el bloque de metadatos de dependencias (firmado por Google) en el APK/AAB. No
+    // aporta al usuario, engorda ligeramente el artefacto y es información de build innecesaria.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 }
 
