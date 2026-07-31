@@ -20,8 +20,10 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
+import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
+import androidx.webkit.WebViewFeature
 
 /**
  * Thin native shell around the single-file web app (assets/index.html).
@@ -61,6 +63,9 @@ class MainActivity : ComponentActivity() {
         registerLaunchers()
 
         webView = WebView(this)
+        // v2.52 — el fondo por defecto del WebView es BLANCO hasta que la página oscura pinta → destello
+        // blanco al arrancar. Se fija a negro (= theme-color/#0a0a0b del web app) para que no haya flash.
+        webView.setBackgroundColor(0xFF0A0A0B.toInt())
         setContentView(webView)
         configureWebView(webView)
 
@@ -157,7 +162,23 @@ class MainActivity : ComponentActivity() {
                 @Suppress("DEPRECATION")
                 safeBrowsingEnabled = false
             }
+            // v2.52 — offscreenPreRaster: rasteriza fuera de pantalla la zona contigua al viewport, así al
+            // escalar/scrollear los tiles ya están listos y no aparece el patrón de "ajedrez"/parches en
+            // blanco. Coste: ~1 pantalla extra de tiles en memoria; asumible para un WebView único a
+            // pantalla completa con UI casi estática. API 23+ (minSdk 24). La ganancia de render segura.
+            offscreenPreRaster = true
         }
+        // v2.52 — Oscurecido algorítmico OFF: la app tiene su PROPIO tema oscuro. Si el sistema está en
+        // modo oscuro, WebView podría intentar invertir colores (analiza+repinta+puede romper el chasis).
+        // Le decimos "yo controlo el tema, no toques". API 33+ = algorithmic-darkening; 29-32 = force-dark.
+        try {
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                WebSettingsCompat.setAlgorithmicDarkeningAllowed(wv.settings, false)
+            } else if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+                @Suppress("DEPRECATION")
+                WebSettingsCompat.setForceDark(wv.settings, WebSettingsCompat.FORCE_DARK_OFF)
+            }
+        } catch (e: Exception) { /* best-effort: si la versión de WebView no lo soporta, el tema propio del HTML manda igualmente */ }
         // Allow devtools (chrome://inspect) only on debuggable builds.
         if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
             WebView.setWebContentsDebuggingEnabled(true)
