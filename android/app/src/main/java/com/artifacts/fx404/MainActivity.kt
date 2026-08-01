@@ -367,6 +367,11 @@ class MainActivity : ComponentActivity() {
         }
 
         @JavascriptInterface
+        fun noteClick() {
+            if (NativeAudioBridge.ensureLoaded()) NativeAudioBridge.nativeNoteClick()
+        }
+
+        @JavascriptInterface
         fun info(): String =
             if (NativeAudioBridge.ensureLoaded()) NativeAudioBridge.nativeInfo()
             else "{\"open\":false,\"available\":false}"

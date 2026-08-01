@@ -15,6 +15,7 @@
 #include <mutex>
 #include <string>
 #include <cstdio>
+#include <cmath>
 
 #define LOG_TAG "FX404Audio"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -78,6 +79,9 @@ public:
         if (mStream && frames > 0) mStream->setBufferSizeInFrames(frames);
     }
 
+    // RT-safe: only bumps an atomic. The callback thread turns pending triggers into click voices.
+    void noteClick() { mPending.fetch_add(1, std::memory_order_relaxed); }
+
     std::string info() {
         std::lock_guard<std::mutex> lock(mLock);
         if (!mStream) return std::string("{\"open\":false}");
@@ -105,19 +109,45 @@ public:
         return std::string(buf);
     }
 
-    DataCallbackResult onAudioReady(AudioStream* /*stream*/, void* audioData,
+    DataCallbackResult onAudioReady(AudioStream* stream, void* audioData,
                                     int32_t numFrames) override {
-        // Scaffold: stereo float silence. The voice mixer replaces this in step 2.
         float* out = static_cast<float*>(audioData);
         const int32_t samples = numFrames * 2;
         for (int32_t i = 0; i < samples; ++i) out[i] = 0.0f;
+
+        // Turn pending taps into click voices (a short 1 kHz decaying ping) so the user can feel the
+        // native tap→sound latency in the app. All voice state is touched only on this thread.
+        int pending = mPending.exchange(0, std::memory_order_relaxed);
+        const float sr = static_cast<float>(stream->getSampleRate());
+        while (pending-- > 0) {
+            for (auto& v : mVoices) {
+                if (!v.active) { v.active = true; v.pos = 0; break; }
+            }
+        }
+        for (auto& v : mVoices) {
+            if (!v.active) continue;
+            for (int32_t f = 0; f < numFrames; ++f) {
+                const float t = static_cast<float>(v.pos) / sr;
+                const float env = std::exp(-t * 60.0f);          // ~decays in ~50 ms
+                const float s = 0.25f * env * std::sin(2.0f * 3.14159265f * 1000.0f * t);
+                out[f * 2]     += s;
+                out[f * 2 + 1] += s;
+                if (++v.pos >= kClickFrames) { v.active = false; break; }
+            }
+        }
         return DataCallbackResult::Continue;
     }
 
 private:
+    struct Voice { int pos = 0; bool active = false; };
+    static constexpr int kMaxVoices = 16;
+    static constexpr int kClickFrames = 2400; // ~50 ms at 48 kHz
+
     std::mutex mLock;
     std::shared_ptr<AudioStream> mStream;
     int mBurst = 0;
+    std::atomic<int> mPending{0};
+    Voice mVoices[kMaxVoices];
 };
 
 static Fx404Engine gEngine;
@@ -137,6 +167,11 @@ Java_com_artifacts_fx404_NativeAudioBridge_nativeStop(JNIEnv*, jobject) {
 JNIEXPORT void JNICALL
 Java_com_artifacts_fx404_NativeAudioBridge_nativeSetBufferFrames(JNIEnv*, jobject, jint frames) {
     gEngine.setBufferFrames(static_cast<int>(frames));
+}
+
+JNIEXPORT void JNICALL
+Java_com_artifacts_fx404_NativeAudioBridge_nativeNoteClick(JNIEnv*, jobject) {
+    gEngine.noteClick();
 }
 
 JNIEXPORT jstring JNICALL

@@ -30,5 +30,6 @@ object NativeAudioBridge {
     external fun nativeStart(): Int
     external fun nativeStop()
     external fun nativeSetBufferFrames(frames: Int)
+    external fun nativeNoteClick()
     external fun nativeInfo(): String
 }
