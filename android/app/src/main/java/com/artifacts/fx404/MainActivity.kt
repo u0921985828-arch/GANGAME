@@ -1,7 +1,6 @@
 package com.artifacts.fx404
 
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.net.Uri
 import android.os.Build
@@ -372,19 +371,9 @@ class MainActivity : ComponentActivity() {
             if (NativeAudioBridge.ensureLoaded()) NativeAudioBridge.nativeNoteClick()
         }
 
-        // Lock/unlock screen orientation from the web app (the "editores en horizontal" option). The
-        // Activity already declares configChanges=orientation|screenSize… so this rotates WITHOUT
-        // recreating the WebView. Runs on the UI thread (JS-bridge calls arrive off it).
-        @JavascriptInterface
-        fun setOrientation(mode: String) {
-            this@MainActivity.runOnUiThread {
-                this@MainActivity.requestedOrientation = when (mode) {
-                    "landscape" -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                    "portrait"  -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    else         -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                }
-            }
-        }
+        // (The old setOrientation bridge was removed: the app is now hard-locked to portrait in the
+        // manifest and the "editores en horizontal" option rotates the popup via CSS, not the screen.
+        // A runtime setRequestedOrientation would have overridden the manifest lock, so it's gone.)
 
         @JavascriptInterface
         fun info(): String =
