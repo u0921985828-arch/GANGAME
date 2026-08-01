@@ -26,9 +26,9 @@ android {
         }
         externalNativeBuild {
             cmake {
-                // Oboe's prefab ships a static lib; link the app's native code against libc++ statically
-                // so we don't have to also package libc++_shared.so.
-                arguments += "-DANDROID_STL=c++_static"
+                // Oboe's prefab is built against the shared libc++, and prefab enforces a matching STL,
+                // so the app's native code must also use c++_shared. AGP then packages libc++_shared.so.
+                arguments += "-DANDROID_STL=c++_shared"
             }
         }
     }
