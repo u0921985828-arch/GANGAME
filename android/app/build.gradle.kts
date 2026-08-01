@@ -16,8 +16,8 @@ android {
         applicationId = "com.artifacts.fx404"
         minSdk = 24                 // WebViewAssetLoader + modern WebView; covers ~99% of devices
         targetSdk = 36              // API 36 (Android 16) — within Play's required window for new/updated apps (2026)
-        versionCode = 159
-        versionName = "2.58"
+        versionCode = 160
+        versionName = "2.59"
 
         // Native low-latency audio (Oboe) is 64-bit only; every device from the last several years is
         // arm64, and the App Bundle splits per-ABI so the download stays small.
