@@ -9,3 +9,10 @@
 # afectado por optimizaciones de clase. Los nombres de método deben conservarse porque el JS los llama
 # por nombre (AndroidDownloader.saveFile/beginFile/appendBase64/endFile/endFileToProjects/openProject).
 -keep class com.artifacts.fx404.MainActivity$DownloadBridge { *; }
+
+# Native audio (Oboe) bridge. JNI links the external methods BY NAME
+# (Java_com_artifacts_fx404_NativeAudioBridge_*), so their names must survive R8 full mode; and the
+# NativeAudio JS bridge is called by name from injected JavaScript, same as DownloadBridge.
+-keepclasseswithmembernames class * { native <methods>; }
+-keep class com.artifacts.fx404.NativeAudioBridge { *; }
+-keep class com.artifacts.fx404.MainActivity$NativeAudioJs { *; }

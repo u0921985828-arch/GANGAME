@@ -120,6 +120,7 @@ class MainActivity : ComponentActivity() {
         }
 
         webView.addJavascriptInterface(DownloadBridge(), "AndroidDownloader")
+        webView.addJavascriptInterface(NativeAudioJs(), "NativeAudio")
 
         setupBackHandling()
 
@@ -338,6 +339,37 @@ class MainActivity : ComponentActivity() {
         })();
         """.trimIndent()
         view.evaluateJavascript(js, null)
+    }
+
+    /**
+     * Bridge exposed to the page as `NativeAudio` — the JS side of the low-latency Oboe engine.
+     * Every method degrades safely when the native lib is unavailable (older WebView build, load
+     * failure): the page checks `available()` and falls back to its Web Audio engine.
+     * Stage 1 scaffold: `start()` opens a silent low-latency stream and `info()` reports its real
+     * latency, so the page can show the low-latency indicator and validate the chain on-device.
+     */
+    inner class NativeAudioJs {
+        @JavascriptInterface
+        fun available(): Boolean = NativeAudioBridge.ensureLoaded()
+
+        @JavascriptInterface
+        fun start(): Int =
+            if (NativeAudioBridge.ensureLoaded()) NativeAudioBridge.nativeStart() else -999
+
+        @JavascriptInterface
+        fun stop() {
+            if (NativeAudioBridge.ensureLoaded()) NativeAudioBridge.nativeStop()
+        }
+
+        @JavascriptInterface
+        fun setBufferFrames(frames: Int) {
+            if (NativeAudioBridge.ensureLoaded()) NativeAudioBridge.nativeSetBufferFrames(frames)
+        }
+
+        @JavascriptInterface
+        fun info(): String =
+            if (NativeAudioBridge.ensureLoaded()) NativeAudioBridge.nativeInfo()
+            else "{\"open\":false,\"available\":false}"
     }
 
     /** Bridge exposed to the page as `AndroidDownloader`. */

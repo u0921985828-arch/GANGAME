@@ -16,8 +16,37 @@ android {
         applicationId = "com.artifacts.fx404"
         minSdk = 24                 // WebViewAssetLoader + modern WebView; covers ~99% of devices
         targetSdk = 36              // API 36 (Android 16) — within Play's required window for new/updated apps (2026)
-        versionCode = 154
-        versionName = "2.53"
+        versionCode = 155
+        versionName = "2.54"
+
+        // Native low-latency audio (Oboe) is 64-bit only; every device from the last several years is
+        // arm64, and the App Bundle splits per-ABI so the download stays small.
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
+        externalNativeBuild {
+            cmake {
+                // Oboe's prefab ships a static lib; link the app's native code against libc++ statically
+                // so we don't have to also package libc++_shared.so.
+                arguments += "-DANDROID_STL=c++_static"
+            }
+        }
+    }
+
+    // Build libfx404audio.so from src/main/cpp (Stage 1 native audio scaffold).
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
+    // Pin the NDK so CI resolves/downloads a known-good, 16 KB-page-aligned toolchain (Play requirement
+    // for native libs). AGP fetches it via the SDK manager when absent.
+    ndkVersion = "27.0.12077973"
+
+    // Oboe is delivered as a prefab AAR; enable prefab so CMake's find_package(oboe) resolves it.
+    buildFeatures {
+        prefab = true
     }
 
     signingConfigs {
@@ -70,4 +99,5 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.9.2")
     implementation("androidx.webkit:webkit:1.11.0")            // WebViewAssetLoader (secure origin)
     implementation("androidx.core:core-splashscreen:1.0.1")    // Android 12 splash, back-compat
+    implementation("com.google.oboe:oboe:1.9.0")               // low-latency native audio (prefab .so)
 }
