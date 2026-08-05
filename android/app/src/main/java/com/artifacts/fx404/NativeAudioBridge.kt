@@ -32,4 +32,16 @@ object NativeAudioBridge {
     external fun nativeSetBufferFrames(frames: Int)
     external fun nativeNoteClick()
     external fun nativeInfo(): String
+
+    // Low-latency voice core (DRY one-shot pads on wired/USB output).
+    external fun nativeSetMasterGain(g: Float)
+    external fun nativeLoadSample(slotId: Int, path: String, sr: Int, ch: Int, frames: Int): Boolean
+    external fun nativeFreeSample(slotId: Int)
+    external fun nativeHasSample(slotId: Int): Boolean
+    external fun nativeNoteOn(
+        slotId: Int, gain: Float, pitch: Float, startFrac: Float, endFrac: Float,
+        reverse: Boolean, attackSec: Float, releaseSec: Float, padId: Int, groupId: Int
+    ): Boolean
+    external fun nativeStopPad(padId: Int)
+    external fun nativePanic()
 }

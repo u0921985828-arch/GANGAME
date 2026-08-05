@@ -2,6 +2,8 @@ package com.artifacts.fx404
 
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.media.AudioManager
+import android.media.AudioDeviceInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -50,6 +52,11 @@ class MainActivity : ComponentActivity() {
     private var chunkBuffer: java.io.ByteArrayOutputStream? = null
     private var chunkName: String = "export"
     private var chunkMime: String = "application/octet-stream"
+
+    // Native-audio sample-transfer state (see NativeAudioJs.sampleBegin/sampleChunk/sampleEnd).
+    private var sampleOut: java.io.OutputStream? = null
+    private var sampleFile: java.io.File? = null
+    private fun closeSampleStream() { try { sampleOut?.flush(); sampleOut?.close() } catch (e: Exception) {} finally { sampleOut = null } }
 
     private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
     private lateinit var saveDocLauncher: ActivityResultLauncher<Intent>
@@ -379,6 +386,83 @@ class MainActivity : ComponentActivity() {
         fun info(): String =
             if (NativeAudioBridge.ensureLoaded()) NativeAudioBridge.nativeInfo()
             else "{\"open\":false,\"available\":false}"
+
+        // --- Low-latency voice core (DRY one-shot pads on wired/USB output) ------------------------
+
+        // True only when a wired/USB/line output is present. Bluetooth is excluded: it never gets the
+        // fast path and adds its own codec latency, so those hits stay on the WebView engine.
+        @JavascriptInterface
+        fun outputWired(): Boolean {
+            return try {
+                val am = getSystemService(AUDIO_SERVICE) as AudioManager
+                am.getDevices(AudioManager.GET_DEVICES_OUTPUTS).any { d ->
+                    when (d.type) {
+                        AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+                        AudioDeviceInfo.TYPE_WIRED_HEADSET,
+                        AudioDeviceInfo.TYPE_USB_DEVICE,
+                        AudioDeviceInfo.TYPE_USB_HEADSET,
+                        AudioDeviceInfo.TYPE_USB_ACCESSORY,
+                        AudioDeviceInfo.TYPE_LINE_ANALOG,
+                        AudioDeviceInfo.TYPE_LINE_DIGITAL -> true
+                        else -> false
+                    }
+                }
+            } catch (e: Exception) { false }
+        }
+
+        @JavascriptInterface
+        fun setMasterGain(g: Float) { if (NativeAudioBridge.ensureLoaded()) NativeAudioBridge.nativeSetMasterGain(g) }
+
+        @JavascriptInterface
+        fun hasSample(slotId: Int): Boolean =
+            NativeAudioBridge.ensureLoaded() && NativeAudioBridge.nativeHasSample(slotId)
+
+        // Sample transfer: JS streams raw interleaved float32 PCM in base64 chunks (sampleBegin →
+        // sampleChunk* → sampleEnd), symmetric to the project loader, to avoid overrunning the
+        // JS↔native transaction with one multi-MB string. Bytes land in the app's private files dir,
+        // then the native engine reads that file into a slot. Chunks arrive in order on the JavaBridge
+        // thread, so a single output stream is safe.
+        @JavascriptInterface
+        fun sampleBegin(slotId: Int) {
+            try {
+                closeSampleStream()
+                val dir = java.io.File(filesDir, "fx404_native").apply { mkdirs() }
+                sampleFile = java.io.File(dir, "slot_$slotId.pcm")
+                sampleOut = java.io.BufferedOutputStream(java.io.FileOutputStream(sampleFile!!))
+            } catch (e: Exception) { sampleOut = null; sampleFile = null }
+        }
+
+        @JavascriptInterface
+        fun sampleChunk(b64: String) {
+            val out = sampleOut ?: return
+            try { out.write(Base64.decode(b64, Base64.DEFAULT)) }
+            catch (e: Exception) { closeSampleStream(); sampleFile = null }   // abort on a bad chunk
+        }
+
+        @JavascriptInterface
+        fun sampleEnd(slotId: Int, sr: Int, ch: Int, frames: Int): Boolean {
+            val f = sampleFile
+            closeSampleStream()
+            sampleFile = null
+            if (f == null || !NativeAudioBridge.ensureLoaded()) return false
+            return try { NativeAudioBridge.nativeLoadSample(slotId, f.absolutePath, sr, ch, frames) }
+            catch (e: Exception) { false }
+        }
+
+        @JavascriptInterface
+        fun freeSample(slotId: Int) { if (NativeAudioBridge.ensureLoaded()) NativeAudioBridge.nativeFreeSample(slotId) }
+
+        @JavascriptInterface
+        fun noteOn(slotId: Int, gain: Float, pitch: Float, startFrac: Float, endFrac: Float,
+                   reverse: Boolean, attackSec: Float, releaseSec: Float, padId: Int, groupId: Int): Boolean =
+            NativeAudioBridge.ensureLoaded() &&
+                NativeAudioBridge.nativeNoteOn(slotId, gain, pitch, startFrac, endFrac, reverse, attackSec, releaseSec, padId, groupId)
+
+        @JavascriptInterface
+        fun stopPad(padId: Int) { if (NativeAudioBridge.ensureLoaded()) NativeAudioBridge.nativeStopPad(padId) }
+
+        @JavascriptInterface
+        fun panic() { if (NativeAudioBridge.ensureLoaded()) NativeAudioBridge.nativePanic() }
     }
 
     /** Bridge exposed to the page as `AndroidDownloader`. */
