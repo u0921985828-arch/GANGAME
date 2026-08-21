@@ -110,6 +110,20 @@ button { font-family: inherit; cursor: pointer; }
 /* Lista de ejercicios */
 .list { margin-top: 28px; }
 .list__head { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted-2); margin-bottom: 12px; }
+
+/* Selector de programa (rutinas por objetivo) */
+.programs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.programs::-webkit-scrollbar { display: none; }
+.prog {
+  flex: 0 0 auto; min-width: 132px; text-align: left; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px;
+  display: flex; flex-direction: column; gap: 2px; transition: border-color .15s, background .15s, transform .12s;
+}
+.prog:active { transform: scale(.98); }
+.prog b { font-size: 0.92rem; font-weight: 700; }
+.prog small { font-size: 0.72rem; color: var(--muted); }
+.prog.is-on { border-color: var(--accent); background: linear-gradient(135deg, #2a2512, var(--surface)); }
+.prog.is-on b { color: var(--accent); }
 .exercises { list-style: none; display: flex; flex-direction: column; gap: 8px; }
 .exercises .ex-cat {
   font-size: 0.72rem; text-transform: uppercase; letter-spacing: .07em;

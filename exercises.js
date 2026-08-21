@@ -25,6 +25,18 @@ const CATEGORIES = {
   habitos:       'Descanso y hábitos',
 };
 
+/**
+ * Programas (rutinas por objetivo). Declarativos y ampliables: añade uno nuevo
+ * con `ids` (lista explícita, respeta ese orden) o `cats` (todas las de esas
+ * categorías, en el orden de EXERCISES). Sin `ids` ni `cats` → rutina completa.
+ */
+const PROGRAMS = [
+  { id: 'completa',  name: 'Completa',   desc: 'Entrenamiento visual integral' },
+  { id: 'pantallas', name: 'Pantallas',  desc: 'Descanso rápido para la vista', ids: ['blink', 'pursuit-h', 'rule20', 'palming'] },
+  { id: 'enfoque',   name: 'Enfoque',    desc: 'Acomodación y convergencia',    cats: ['enfoque', 'convergencia'] },
+  { id: 'motilidad', name: 'Movimiento', desc: 'Seguimientos y sacádicos',      cats: ['seguimiento', 'sacadicos'] },
+];
+
 const EXERCISES = [
   // ---- Calentamiento ----
   {
@@ -140,5 +152,5 @@ const EXERCISES = [
 ];
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { EXERCISES, CATEGORIES };
+  module.exports = { EXERCISES, CATEGORIES, PROGRAMS };
 }

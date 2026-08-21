@@ -101,6 +101,12 @@ visión borrosa persistente, detente y consulta a tu oftalmólogo.
 
 ## Changelog
 
+- **v4** — Rutinas por objetivo:
+  - Selector de programa en el inicio: **Completa** (14), **Pantallas** (descanso
+    rápido, 4), **Enfoque** (acomodación + convergencia) y **Movimiento**
+    (seguimientos + sacádicos). Declarativos y ampliables (`PROGRAMS` en
+    `exercises.js`, por `ids` o `cats`); la elección se recuerda.
+  - El reproductor, el resumen y las estadísticas operan sobre la rutina activa.
 - **v3** — Pulido de reproductor:
   - Motor de audio WebAudio con envolventes suaves y cues con nombre (preparación,
     inicio, salto sacádico, acorde final); filtro paso-bajo para timbre agradable.

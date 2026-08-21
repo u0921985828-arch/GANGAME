@@ -26,7 +26,7 @@
     lastDone: null,     // clave de día de la última rutina completada
     total: 0,           // rutinas totales
     history: [],        // claves de día completadas (para la semana)
-    settings: { sound: true, haptics: true, reduced: false, intensity: 1 },
+    settings: { sound: true, haptics: true, reduced: false, intensity: 1, program: 'completa' },
   };
 
   const prefersReducedMotion = () => {
@@ -56,6 +56,17 @@
   }
 
   let state = loadState();
+
+  // ---------- Rutina activa (según el programa elegido) ----------
+  function resolveRoutine(id) {
+    const prog = (typeof PROGRAMS !== 'undefined' && PROGRAMS.find((p) => p.id === id)) || null;
+    let list;
+    if (prog && prog.ids) list = prog.ids.map((x) => EXERCISES.find((e) => e.id === x)).filter(Boolean);
+    else if (prog && prog.cats) list = EXERCISES.filter((e) => prog.cats.includes(e.category));
+    else list = EXERCISES.slice();
+    return list.length ? list : EXERCISES.slice();
+  }
+  let routine = resolveRoutine(state.settings.program);
 
   // ---------- Audio (motor de cues suaves con WebAudio) ----------
   let audioCtx = null, masterGain = null;
@@ -116,7 +127,7 @@
   let FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
   const el = {
     streakCount: $('#streak-count'), streakStatus: $('#streak-status'), weekDots: $('#week-dots'),
-    routineSummary: $('#routine-summary'), exerciseList: $('#exercise-list'),
+    routineSummary: $('#routine-summary'), exerciseList: $('#exercise-list'), programs: $('#programs'),
     exIndex: $('#ex-index'), exName: $('#ex-name'), exInstruction: $('#ex-instruction'),
     exTimer: $('#ex-timer'), progressBar: $('#progress-bar'), ringFg: $('#ring-fg'),
     icPause: $('#ic-pause'), icPlay: $('#ic-play'),
@@ -135,10 +146,35 @@
 
   // ---------- Duración efectiva ----------
   const effDuration = (ex) => Math.round(ex.duration * state.settings.intensity);
-  const totalRoutineSeconds = () => EXERCISES.reduce((s, ex) => s + effDuration(ex), 0);
+  const totalRoutineSeconds = () => routine.reduce((s, ex) => s + effDuration(ex), 0);
+
+  // ---------- Selector de programa (rutinas por objetivo) ----------
+  function setProgram(id) {
+    state.settings.program = id;
+    routine = resolveRoutine(id);
+    saveState();
+    renderHome();
+  }
+  function renderPrograms() {
+    if (!el.programs || typeof PROGRAMS === 'undefined') return;
+    el.programs.innerHTML = '';
+    PROGRAMS.forEach((p) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'prog' + (p.id === state.settings.program ? ' is-on' : '');
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', p.id === state.settings.program ? 'true' : 'false');
+      btn.innerHTML = '<b></b><small></small>';
+      btn.querySelector('b').textContent = p.name;
+      btn.querySelector('small').textContent = p.desc;
+      btn.addEventListener('click', () => setProgram(p.id));
+      el.programs.appendChild(btn);
+    });
+  }
 
   // ---------- Render de inicio ----------
   function renderHome() {
+    renderPrograms();
     el.streakCount.textContent = state.streak;
     const doneToday = state.lastDone === todayKey();
     el.streakStatus.textContent = doneToday
@@ -157,12 +193,12 @@
       el.weekDots.appendChild(span);
     }
 
-    const mins = Math.round(totalRoutineSeconds() / 60);
-    el.routineSummary.textContent = `${EXERCISES.length} ejercicios · ~${mins} min`;
+    const mins = Math.max(1, Math.round(totalRoutineSeconds() / 60));
+    el.routineSummary.textContent = `${routine.length} ejercicios · ~${mins} min`;
 
     el.exerciseList.innerHTML = '';
     let currentCat = null;
-    EXERCISES.forEach((ex) => {
+    routine.forEach((ex) => {
       if (ex.category !== currentCat) {
         currentCat = ex.category;
         const head = document.createElement('li');
@@ -581,7 +617,7 @@
     el.ringFg.style.stroke = accent;
     el.ringFg.style.strokeDashoffset = String(RING_C * (1 - clamp(p, 0, 1)));
   }
-  const overallPct = (frac) => ((player.index + frac) / EXERCISES.length) * 100;
+  const overallPct = (frac) => ((player.index + frac) / routine.length) * 100;
 
   // ---------- Bucle principal ----------
   function loop(ts) {
@@ -590,7 +626,7 @@
     const dt = Math.min((ts - player.lastTs) / 1000, 0.1);
     player.lastTs = ts;
 
-    const ex = EXERCISES[player.index];
+    const ex = routine[player.index];
     const readySecs = state.settings.reduced ? READY_SECS + 0.5 : READY_SECS;
 
     // --- Fase: prepárate (cuenta atrás) ---
@@ -645,8 +681,8 @@
   }
 
   function loadExercise(i) {
-    const ex = EXERCISES[i];
-    el.exIndex.textContent = `${i + 1} / ${EXERCISES.length}`;
+    const ex = routine[i];
+    el.exIndex.textContent = `${i + 1} / ${routine.length}`;
     el.exName.textContent = ex.name;
     el.exInstruction.textContent = ex.instruction;
     el.progressBar.style.background = ex.accent;
@@ -664,7 +700,7 @@
 
   function advance(dir) {
     const next = player.index + dir;
-    if (next >= EXERCISES.length) { finishRoutine(); return; }
+    if (next >= routine.length) { finishRoutine(); return; }
     if (next < 0) { loadExercise(0); return; }   // en el primer ejercicio, reinicia su cuenta atrás
     player.index = next;
     loadExercise(next);
@@ -748,9 +784,9 @@
       ? `¡${state.streak} días seguidos! Sigue así.`
       : 'Tus ojos te lo agradecen.';
 
-    // Resumen de habilidades entrenadas (categorías presentes + conteo).
+    // Resumen de habilidades entrenadas (categorías de la rutina + conteo).
     const order = [], byCat = {};
-    EXERCISES.forEach((ex) => {
+    routine.forEach((ex) => {
       if (!byCat[ex.category]) { byCat[ex.category] = { n: 0, accent: ex.accent }; order.push(ex.category); }
       byCat[ex.category].n += 1;
     });
