@@ -710,6 +710,7 @@
   function skipReady() { if (player.running && player.phase === 'ready') enterActive(); }
 
   function startRoutine() {
+    stopConfetti();
     player.index = 0;
     player.paused = false;
     player.running = true;
@@ -740,6 +741,7 @@
 
   function exitToHome() {
     stopLoop();
+    stopConfetti();
     releaseWake();
     renderHome();
     show('home');
@@ -753,6 +755,7 @@
     show('done');
     haptic([30, 40, 60]);
     sfx('win');
+    launchConfetti();
   }
 
   // ---------- Registro de progreso ----------
@@ -798,6 +801,51 @@
       chip.appendChild(document.createTextNode(`${SKILL_LABEL[cat] || cat} · ${byCat[cat].n}`));
       el.doneSkills.appendChild(chip);
     });
+  }
+
+  // ---------- Celebración (confeti al completar) ----------
+  let confettiRaf = 0;
+  function stopConfetti() {
+    cancelAnimationFrame(confettiRaf); confettiRaf = 0;
+    const cv = $('#confetti');
+    if (cv) { const c = cv.getContext('2d'); if (c) c.clearRect(0, 0, cv.width, cv.height); }
+  }
+  function launchConfetti() {
+    if (state.settings.reduced) return;               // respeta movimiento reducido
+    const cv = $('#confetti'); if (!cv) return;
+    const cctx = cv.getContext('2d'); if (!cctx) return;
+    const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
+    const W = cv.clientWidth || window.innerWidth, H = cv.clientHeight || window.innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const colors = ['#fbbf24', '#38bdf8', '#34d399', '#f472b6', '#a78bfa', '#22d3ee', '#fb923c'];
+    const parts = Array.from({ length: 130 }, () => ({
+      x: W * (0.3 + 0.4 * Math.random()), y: H * 0.26 + (Math.random() * 40 - 20),
+      vx: (Math.random() - 0.5) * 6.5, vy: -6 - Math.random() * 6,
+      g: 0.18 + Math.random() * 0.08, size: 5 + Math.random() * 5,
+      rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 0.3,
+      color: colors[(Math.random() * colors.length) | 0], life: 1,
+    }));
+    const DUR = 1.9;
+    let start = 0;
+    cancelAnimationFrame(confettiRaf);
+    function tick(now) {
+      if (!start) start = now;
+      const t = (now - start) / 1000;
+      cctx.clearRect(0, 0, W, H);
+      let alive = 0;
+      for (const p of parts) {
+        p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        p.life = clamp(1 - t / DUR, 0, 1);
+        if (p.y < H + 24 && p.life > 0) alive++;
+        cctx.save(); cctx.globalAlpha = p.life; cctx.translate(p.x, p.y); cctx.rotate(p.rot);
+        cctx.fillStyle = p.color; cctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        cctx.restore();
+      }
+      if (t < DUR && alive > 0) confettiRaf = requestAnimationFrame(tick);
+      else { cctx.clearRect(0, 0, W, H); confettiRaf = 0; }
+    }
+    confettiRaf = requestAnimationFrame(tick);
   }
 
   // ============================================================
