@@ -287,10 +287,12 @@ button { font-family: inherit; cursor: pointer; }
 .player__hint { display: none; }
 
 @media (min-width: 900px) {
-  /* La app deja de ser una columna estrecha y usa el ancho disponible. */
+  /* La app deja de ser una columna estrecha y usa el ancho disponible.
+     Se condiciona a .is-active para no romper el ocultado de pantallas
+     (una regla #home sin .is-active ganaría a .screen{display:none}). */
   body { max-width: 1060px; }
 
-  #home {
+  #home.is-active {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
     grid-template-rows: auto auto auto auto 1fr;
@@ -334,6 +336,9 @@ button { font-family: inherit; cursor: pointer; }
     border-inline: 1px solid #ffffff0d;
   }
   .player__ui { max-width: 900px; margin-inline: auto; }
+
+  /* Pantalla de fin como columna centrada (no estirar a todo el ancho). */
+  .done__stats, .done__skills { max-width: 480px; margin-inline: auto; }
 }
 
 @media (min-width: 900px) and (pointer: fine) {
