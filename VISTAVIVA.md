@@ -101,6 +101,14 @@ visión borrosa persistente, detente y consulta a tu oftalmólogo.
 
 ## Changelog
 
+- **v5** — Personalización y accesibilidad:
+  - **Rutina personalizada**: programa "Personalizada" con interruptores por
+    ejercicio (mínimo 1; "Comenzar" se deshabilita si no hay ninguno); la
+    selección se recuerda.
+  - **Modo daltónico**: paleta accesible Okabe–Ito por categoría, aplicada a
+    canvas, lista, anillo y estadísticas.
+  - **Vista previa animada** de cada ejercicio en la lista (mini-lienzos, ~30 fps
+    compartidos, en pausa con la pestaña oculta y estáticos en movimiento reducido).
 - **v4** — Rutinas por objetivo:
   - Selector de programa en el inicio: **Completa** (14), **Pantallas** (descanso
     rápido, 4), **Enfoque** (acomodación + convergencia) y **Movimiento**

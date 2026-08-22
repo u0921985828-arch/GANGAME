@@ -136,10 +136,30 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: 14px; padding: 12px 14px;
 }
 .ex-dot { flex: 0 0 auto; width: 12px; height: 12px; border-radius: 50%; }
+.ex-prev {
+  flex: 0 0 auto; width: 44px; height: 44px; border-radius: 10px;
+  background: radial-gradient(circle at 50% 50%, #0e1526, #0a0f1e);
+  border: 1px solid var(--line);
+}
 .ex-body { flex: 1; min-width: 0; }
 .ex-body b { font-size: 0.98rem; font-weight: 600; display: block; }
 .ex-body small { color: var(--muted); font-size: 0.78rem; }
 .ex-time { color: var(--muted-2); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+
+/* Rutina personalizada: filas con interruptor */
+.ex-item--toggle { cursor: pointer; }
+.ex-item--toggle:active { transform: scale(.995); }
+.ex-check {
+  flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--line); position: relative; transition: background .15s, border-color .15s;
+}
+.ex-check.is-on { border-color: var(--ok); background: var(--ok); }
+.ex-check.is-on::after {
+  content: "✓"; position: absolute; inset: 0; display: grid; place-items: center;
+  color: #06281c; font-size: 14px; font-weight: 800;
+}
+
+.cta:disabled { opacity: .5; box-shadow: none; cursor: not-allowed; filter: grayscale(.35); }
 
 .disclaimer {
   margin-top: 26px; font-size: 0.74rem; line-height: 1.5; color: var(--muted-2);

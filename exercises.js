@@ -35,6 +35,7 @@ const PROGRAMS = [
   { id: 'pantallas', name: 'Pantallas',  desc: 'Descanso rápido para la vista', ids: ['blink', 'pursuit-h', 'rule20', 'palming'] },
   { id: 'enfoque',   name: 'Enfoque',    desc: 'Acomodación y convergencia',    cats: ['enfoque', 'convergencia'] },
   { id: 'motilidad', name: 'Movimiento', desc: 'Seguimientos y sacádicos',      cats: ['seguimiento', 'sacadicos'] },
+  { id: 'custom',    name: 'Personalizada', desc: 'Elige tus ejercicios',       custom: true },
 ];
 
 const EXERCISES = [

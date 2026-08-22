@@ -26,8 +26,15 @@
     lastDone: null,     // clave de día de la última rutina completada
     total: 0,           // rutinas totales
     history: [],        // claves de día completadas (para la semana)
-    settings: { sound: true, haptics: true, reduced: false, intensity: 1, program: 'completa' },
+    settings: { sound: true, haptics: true, reduced: false, intensity: 1, program: 'completa', colorblind: false, custom: null },
   };
+
+  // Paleta segura para daltonismo (Okabe–Ito) por categoría.
+  const CVD_CAT = {
+    calentamiento: '#56b4e9', seguimiento: '#e69f00', sacadicos: '#009e73',
+    enfoque: '#f0e442', convergencia: '#d55e00', periferia: '#cc79a7', habitos: '#0072b2',
+  };
+  const accentOf = (ex) => (state.settings.colorblind ? (CVD_CAT[ex.category] || ex.accent) : ex.accent);
 
   const prefersReducedMotion = () => {
     try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch { return false; }
@@ -58,7 +65,12 @@
   let state = loadState();
 
   // ---------- Rutina activa (según el programa elegido) ----------
+  const customIds = () => (Array.isArray(state.settings.custom) ? state.settings.custom : EXERCISES.map((e) => e.id));
   function resolveRoutine(id) {
+    if (id === 'custom') {
+      const sel = new Set(customIds());
+      return EXERCISES.filter((e) => sel.has(e.id));   // puede quedar vacío → se deshabilita "Comenzar"
+    }
     const prog = (typeof PROGRAMS !== 'undefined' && PROGRAMS.find((p) => p.id === id)) || null;
     let list;
     if (prog && prog.ids) list = prog.ids.map((x) => EXERCISES.find((e) => e.id === x)).filter(Boolean);
@@ -132,8 +144,9 @@
     exTimer: $('#ex-timer'), progressBar: $('#progress-bar'), ringFg: $('#ring-fg'),
     icPause: $('#ic-pause'), icPlay: $('#ic-play'),
     doneStreak: $('#done-streak'), doneTotal: $('#done-total'), doneMins: $('#done-mins'), doneSub: $('#done-sub'),
-    doneSkills: $('#done-skills'),
+    doneSkills: $('#done-skills'), btnStart: $('#btn-start'),
   };
+  let previewItems = [];   // {ctx, ex, size} de las vistas previas animadas del inicio
 
   // ---------- Navegación de pantallas ----------
   function show(name) {
@@ -193,12 +206,17 @@
       el.weekDots.appendChild(span);
     }
 
-    const mins = Math.max(1, Math.round(totalRoutineSeconds() / 60));
-    el.routineSummary.textContent = `${routine.length} ejercicios · ~${mins} min`;
+    const isCustom = state.settings.program === 'custom';
+    const sel = new Set(customIds());
+    updateStartState();
 
+    // En "Personalizada" se muestran TODOS los ejercicios con interruptor.
+    const listSource = isCustom ? EXERCISES : routine;
+    const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
     el.exerciseList.innerHTML = '';
+    previewItems = [];
     let currentCat = null;
-    routine.forEach((ex) => {
+    listSource.forEach((ex) => {
       if (ex.category !== currentCat) {
         currentCat = ex.category;
         const head = document.createElement('li');
@@ -207,15 +225,119 @@
         el.exerciseList.appendChild(head);
       }
       const li = document.createElement('li');
-      li.className = 'ex-item';
-      li.innerHTML = `
-        <span class="ex-dot" style="background:${ex.accent}"></span>
-        <span class="ex-body"><b></b><small></small></span>
-        <span class="ex-time">${effDuration(ex)}s</span>`;
-      li.querySelector('b').textContent = ex.name;
-      li.querySelector('small').textContent = ex.goal || ex.instruction.split('.')[0] + '.';
+      li.className = 'ex-item' + (isCustom ? ' ex-item--toggle' : '');
+
+      // Vista previa animada (mini-lienzo por ejercicio).
+      const prev = document.createElement('canvas');
+      prev.className = 'ex-prev'; prev.setAttribute('aria-hidden', 'true');
+      prev.width = Math.round(44 * dpr); prev.height = Math.round(44 * dpr);
+      const pctx = prev.getContext('2d');
+      pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const body = document.createElement('span'); body.className = 'ex-body';
+      const b = document.createElement('b'); b.textContent = ex.name;
+      const sm = document.createElement('small'); sm.textContent = ex.goal || ex.instruction.split('.')[0] + '.';
+      body.appendChild(b); body.appendChild(sm);
+      const time = document.createElement('span'); time.className = 'ex-time'; time.textContent = `${effDuration(ex)}s`;
+
+      li.appendChild(prev); li.appendChild(body); li.appendChild(time);
+
+      if (isCustom) {
+        const on = sel.has(ex.id);
+        const chk = document.createElement('span');
+        chk.className = 'ex-check' + (on ? ' is-on' : '');
+        chk.setAttribute('aria-hidden', 'true');
+        li.appendChild(chk);
+        li.setAttribute('role', 'button');
+        li.setAttribute('aria-pressed', on ? 'true' : 'false');
+        li.tabIndex = 0;
+        // Actualiza SOLO esta fila (sin re-render: conserva el scroll).
+        const toggle = () => {
+          const cur = new Set(customIds());
+          const nowOn = !cur.has(ex.id);
+          if (nowOn) cur.add(ex.id); else cur.delete(ex.id);
+          state.settings.custom = EXERCISES.filter((e) => cur.has(e.id)).map((e) => e.id);
+          routine = resolveRoutine('custom');
+          saveState();
+          chk.classList.toggle('is-on', nowOn);
+          li.setAttribute('aria-pressed', nowOn ? 'true' : 'false');
+          updateStartState();
+          haptic(10);
+        };
+        li.addEventListener('click', toggle);
+        li.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+      }
+
+      previewItems.push({ ctx: pctx, ex, size: 44 });
       el.exerciseList.appendChild(li);
     });
+    startPreviews();
+  }
+
+  function updateStartState() {
+    const mins = Math.max(1, Math.round(totalRoutineSeconds() / 60));
+    el.routineSummary.textContent = routine.length === 0
+      ? 'Elige al menos 1 ejercicio'
+      : `${routine.length} ejercicios · ~${mins} min`;
+    if (el.btnStart) el.btnStart.disabled = routine.length === 0;
+  }
+
+  // ---------- Vistas previas animadas del inicio ----------
+  // Posición/escala normalizada [-1,1] representativa de cada tipo de ejercicio.
+  function previewPos(ex, t) {
+    const m = ex.motion;
+    switch (m.type) {
+      case 'linear':       { const s = Math.sin(t * 2) * 0.72; return m.axis === 'x' ? { x: s, y: 0 } : { x: 0, y: s }; }
+      case 'diagonal':     { const s = Math.sin(t * 2) * 0.72; return { x: s, y: s }; }
+      case 'circle':       { const a = t * 2; return { x: Math.cos(a) * 0.72, y: Math.sin(a) * 0.72 }; }
+      case 'figure8':      { const a = t * 2; return { x: Math.sin(a) * 0.76, y: Math.sin(a) * Math.cos(a) * 1.4 }; }
+      case 'saccade':      { const idx = Math.floor(t / 0.5) % 2; return { x: idx ? 0.72 : -0.72, y: 0 }; }
+      case 'brock':        { const s = Math.sin(t * 1.5) * 0.7; return { x: 0, y: s, scale: 0.8 + (s + 0.7) * 0.35 }; }
+      case 'peripheral':   { const a = t * 2.2; return { x: Math.cos(a) * 0.72, y: Math.sin(a) * 0.72 }; }
+      case 'convergence':  { const p = (Math.sin(t * 2) + 1) / 2; return { x: 0, y: 0, scale: 0.5 + p * 0.9 }; }
+      case 'accommodation':{ const far = Math.floor(t / 1.2) % 2 === 0; return { x: 0, y: 0, scale: far ? 1.15 : 0.55, ring: far }; }
+      case 'blink':        { const c = Math.abs(Math.sin(t * 2.2)); return { x: 0, y: 0, scale: 0.45 + (1 - c) * 0.75 }; }
+      case 'far':          return { x: 0, y: 0, scale: 0.7 };
+      case 'rest':         { const p = (Math.sin(t * 1.3) + 1) / 2; return { x: 0, y: 0, scale: 0.5 + p * 0.8 }; }
+      default:             return { x: 0, y: 0 };
+    }
+  }
+  function drawPreview(pctx, ex, t, size) {
+    pctx.clearRect(0, 0, size, size);
+    const cx = size / 2, cy = size / 2, R = size * 0.32, col = accentOf(ex);
+    const p = previewPos(ex, t);
+    if (p.ring) {
+      pctx.strokeStyle = col; pctx.lineWidth = 2;
+      pctx.beginPath(); pctx.arc(cx, cy, R * 0.85, 0, TAU); pctx.stroke();
+      return;
+    }
+    const px = cx + (p.x || 0) * R, py = cy + (p.y || 0) * R;
+    const base = size * 0.11 * (p.scale || 1);
+    const g = pctx.createRadialGradient(px, py, 0, px, py, base * 2.4);
+    g.addColorStop(0, col + 'aa'); g.addColorStop(1, col + '00');
+    pctx.fillStyle = g; pctx.beginPath(); pctx.arc(px, py, base * 2.4, 0, TAU); pctx.fill();
+    pctx.fillStyle = col; pctx.beginPath(); pctx.arc(px, py, base, 0, TAU); pctx.fill();
+  }
+  let previewRaf = 0, previewStart = 0, previewLast = 0;
+  function stopPreviews() { cancelAnimationFrame(previewRaf); previewRaf = 0; }
+  function startPreviews() {
+    stopPreviews();
+    if (!previewItems.length) return;
+    if (state.settings.reduced) {                       // reducido: fotograma estático
+      previewItems.forEach((it) => drawPreview(it.ctx, it.ex, 0, it.size));
+      return;
+    }
+    previewStart = 0; previewLast = 0;
+    function tick(now) {
+      if (!previewStart) previewStart = now;
+      if (now - previewLast >= 33) {                     // ~30 fps (ahorro de batería)
+        previewLast = now;
+        const t = (now - previewStart) / 1000;
+        for (const it of previewItems) drawPreview(it.ctx, it.ex, t, it.size);
+      }
+      previewRaf = requestAnimationFrame(tick);
+    }
+    previewRaf = requestAnimationFrame(tick);
   }
 
   // ============================================================
@@ -355,11 +477,11 @@
     }
     const active = order[idx % order.length];
     if (idx !== player.saccadeIdx) { player.saccadeIdx = idx; sfx('jump'); }
-    pts.forEach((p, i) => { if (i !== active) drawGhostDot(p[0], p[1], 0.7, ex.accent); });
+    pts.forEach((p, i) => { if (i !== active) drawGhostDot(p[0], p[1], 0.7, accentOf(ex)); });
     // pulso al aparecer
     const frac = (t % interval) / interval;
     const pulse = 1 + Math.max(0, 0.5 - frac) * 0.8;
-    drawTarget(pts[active][0], pts[active][1], pulse, ex.accent);
+    drawTarget(pts[active][0], pts[active][1], pulse, accentOf(ex));
   }
 
   // Cuerda de Brock: línea en perspectiva con 3 cuentas; se ilumina una.
@@ -373,16 +495,16 @@
     const near = norm2px(0, nearY), far = norm2px(0, farY);
     // cuerda
     ctx.save();
-    ctx.strokeStyle = ex.accent + '66'; ctx.lineWidth = 2;
+    ctx.strokeStyle = accentOf(ex) + '66'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(near.cx, near.cy); ctx.lineTo(far.cx, far.cy); ctx.stroke();
     ctx.restore();
     fracs.forEach((f, i) => {
       const ny = nearY + (farY - nearY) * f;
       const sizeScale = 1.15 - f * 0.7; // más grande cerca (abajo)
-      if (i === active) drawTarget(0, ny, sizeScale * 1.1, ex.accent);
-      else drawGhostDot(0, ny, sizeScale, ex.accent);
+      if (i === active) drawTarget(0, ny, sizeScale * 1.1, accentOf(ex));
+      else drawGhostDot(0, ny, sizeScale, accentOf(ex));
     });
-    drawCenterTextBelow(labels[active], ex.accent);
+    drawCenterTextBelow(labels[active], accentOf(ex));
   }
 
   // Flexibilidad de enfoque: alterna una diana LEJOS (aro grande) y CERCA (punto).
@@ -394,15 +516,15 @@
     if (far) {
       const R = Math.min(Math.min(cssW, cssH) * 0.22, 140);
       ctx.save();
-      ctx.strokeStyle = ex.accent; ctx.lineWidth = 4;
+      ctx.strokeStyle = accentOf(ex); ctx.lineWidth = 4;
       ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
       ctx.globalAlpha = 0.5; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(cx, cy, R * 1.35, 0, TAU); ctx.stroke();
       ctx.restore();
-      drawCenterTextBelow('Lejos · relaja', ex.accent);
+      drawCenterTextBelow('Lejos · relaja', accentOf(ex));
     } else {
-      drawTarget(0, 0, 0.72, ex.accent);
-      drawCenterTextBelow('Cerca · enfoca', ex.accent);
+      drawTarget(0, 0, 0.72, accentOf(ex));
+      drawCenterTextBelow('Cerca · enfoca', accentOf(ex));
     }
   }
 
@@ -414,7 +536,7 @@
     // cruz central
     const c = norm2px(0, 0);
     ctx.save();
-    ctx.strokeStyle = ex.accent; ctx.lineWidth = 3; ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = accentOf(ex); ctx.lineWidth = 3; ctx.globalAlpha = 0.9;
     const s = Math.min(cssW, cssH) * 0.03;
     ctx.beginPath();
     ctx.moveTo(c.cx - s, c.cy); ctx.lineTo(c.cx + s, c.cy);
@@ -427,7 +549,7 @@
     const frac = (t % interval) / interval;
     const alpha = Math.max(0, 1 - frac * 1.1);
     if (alpha > 0.02) {
-      drawTarget(Math.cos(ang) * rad, Math.sin(ang) * rad * 0.9, 0.9, ex.accent, alpha);
+      drawTarget(Math.cos(ang) * rad, Math.sin(ang) * rad * 0.9, 0.9, accentOf(ex), alpha);
     }
   }
 
@@ -512,7 +634,7 @@
 
   function renderFrame(ex, t) {
     ctx.clearRect(0, 0, cssW, cssH);
-    drawAmbient(ex.accent);
+    drawAmbient(accentOf(ex));
     // Tipos con dibujo propio (no pasan por evaluate).
     switch (ex.motion.type) {
       case 'saccade': drawSaccade(ex, t); return;
@@ -522,33 +644,33 @@
     }
     const s = evaluate(ex, t);
     if (s.mode === 'blink') {
-      drawBlink(s.close, ex.accent);
-      if (s.close > 0.6) { ctx.save(); drawCenterTextBelow('Parpadea', ex.accent); ctx.restore(); }
+      drawBlink(s.close, accentOf(ex));
+      if (s.close > 0.6) { ctx.save(); drawCenterTextBelow('Parpadea', accentOf(ex)); ctx.restore(); }
       return;
     }
     if (s.mode === 'far') {
       const remain = Math.ceil(effDuration(ex) - t);
-      drawCenterText(String(Math.max(remain, 0)), ex.accent);
-      drawCenterTextBelow('Mira a lo lejos (6 m)', ex.accent);
+      drawCenterText(String(Math.max(remain, 0)), accentOf(ex));
+      drawCenterTextBelow('Mira a lo lejos (6 m)', accentOf(ex));
       return;
     }
     if (s.mode === 'rest') {
-      const word = drawBreath(s.breath, t, ex.accent);
-      drawCenterTextBelow(word, ex.accent);
+      const word = drawBreath(s.breath, t, accentOf(ex));
+      drawCenterTextBelow(word, accentOf(ex));
       return;
     }
     if (s.mode === 'convergence') {
-      drawTarget(0, 0, s.r, ex.accent);
-      drawCenterTextBelow(s.near > 0.5 ? 'Cerca' : 'Lejos', ex.accent);
+      drawTarget(0, 0, s.r, accentOf(ex));
+      drawCenterTextBelow(s.near > 0.5 ? 'Cerca' : 'Lejos', accentOf(ex));
       return;
     }
     // Seguimientos: estela (salvo movimiento reducido) + objetivo.
     if (!state.settings.reduced) {
       player.trail.push({ x: s.x, y: s.y });
       if (player.trail.length > 16) player.trail.shift();
-      drawTrail(ex.accent);
+      drawTrail(accentOf(ex));
     }
-    drawTarget(s.x, s.y, s.r || 1, ex.accent);
+    drawTarget(s.x, s.y, s.r || 1, accentOf(ex));
   }
 
   // Superposición al pausar.
@@ -570,19 +692,19 @@
   // Pantalla de preparación: aro que se llena + cuenta atrás.
   function renderReady(ex, prog) {
     ctx.clearRect(0, 0, cssW, cssH);
-    drawAmbient(ex.accent);
+    drawAmbient(accentOf(ex));
     const { cx, cy } = norm2px(0, 0);
     const R = Math.min(Math.min(cssW, cssH) * 0.16, 118);
     const font = FONT;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     // "Prepárate" encima del aro (zona despejada, no invade la cabecera)
-    ctx.fillStyle = ex.accent;
+    ctx.fillStyle = accentOf(ex);
     ctx.font = `700 ${R * 0.34}px ${font}`;
     ctx.fillText('Prepárate', cx, cy - R - R * 0.5);
     ctx.save();
     ctx.strokeStyle = '#ffffff1f'; ctx.lineWidth = 6;
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
-    ctx.strokeStyle = ex.accent; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.strokeStyle = accentOf(ex); ctx.lineWidth = 6; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(prog, 0, 1)); ctx.stroke();
     ctx.restore();
     const n = Math.max(1, Math.ceil(READY_SECS - prog * READY_SECS));
@@ -637,7 +759,7 @@
       renderReady(ex, player.readyElapsed / readySecs);
       el.exTimer.textContent = '···';
       el.progressBar.style.width = `${overallPct(0)}%`;
-      setRing(0, ex.accent);
+      setRing(0, accentOf(ex));
       if (player.paused) drawPausedOverlay();
       if (player.readyElapsed >= readySecs) enterActive();
       player.rafId = requestAnimationFrame(loop);
@@ -662,7 +784,7 @@
 
     el.exTimer.textContent = fmtTime(Math.max(remain, 0));
     el.progressBar.style.width = `${overallPct(clamp(player.exElapsed / dur, 0, 1))}%`;
-    setRing(player.exElapsed / dur, ex.accent);
+    setRing(player.exElapsed / dur, accentOf(ex));
     if (player.paused) drawPausedOverlay();
 
     if (player.exElapsed >= dur) { advance(1); }
@@ -685,7 +807,7 @@
     el.exIndex.textContent = `${i + 1} / ${routine.length}`;
     el.exName.textContent = ex.name;
     el.exInstruction.textContent = ex.instruction;
-    el.progressBar.style.background = ex.accent;
+    el.progressBar.style.background = accentOf(ex);
     player.phase = 'ready';
     player.readyElapsed = 0;
     player.exElapsed = 0;
@@ -694,7 +816,7 @@
     player.trail.length = 0;
     player.saccadeIdx = -1;
     el.exTimer.textContent = '···';
-    setRing(0, ex.accent);
+    setRing(0, accentOf(ex));
     haptic(15);
   }
 
@@ -710,7 +832,9 @@
   function skipReady() { if (player.running && player.phase === 'ready') enterActive(); }
 
   function startRoutine() {
+    if (!routine.length) return;   // rutina personalizada vacía
     stopConfetti();
+    stopPreviews();
     player.index = 0;
     player.paused = false;
     player.running = true;
@@ -790,7 +914,7 @@
     // Resumen de habilidades entrenadas (categorías de la rutina + conteo).
     const order = [], byCat = {};
     routine.forEach((ex) => {
-      if (!byCat[ex.category]) { byCat[ex.category] = { n: 0, accent: ex.accent }; order.push(ex.category); }
+      if (!byCat[ex.category]) { byCat[ex.category] = { n: 0, accent: accentOf(ex) }; order.push(ex.category); }
       byCat[ex.category].n += 1;
     });
     el.doneSkills.innerHTML = '';
@@ -854,18 +978,20 @@
   const dlg = $('#settings');
   const setInputs = {
     sound: $('#set-sound'), haptics: $('#set-haptics'),
-    reduced: $('#set-reduced'), intensity: $('#set-intensity'),
+    reduced: $('#set-reduced'), intensity: $('#set-intensity'), colorblind: $('#set-colorblind'),
   };
   function syncSettingsUI() {
     setInputs.sound.checked = state.settings.sound;
     setInputs.haptics.checked = state.settings.haptics;
     setInputs.reduced.checked = state.settings.reduced;
+    setInputs.colorblind.checked = state.settings.colorblind;
     setInputs.intensity.value = String(state.settings.intensity);
   }
   function bindSettings() {
     setInputs.sound.addEventListener('change', (e) => { state.settings.sound = e.target.checked; saveState(); if (e.target.checked) sfx('toggle'); });
     setInputs.haptics.addEventListener('change', (e) => { state.settings.haptics = e.target.checked; saveState(); haptic(); });
-    setInputs.reduced.addEventListener('change', (e) => { state.settings.reduced = e.target.checked; saveState(); });
+    setInputs.reduced.addEventListener('change', (e) => { state.settings.reduced = e.target.checked; saveState(); renderHome(); });
+    setInputs.colorblind.addEventListener('change', (e) => { state.settings.colorblind = e.target.checked; saveState(); renderHome(); });
     setInputs.intensity.addEventListener('change', (e) => { state.settings.intensity = parseFloat(e.target.value) || 1; saveState(); renderHome(); });
     $('#set-reset').addEventListener('click', () => {
       if (confirm('¿Reiniciar tu racha y estadísticas? Esta acción no se puede deshacer.')) {
@@ -906,9 +1032,12 @@
     window.addEventListener('resize', () => { if (player.running) resizeCanvas(); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
+        stopPreviews();              // ahorra batería con la pestaña oculta
         if (player.running && !player.paused) setPaused(true);
       } else if (player.running) {
         acquireWake();               // el Wake Lock se libera al ocultar: re-adquirir
+      } else if (screens.home.classList.contains('is-active')) {
+        startPreviews();             // reanudar previews al volver al inicio
       }
     });
     // teclado (accesibilidad de escritorio)
