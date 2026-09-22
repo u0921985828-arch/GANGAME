@@ -441,11 +441,15 @@
     g.addColorStop(1, accent + '00');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(cx, cy, r * 3, 0, TAU); ctx.fill();
-    // núcleo
+    // núcleo con brillo neón
+    ctx.shadowColor = accent; ctx.shadowBlur = r * 1.5;
     ctx.fillStyle = accent;
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#ffffffcc';
-    ctx.beginPath(); ctx.arc(cx - r * 0.28, cy - r * 0.28, r * 0.32, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();   // segunda pasada refuerza el halo
+    ctx.shadowBlur = 0;
+    // reflejo especular
+    ctx.fillStyle = '#ffffffdd';
+    ctx.beginPath(); ctx.arc(cx - r * 0.3, cy - r * 0.3, r * 0.3, 0, TAU); ctx.fill();
     ctx.restore();
   }
 
@@ -564,9 +568,11 @@
     ctx.fillStyle = '#0a1022';
     ctx.strokeStyle = accent;
     ctx.lineWidth = 4;
+    ctx.shadowColor = accent; ctx.shadowBlur = 16;
     ctx.beginPath();
     ctx.ellipse(0, 0, w, Math.max(openH, 3), 0, 0, TAU);
     ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
     if (close < 0.6) {
       // iris
       ctx.fillStyle = accent;
@@ -705,6 +711,7 @@
     ctx.strokeStyle = '#ffffff1f'; ctx.lineWidth = 6;
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
     ctx.strokeStyle = accentOf(ex); ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.shadowColor = accentOf(ex); ctx.shadowBlur = 14;
     ctx.beginPath(); ctx.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(prog, 0, 1)); ctx.stroke();
     ctx.restore();
     const n = Math.max(1, Math.ceil(READY_SECS - prog * READY_SECS));
@@ -942,15 +949,24 @@
     const W = cv.clientWidth || window.innerWidth, H = cv.clientHeight || window.innerHeight;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const colors = ['#fbbf24', '#38bdf8', '#34d399', '#f472b6', '#a78bfa', '#22d3ee', '#fb923c'];
-    const parts = Array.from({ length: 130 }, () => ({
-      x: W * (0.3 + 0.4 * Math.random()), y: H * 0.26 + (Math.random() * 40 - 20),
-      vx: (Math.random() - 0.5) * 6.5, vy: -6 - Math.random() * 6,
-      g: 0.18 + Math.random() * 0.08, size: 5 + Math.random() * 5,
-      rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 0.3,
-      color: colors[(Math.random() * colors.length) | 0], life: 1,
-    }));
-    const DUR = 1.9;
+    const colors = ['#fbbf24', '#38bdf8', '#34d399', '#f472b6', '#a78bfa', '#22d3ee', '#fb923c', '#fca5a5'];
+    const shapes = ['rect', 'rect', 'square', 'circle'];   // mezcla estilo canvas-confetti
+    // Dos focos (izquierda y derecha) para un estallido más lleno.
+    const parts = Array.from({ length: 150 }, (_, i) => {
+      const left = i % 2 === 0;
+      return {
+        x: W * (left ? 0.34 : 0.66) + (Math.random() * 40 - 20),
+        y: H * 0.28 + (Math.random() * 30 - 15),
+        vx: (left ? 1 : -1) * (1 + Math.random() * 3) + (Math.random() - 0.5) * 4,
+        vy: -7 - Math.random() * 6,
+        g: 0.17 + Math.random() * 0.09, size: 5 + Math.random() * 6,
+        rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 0.34,
+        wob: Math.random() * TAU, wv: 0.12 + Math.random() * 0.12,   // bamboleo (giro 3D simulado)
+        shape: shapes[(Math.random() * shapes.length) | 0],
+        color: colors[(Math.random() * colors.length) | 0], life: 1,
+      };
+    });
+    const DUR = 2.1;
     let start = 0;
     cancelAnimationFrame(confettiRaf);
     function tick(now) {
@@ -959,11 +975,15 @@
       cctx.clearRect(0, 0, W, H);
       let alive = 0;
       for (const p of parts) {
-        p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        p.vy += p.g; p.vx *= 0.995; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.wob += p.wv;
         p.life = clamp(1 - t / DUR, 0, 1);
         if (p.y < H + 24 && p.life > 0) alive++;
-        cctx.save(); cctx.globalAlpha = p.life; cctx.translate(p.x, p.y); cctx.rotate(p.rot);
-        cctx.fillStyle = p.color; cctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        const sx = Math.cos(p.wob);              // aplasta/estira para simular volteo
+        cctx.save(); cctx.globalAlpha = p.life; cctx.translate(p.x, p.y); cctx.rotate(p.rot); cctx.scale(sx, 1);
+        cctx.fillStyle = p.color;
+        if (p.shape === 'circle') { cctx.beginPath(); cctx.arc(0, 0, p.size / 2, 0, TAU); cctx.fill(); }
+        else if (p.shape === 'square') { cctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size); }
+        else { cctx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * 0.66); }
         cctx.restore();
       }
       if (t < DUR && alive > 0) confettiRaf = requestAnimationFrame(tick);

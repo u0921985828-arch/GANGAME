@@ -101,6 +101,14 @@ visión borrosa persistente, detente y consulta a tu oftalmólogo.
 
 ## Changelog
 
+- **v6** — Remaster visual (HQ, sin dependencias):
+  - Sistema de **easing Material 3** (emphasized/decelerate/snappy) en todas las
+    transiciones y entradas; micro-interacciones con lift/press.
+  - **Profundidad**: paleta enriquecida, sombras de elevación, gradientes y fondo
+    por capas; racha con resplandor animado.
+  - **Canvas neón**: brillo en objetivos, aro de preparación y ojo del parpadeo.
+  - **Confeti mejorado** (técnica canvas-confetti): formas mezcladas (rect/cuadrado/
+    círculo), bamboleo 3D simulado y doble foco. Sigue a ~60 fps.
 - **v5** — Personalización y accesibilidad:
   - **Rutina personalizada**: programa "Personalizada" con interruptores por
     ejercicio (mínimo 1; "Comenzar" se deshabilita si no hay ninguno); la
