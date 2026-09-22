@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
   VistaViva - SITIO COMPLETO para WordPress (formato WXR).
-  Crea 6 paginas, TODAS con el mismo estilo oscuro de VistaViva:
-    VistaViva (app) - Politica de privacidad - Aviso legal -
-    Politica de cookies - Terminos y condiciones - Contacto.
+  Crea 6 paginas + 5 articulos, TODO con el mismo estilo oscuro de VistaViva:
+    Paginas: VistaViva (app) - Privacidad - Aviso legal - Cookies - Terminos - Contacto.
+    Articulos (categoria "Salud visual"): 20-20-20, fatiga por pantallas,
+    insuficiencia de convergencia, luz natural/miopia, metodo Bates.
+
+  ANUNCIOS: van en la propia pagina de la app, FUERA del iframe (arriba y abajo).
+  Cuando AdSense te apruebe, edita la pagina "VistaViva" y sustituye
+  ca-pub-XXXXXXXXXXXXXXXX y los data-ad-slot por los tuyos. Hasta entonces no se muestran.
 
   IMPORTANTE: si ya importaste paginas antes, BORRALAS (Paginas -> Papelera)
-  antes de importar este archivo, para que no salgan duplicadas con -2.
+  antes de importar, para que no salgan duplicadas con -2.
 
   Uso: Herramientas -> Importar -> «Importador de WordPress», sube este .xml,
   asigna a admin e importa. Luego cambia los textos entre [corchetes].
@@ -27,6 +32,13 @@
   <wp:base_site_url>https://example.com</wp:base_site_url>
   <wp:base_blog_url>https://example.com</wp:base_blog_url>
   <wp:author><wp:author_id>1</wp:author_id><wp:author_login><![CDATA[admin]]></wp:author_login><wp:author_display_name><![CDATA[admin]]></wp:author_display_name></wp:author>
+
+  <wp:category>
+    <wp:term_id>10</wp:term_id>
+    <wp:category_nicename><![CDATA[salud-visual]]></wp:category_nicename>
+    <wp:category_parent><![CDATA[]]></wp:category_parent>
+    <wp:cat_name><![CDATA[Salud visual]]></wp:cat_name>
+  </wp:category>
   <generator>https://vistaviva.app</generator>
 
   <item>
@@ -34,14 +46,28 @@
     <link>https://example.com/vistaviva/</link>
     <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
     <dc:creator><![CDATA[admin]]></dc:creator>
-    <guid isPermaLink="false">https://example.com/?page_id=1001</guid>
+    <guid isPermaLink="false">https://example.com/?p=1001</guid>
     <description></description>
     <content:encoded><![CDATA[
 <style>
-.vv-wrap{position:fixed;inset:0;z-index:99999;margin:0;padding:0;border:0;background:#090d1a}
-.vv-wrap iframe{width:100%;height:100%;border:0;display:block}
+body{background:#090d1a!important}
+.vv-app{--accent:#fbbf24;background:#090d1a;color:#eef2fb;max-width:520px;margin:0 auto;padding:12px 12px 48px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.vv-frame{position:relative;width:100%;height:80vh;min-height:560px;border-radius:22px;overflow:hidden;
+  border:1px solid #29365a;background:#090d1a;box-shadow:0 22px 48px -18px #000000cc}
+.vv-frame iframe{width:100%;height:100%;border:0;display:block}
+.vv-ad{margin:14px auto;min-height:90px;text-align:center;background:#0f1730;border:1px dashed #29365a;
+  border-radius:14px;padding:10px;overflow:hidden}
+.vv-ad__tag{display:block;color:#6c7aa0;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+.vv-applinks{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;margin-top:18px}
+.vv-applinks a{color:#aab5cf;font-size:.84rem;text-decoration:none}
+.vv-applinks a:hover{color:var(--accent)}
 </style>
-<div class="vv-wrap"><iframe title="VistaViva" srcdoc="&lt;!DOCTYPE html&gt;
+<div class="vv-app">
+  <div class="vv-ad"><span class="vv-ad__tag">Publicidad</span><!-- ANUNCIO SUPERIOR: pega aquí tu bloque de AdSense o deja este -->
+<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0000000001" data-ad-format="auto" data-full-width-responsive="true"></ins>
+<script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>
+  <div class="vv-frame"><iframe title="VistaViva" srcdoc="&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;es&quot;&gt;
 &lt;head&gt;
   &lt;meta charset=&quot;UTF-8&quot; /&gt;
@@ -2194,6 +2220,14 @@ if (typeof module !== 'undefined' &amp;&amp; module.exports) {
 &lt;/body&gt;
 &lt;/html&gt;
 " referrerpolicy="no-referrer"></iframe></div>
+  <div class="vv-ad"><span class="vv-ad__tag">Publicidad</span><!-- ANUNCIO INFERIOR: pega aquí tu bloque de AdSense o deja este -->
+<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0000000002" data-ad-format="auto" data-full-width-responsive="true"></ins>
+<script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>
+  <nav class="vv-applinks">
+    <a href="/salud-visual/">Artículos de salud visual</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+  </nav>
+</div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 ]]></content:encoded>
     <excerpt:encoded><![CDATA[
 Coach de entrenamiento visual: rutina diaria de ejercicios para los ojos. Gratis y sin conexión.
@@ -2210,6 +2244,7 @@ Coach de entrenamiento visual: rutina diaria de ejercicios para los ojos. Gratis
     <wp:post_type><![CDATA[page]]></wp:post_type>
     <wp:post_password><![CDATA[]]></wp:post_password>
     <wp:is_sticky>0</wp:is_sticky>
+    
   </item>
 
   <item>
@@ -2217,7 +2252,7 @@ Coach de entrenamiento visual: rutina diaria de ejercicios para los ojos. Gratis
     <link>https://example.com/politica-de-privacidad/</link>
     <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
     <dc:creator><![CDATA[admin]]></dc:creator>
-    <guid isPermaLink="false">https://example.com/?page_id=1002</guid>
+    <guid isPermaLink="false">https://example.com/?p=1002</guid>
     <description></description>
     <content:encoded><![CDATA[
 
@@ -2238,6 +2273,8 @@ body{background:#090d1a!important}
 .vv-card ul{padding-left:22px}
 .vv-card strong{color:var(--text)}
 .vv-card a{color:var(--accent)}
+.vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
+.vv-cta{display:inline-block;margin-top:18px;color:#101725!important;background:var(--accent);padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none}
 .vv-nav{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
 .vv-nav a{color:var(--muted);font-size:.86rem;text-decoration:none}
 .vv-nav a:hover{color:var(--accent)}
@@ -2268,7 +2305,7 @@ body{background:#090d1a!important}
 <p>VistaViva ayuda a relajar la vista y reducir la fatiga visual. No cura ni corrige defectos refractivos ni sustituye la revisión de un profesional. Ante dolor, mareo o visión borrosa persistente, detente y consulta a tu oftalmólogo u optometrista.</p>
 
 <a class="vv-back" href="/vistaviva/">← Volver a la app</a></div><nav class="vv-nav">
-<a href="/vistaviva/">Abrir la app</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+<a href="/vistaviva/">Abrir la app</a><a href="/salud-visual/">Artículos</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
 </nav></div>
 ]]></content:encoded>
     <excerpt:encoded><![CDATA[
@@ -2286,6 +2323,7 @@ Cómo VistaViva maneja tus datos.
     <wp:post_type><![CDATA[page]]></wp:post_type>
     <wp:post_password><![CDATA[]]></wp:post_password>
     <wp:is_sticky>0</wp:is_sticky>
+    
   </item>
 
   <item>
@@ -2293,7 +2331,7 @@ Cómo VistaViva maneja tus datos.
     <link>https://example.com/aviso-legal/</link>
     <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
     <dc:creator><![CDATA[admin]]></dc:creator>
-    <guid isPermaLink="false">https://example.com/?page_id=1003</guid>
+    <guid isPermaLink="false">https://example.com/?p=1003</guid>
     <description></description>
     <content:encoded><![CDATA[
 
@@ -2314,6 +2352,8 @@ body{background:#090d1a!important}
 .vv-card ul{padding-left:22px}
 .vv-card strong{color:var(--text)}
 .vv-card a{color:var(--accent)}
+.vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
+.vv-cta{display:inline-block;margin-top:18px;color:#101725!important;background:var(--accent);padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none}
 .vv-nav{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
 .vv-nav a{color:var(--muted);font-size:.86rem;text-decoration:none}
 .vv-nav a:hover{color:var(--accent)}
@@ -2351,7 +2391,7 @@ body{background:#090d1a!important}
 <p>Estas condiciones se rigen por la legislación española y de la Unión Europea. Para cualquier controversia, las partes se someten a los juzgados y tribunales del domicilio del titular, salvo que la normativa de consumo disponga otro fuero. <em>(Si resides fuera de España, ajusta esta cláusula a la legislación de tu país.)</em></p>
 
 <a class="vv-back" href="/vistaviva/">← Volver a la app</a></div><nav class="vv-nav">
-<a href="/vistaviva/">Abrir la app</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+<a href="/vistaviva/">Abrir la app</a><a href="/salud-visual/">Artículos</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
 </nav></div>
 ]]></content:encoded>
     <excerpt:encoded><![CDATA[
@@ -2369,6 +2409,7 @@ Datos del titular y condiciones de uso (LSSI).
     <wp:post_type><![CDATA[page]]></wp:post_type>
     <wp:post_password><![CDATA[]]></wp:post_password>
     <wp:is_sticky>0</wp:is_sticky>
+    
   </item>
 
   <item>
@@ -2376,7 +2417,7 @@ Datos del titular y condiciones de uso (LSSI).
     <link>https://example.com/politica-de-cookies/</link>
     <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
     <dc:creator><![CDATA[admin]]></dc:creator>
-    <guid isPermaLink="false">https://example.com/?page_id=1004</guid>
+    <guid isPermaLink="false">https://example.com/?p=1004</guid>
     <description></description>
     <content:encoded><![CDATA[
 
@@ -2397,6 +2438,8 @@ body{background:#090d1a!important}
 .vv-card ul{padding-left:22px}
 .vv-card strong{color:var(--text)}
 .vv-card a{color:var(--accent)}
+.vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
+.vv-cta{display:inline-block;margin-top:18px;color:#101725!important;background:var(--accent);padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none}
 .vv-nav{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
 .vv-nav a{color:var(--muted);font-size:.86rem;text-decoration:none}
 .vv-nav a:hover{color:var(--accent)}
@@ -2429,7 +2472,7 @@ body{background:#090d1a!important}
 <p>Podemos actualizar esta política. Publicaremos aquí la versión vigente con su fecha.</p>
 
 <a class="vv-back" href="/vistaviva/">← Volver a la app</a></div><nav class="vv-nav">
-<a href="/vistaviva/">Abrir la app</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+<a href="/vistaviva/">Abrir la app</a><a href="/salud-visual/">Artículos</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
 </nav></div>
 ]]></content:encoded>
     <excerpt:encoded><![CDATA[
@@ -2447,6 +2490,7 @@ Qué cookies usa el sitio y cómo gestionarlas.
     <wp:post_type><![CDATA[page]]></wp:post_type>
     <wp:post_password><![CDATA[]]></wp:post_password>
     <wp:is_sticky>0</wp:is_sticky>
+    
   </item>
 
   <item>
@@ -2454,7 +2498,7 @@ Qué cookies usa el sitio y cómo gestionarlas.
     <link>https://example.com/terminos-y-condiciones/</link>
     <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
     <dc:creator><![CDATA[admin]]></dc:creator>
-    <guid isPermaLink="false">https://example.com/?page_id=1005</guid>
+    <guid isPermaLink="false">https://example.com/?p=1005</guid>
     <description></description>
     <content:encoded><![CDATA[
 
@@ -2475,6 +2519,8 @@ body{background:#090d1a!important}
 .vv-card ul{padding-left:22px}
 .vv-card strong{color:var(--text)}
 .vv-card a{color:var(--accent)}
+.vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
+.vv-cta{display:inline-block;margin-top:18px;color:#101725!important;background:var(--accent);padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none}
 .vv-nav{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
 .vv-nav a{color:var(--muted);font-size:.86rem;text-decoration:none}
 .vv-nav a:hover{color:var(--accent)}
@@ -2512,7 +2558,7 @@ body{background:#090d1a!important}
 <p>Para cualquier consulta: <a href="/contacto/">página de contacto</a> o <a href="mailto:[TU-EMAIL]">[TU-EMAIL]</a>.</p>
 
 <a class="vv-back" href="/vistaviva/">← Volver a la app</a></div><nav class="vv-nav">
-<a href="/vistaviva/">Abrir la app</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+<a href="/vistaviva/">Abrir la app</a><a href="/salud-visual/">Artículos</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
 </nav></div>
 ]]></content:encoded>
     <excerpt:encoded><![CDATA[
@@ -2530,6 +2576,7 @@ Términos de uso y aviso de salud.
     <wp:post_type><![CDATA[page]]></wp:post_type>
     <wp:post_password><![CDATA[]]></wp:post_password>
     <wp:is_sticky>0</wp:is_sticky>
+    
   </item>
 
   <item>
@@ -2537,7 +2584,7 @@ Términos de uso y aviso de salud.
     <link>https://example.com/contacto/</link>
     <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
     <dc:creator><![CDATA[admin]]></dc:creator>
-    <guid isPermaLink="false">https://example.com/?page_id=1006</guid>
+    <guid isPermaLink="false">https://example.com/?p=1006</guid>
     <description></description>
     <content:encoded><![CDATA[
 
@@ -2558,6 +2605,8 @@ body{background:#090d1a!important}
 .vv-card ul{padding-left:22px}
 .vv-card strong{color:var(--text)}
 .vv-card a{color:var(--accent)}
+.vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
+.vv-cta{display:inline-block;margin-top:18px;color:#101725!important;background:var(--accent);padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none}
 .vv-nav{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
 .vv-nav a{color:var(--muted);font-size:.86rem;text-decoration:none}
 .vv-nav a:hover{color:var(--accent)}
@@ -2577,7 +2626,7 @@ body{background:#090d1a!important}
 <p><em>Consejo: si prefieres un formulario en vez de mostrar tu correo, instala un plugin gratuito como «Contact Form 7» o «WPForms Lite» y pega su shortcode aquí.</em></p>
 
 <a class="vv-back" href="/vistaviva/">← Volver a la app</a></div><nav class="vv-nav">
-<a href="/vistaviva/">Abrir la app</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+<a href="/vistaviva/">Abrir la app</a><a href="/salud-visual/">Artículos</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
 </nav></div>
 ]]></content:encoded>
     <excerpt:encoded><![CDATA[
@@ -2595,6 +2644,383 @@ Cómo contactar y ejercer tus derechos.
     <wp:post_type><![CDATA[page]]></wp:post_type>
     <wp:post_password><![CDATA[]]></wp:post_password>
     <wp:is_sticky>0</wp:is_sticky>
+    
+  </item>
+
+  <item>
+    <title>La regla 20-20-20 para descansar la vista</title>
+    <link>https://example.com/regla-20-20-20/</link>
+    <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
+    <dc:creator><![CDATA[admin]]></dc:creator>
+    <guid isPermaLink="false">https://example.com/?p=2001</guid>
+    <description></description>
+    <content:encoded><![CDATA[
+
+<style>
+body{background:#090d1a!important}
+.vv-page{--bg:#090d1a;--surface:#16203c;--line:#29365a;--text:#eef2fb;--muted:#aab5cf;--accent:#fbbf24;
+  background:#090d1a;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.6;max-width:780px;margin:0 auto;padding:8px 20px 60px}
+.vv-page *{box-sizing:border-box}
+.vv-brand{display:flex;align-items:center;gap:12px;padding:18px 0 8px}
+.vv-brand__logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:1.1rem}
+.vv-brand__name{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+.vv-brand__tag{color:var(--muted);font-size:.8rem}
+.vv-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 22px 8px;margin-top:14px;box-shadow:0 2px 8px #00000066,0 22px 48px -18px #00000099}
+.vv-card h1{font-size:1.55rem;letter-spacing:-.01em;margin:0 0 6px}
+.vv-card h2{font-size:1.12rem;color:var(--accent);margin:26px 0 8px}
+.vv-card p,.vv-card li{color:var(--muted);margin:0 0 12px}
+.vv-card ul{padding-left:22px}
+.vv-card strong{color:var(--text)}
+.vv-card a{color:var(--accent)}
+.vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
+.vv-cta{display:inline-block;margin-top:18px;color:#101725!important;background:var(--accent);padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none}
+.vv-nav{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.vv-nav a{color:var(--muted);font-size:.86rem;text-decoration:none}
+.vv-nav a:hover{color:var(--accent)}
+.vv-back{display:inline-block;margin-top:16px;color:#101725!important;background:var(--accent);padding:11px 18px;border-radius:12px;font-weight:700;text-decoration:none}
+</style>
+<div class="vv-page"><div class="vv-brand"><div class="vv-brand__logo">V</div><div><div class="vv-brand__name">VistaViva</div><div class="vv-brand__tag">Coach de entrenamiento visual</div></div></div><div class="vv-card"><h1>La regla 20-20-20 para descansar la vista</h1>
+<p>Si pasas horas frente a una pantalla, es muy probable que al final del día notes los ojos cansados, secos o algo borrosos. Es lo que se conoce como <strong>fatiga visual digital</strong> (o astenopia), y una de las formas más sencillas y respaldadas de aliviarla es la <strong>regla 20-20-20</strong>.</p>
+
+<h2>En qué consiste</h2>
+<p>La regla es fácil de recordar: <strong>cada 20 minutos, mira algo situado a unos 20 pies (6 metros) durante al menos 20 segundos</strong>. Al enfocar de lejos, relajas el músculo ciliar, que es el que mantienes contraído cuando miras de cerca durante mucho rato.</p>
+
+<h2>Por qué funciona</h2>
+<p>Cuando fijas la vista en una pantalla, ocurren dos cosas: enfocas de cerca de forma sostenida y <strong>parpadeas mucho menos</strong> (hasta la mitad de lo normal). Menos parpadeo significa una película lagrimal peor repartida y, por tanto, sequedad y escozor. La pausa de 20 segundos te obliga a relajar el enfoque y, casi siempre, a parpadear de nuevo con normalidad.</p>
+
+<h2>Cómo aplicarla sin olvidarte</h2>
+<ul>
+<li>Pon una alarma suave cada 20 minutos, o usa una app que te avise.</li>
+<li>Aprovecha la pausa para mirar por la ventana: lo lejano de verdad relaja más.</li>
+<li>Parpadea varias veces de forma consciente durante la pausa.</li>
+<li>Si puedes, levántate: también descansa el cuello y la espalda.</li>
+</ul>
+
+<h2>Un extra que ayuda</h2>
+<p>Ajusta el brillo de la pantalla al de la habitación, mantén una distancia de al menos un brazo y coloca el monitor un poco por debajo de la línea de los ojos. Nada de esto "cura" la vista, pero reduce mucho la fatiga del día a día.</p>
+
+<p class="vv-note">La regla 20-20-20 alivia la fatiga visual; no corrige defectos de graduación. Si el cansancio o la visión borrosa persisten, consulta a tu óptico u oftalmólogo.</p>
+
+<a class="vv-cta" href="/vistaviva/">▶ Probar los ejercicios en VistaViva</a></div><nav class="vv-nav">
+<a href="/vistaviva/">Abrir la app</a><a href="/salud-visual/">Artículos</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+</nav></div>
+]]></content:encoded>
+    <excerpt:encoded><![CDATA[
+Cada 20 minutos, mira a 6 metros durante 20 segundos: por qué funciona y cómo aplicarla.
+]]></excerpt:encoded>
+    <wp:post_id>2001</wp:post_id>
+    <wp:post_date><![CDATA[2025-09-01 10:00:00]]></wp:post_date>
+    <wp:post_date_gmt><![CDATA[2025-09-01 10:00:00]]></wp:post_date_gmt>
+    <wp:comment_status><![CDATA[closed]]></wp:comment_status>
+    <wp:ping_status><![CDATA[closed]]></wp:ping_status>
+    <wp:post_name><![CDATA[regla-20-20-20]]></wp:post_name>
+    <wp:status><![CDATA[publish]]></wp:status>
+    <wp:post_parent>0</wp:post_parent>
+    <wp:menu_order>0</wp:menu_order>
+    <wp:post_type><![CDATA[post]]></wp:post_type>
+    <wp:post_password><![CDATA[]]></wp:post_password>
+    <wp:is_sticky>0</wp:is_sticky>
+    <category domain="category" nicename="salud-visual"><![CDATA[Salud visual]]></category>
+  </item>
+
+  <item>
+    <title>Fatiga visual por pantallas: cómo aliviarla</title>
+    <link>https://example.com/fatiga-visual-pantallas/</link>
+    <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
+    <dc:creator><![CDATA[admin]]></dc:creator>
+    <guid isPermaLink="false">https://example.com/?p=2002</guid>
+    <description></description>
+    <content:encoded><![CDATA[
+
+<style>
+body{background:#090d1a!important}
+.vv-page{--bg:#090d1a;--surface:#16203c;--line:#29365a;--text:#eef2fb;--muted:#aab5cf;--accent:#fbbf24;
+  background:#090d1a;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.6;max-width:780px;margin:0 auto;padding:8px 20px 60px}
+.vv-page *{box-sizing:border-box}
+.vv-brand{display:flex;align-items:center;gap:12px;padding:18px 0 8px}
+.vv-brand__logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:1.1rem}
+.vv-brand__name{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+.vv-brand__tag{color:var(--muted);font-size:.8rem}
+.vv-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 22px 8px;margin-top:14px;box-shadow:0 2px 8px #00000066,0 22px 48px -18px #00000099}
+.vv-card h1{font-size:1.55rem;letter-spacing:-.01em;margin:0 0 6px}
+.vv-card h2{font-size:1.12rem;color:var(--accent);margin:26px 0 8px}
+.vv-card p,.vv-card li{color:var(--muted);margin:0 0 12px}
+.vv-card ul{padding-left:22px}
+.vv-card strong{color:var(--text)}
+.vv-card a{color:var(--accent)}
+.vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
+.vv-cta{display:inline-block;margin-top:18px;color:#101725!important;background:var(--accent);padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none}
+.vv-nav{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.vv-nav a{color:var(--muted);font-size:.86rem;text-decoration:none}
+.vv-nav a:hover{color:var(--accent)}
+.vv-back{display:inline-block;margin-top:16px;color:#101725!important;background:var(--accent);padding:11px 18px;border-radius:12px;font-weight:700;text-decoration:none}
+</style>
+<div class="vv-page"><div class="vv-brand"><div class="vv-brand__logo">V</div><div><div class="vv-brand__name">VistaViva</div><div class="vv-brand__tag">Coach de entrenamiento visual</div></div></div><div class="vv-card"><h1>Fatiga visual por pantallas: cómo aliviarla</h1>
+<p>Trabajar o estudiar frente a pantallas durante horas pasa factura: ojos secos, escozor, visión borrosa al final del día y, a veces, dolor de cabeza. Se conoce como <strong>síndrome visual informático</strong> y no es una enfermedad, sino la suma de varios pequeños esfuerzos que se acumulan. La buena noticia es que casi todo se corrige con hábitos.</p>
+
+<h2>Por qué se cansan los ojos</h2>
+<p>Mirar de cerca obliga al ojo a mantener el enfoque (acomodación) y a converger las dos miradas hacia el mismo punto. Sostener eso durante horas fatiga los músculos implicados. A la vez, frente a la pantalla <strong>parpadeamos mucho menos</strong>, lo que reseca la superficie del ojo.</p>
+
+<h2>Rutina para aliviarla</h2>
+<ul>
+<li><strong>Pausas 20-20-20:</strong> cada 20 minutos, mira a lo lejos 20 segundos.</li>
+<li><strong>Parpadeo consciente:</strong> cierra los ojos con suavidad varias veces por hora.</li>
+<li><strong>Distancia y altura:</strong> pantalla a un brazo de distancia y con el borde superior a la altura de los ojos o algo por debajo.</li>
+<li><strong>Iluminación:</strong> evita reflejos en la pantalla y que el brillo del monitor destaque mucho respecto a la sala.</li>
+<li><strong>Tamaño de letra:</strong> si te acercas para leer, aumenta el texto en vez de forzar la vista.</li>
+</ul>
+
+<h2>Ejercicios sencillos</h2>
+<p>Enfocar de lejos y de cerca alternando (un objeto cercano y otro lejano, unas cuantas veces) ayuda a relajar el enfoque. Mover los ojos describiendo círculos amplios y luego cerrarlos un momento también descansa. Son ejercicios de <em>confort</em>: reducen la fatiga, no cambian la graduación.</p>
+
+<h2>Cuándo consultar</h2>
+<p>Si la molestia aparece siempre a la misma distancia, ves doble, te duele la cabeza a diario o notas que empeora, conviene una revisión: puede haber una graduación sin corregir o un problema de convergencia que tiene tratamiento.</p>
+
+<p class="vv-note">Estos hábitos alivian la fatiga visual digital; no sustituyen una revisión óptica ni corrigen defectos de graduación. Si las molestias persisten, acude a tu óptico u oftalmólogo.</p>
+
+<a class="vv-cta" href="/vistaviva/">▶ Probar los ejercicios en VistaViva</a></div><nav class="vv-nav">
+<a href="/vistaviva/">Abrir la app</a><a href="/salud-visual/">Artículos</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+</nav></div>
+]]></content:encoded>
+    <excerpt:encoded><![CDATA[
+Hábitos y ejercicios sencillos contra el síndrome visual informático.
+]]></excerpt:encoded>
+    <wp:post_id>2002</wp:post_id>
+    <wp:post_date><![CDATA[2025-09-01 10:00:00]]></wp:post_date>
+    <wp:post_date_gmt><![CDATA[2025-09-01 10:00:00]]></wp:post_date_gmt>
+    <wp:comment_status><![CDATA[closed]]></wp:comment_status>
+    <wp:ping_status><![CDATA[closed]]></wp:ping_status>
+    <wp:post_name><![CDATA[fatiga-visual-pantallas]]></wp:post_name>
+    <wp:status><![CDATA[publish]]></wp:status>
+    <wp:post_parent>0</wp:post_parent>
+    <wp:menu_order>0</wp:menu_order>
+    <wp:post_type><![CDATA[post]]></wp:post_type>
+    <wp:post_password><![CDATA[]]></wp:post_password>
+    <wp:is_sticky>0</wp:is_sticky>
+    <category domain="category" nicename="salud-visual"><![CDATA[Salud visual]]></category>
+  </item>
+
+  <item>
+    <title>Insuficiencia de convergencia: qué es y cómo se entrena</title>
+    <link>https://example.com/insuficiencia-de-convergencia/</link>
+    <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
+    <dc:creator><![CDATA[admin]]></dc:creator>
+    <guid isPermaLink="false">https://example.com/?p=2003</guid>
+    <description></description>
+    <content:encoded><![CDATA[
+
+<style>
+body{background:#090d1a!important}
+.vv-page{--bg:#090d1a;--surface:#16203c;--line:#29365a;--text:#eef2fb;--muted:#aab5cf;--accent:#fbbf24;
+  background:#090d1a;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.6;max-width:780px;margin:0 auto;padding:8px 20px 60px}
+.vv-page *{box-sizing:border-box}
+.vv-brand{display:flex;align-items:center;gap:12px;padding:18px 0 8px}
+.vv-brand__logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:1.1rem}
+.vv-brand__name{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+.vv-brand__tag{color:var(--muted);font-size:.8rem}
+.vv-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 22px 8px;margin-top:14px;box-shadow:0 2px 8px #00000066,0 22px 48px -18px #00000099}
+.vv-card h1{font-size:1.55rem;letter-spacing:-.01em;margin:0 0 6px}
+.vv-card h2{font-size:1.12rem;color:var(--accent);margin:26px 0 8px}
+.vv-card p,.vv-card li{color:var(--muted);margin:0 0 12px}
+.vv-card ul{padding-left:22px}
+.vv-card strong{color:var(--text)}
+.vv-card a{color:var(--accent)}
+.vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
+.vv-cta{display:inline-block;margin-top:18px;color:#101725!important;background:var(--accent);padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none}
+.vv-nav{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.vv-nav a{color:var(--muted);font-size:.86rem;text-decoration:none}
+.vv-nav a:hover{color:var(--accent)}
+.vv-back{display:inline-block;margin-top:16px;color:#101725!important;background:var(--accent);padding:11px 18px;border-radius:12px;font-weight:700;text-decoration:none}
+</style>
+<div class="vv-page"><div class="vv-brand"><div class="vv-brand__logo">V</div><div><div class="vv-brand__name">VistaViva</div><div class="vv-brand__tag">Coach de entrenamiento visual</div></div></div><div class="vv-card"><h1>Insuficiencia de convergencia: qué es y cómo se entrena</h1>
+<p>¿Te cuesta mantener la lectura, se te juntan las letras o notas que un ojo "se va" cuando llevas un rato de cerca? Podría tratarse de una <strong>insuficiencia de convergencia</strong>, uno de los problemas de visión binocular más frecuentes y, afortunadamente, de los que mejor responden al entrenamiento.</p>
+
+<h2>Qué es la convergencia</h2>
+<p>Para mirar de cerca, los dos ojos tienen que girar ligeramente hacia dentro y apuntar al mismo punto. Cuando ese esfuerzo cuesta más de lo normal, aparecen síntomas al leer: cansancio, visión borrosa o doble, dolor de cabeza o perder la línea. Es la <strong>insuficiencia de convergencia</strong>.</p>
+
+<h2>Cómo se diagnostica</h2>
+<p>No se diagnostica en casa. Un optometrista mide el punto próximo de convergencia, las forias y la capacidad de mantener el enfoque. Con esos datos confirma si el problema existe y en qué grado.</p>
+
+<h2>Cómo se entrena</h2>
+<p>El tratamiento con más respaldo es la <strong>terapia visual</strong>. Un ejercicio clásico es el <em>push-up</em>: acercar poco a poco un objeto (o la punta de un lápiz) hacia la nariz manteniéndolo nítido y en imagen única, y parar justo cuando se desdobla. Repetido a diario, entrena la convergencia. Existen otros ejercicios (tarjetas de Brock, cordón, cartas) que el profesional pauta según el caso.</p>
+
+<h2>Qué esperar</h2>
+<p>La convergencia es de los pocos aspectos de la visión que sí mejoran con práctica constante, porque es muscular y de coordinación. Eso sí, requiere semanas de trabajo y, muchas veces, supervisión profesional para hacerlo bien y medir el avance.</p>
+
+<p class="vv-note">Los ejercicios de convergencia pueden aliviar síntomas de fatiga en la lectura, pero deben partir de un diagnóstico profesional. Si tienes visión doble o molestias persistentes, consulta a un optometrista u oftalmólogo.</p>
+
+<a class="vv-cta" href="/vistaviva/">▶ Probar los ejercicios en VistaViva</a></div><nav class="vv-nav">
+<a href="/vistaviva/">Abrir la app</a><a href="/salud-visual/">Artículos</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+</nav></div>
+]]></content:encoded>
+    <excerpt:encoded><![CDATA[
+Uno de los problemas de visión binocular que mejor responde al entrenamiento.
+]]></excerpt:encoded>
+    <wp:post_id>2003</wp:post_id>
+    <wp:post_date><![CDATA[2025-09-01 10:00:00]]></wp:post_date>
+    <wp:post_date_gmt><![CDATA[2025-09-01 10:00:00]]></wp:post_date_gmt>
+    <wp:comment_status><![CDATA[closed]]></wp:comment_status>
+    <wp:ping_status><![CDATA[closed]]></wp:ping_status>
+    <wp:post_name><![CDATA[insuficiencia-de-convergencia]]></wp:post_name>
+    <wp:status><![CDATA[publish]]></wp:status>
+    <wp:post_parent>0</wp:post_parent>
+    <wp:menu_order>0</wp:menu_order>
+    <wp:post_type><![CDATA[post]]></wp:post_type>
+    <wp:post_password><![CDATA[]]></wp:post_password>
+    <wp:is_sticky>0</wp:is_sticky>
+    <category domain="category" nicename="salud-visual"><![CDATA[Salud visual]]></category>
+  </item>
+
+  <item>
+    <title>Luz natural y prevención de la miopía</title>
+    <link>https://example.com/luz-natural-y-miopia/</link>
+    <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
+    <dc:creator><![CDATA[admin]]></dc:creator>
+    <guid isPermaLink="false">https://example.com/?p=2004</guid>
+    <description></description>
+    <content:encoded><![CDATA[
+
+<style>
+body{background:#090d1a!important}
+.vv-page{--bg:#090d1a;--surface:#16203c;--line:#29365a;--text:#eef2fb;--muted:#aab5cf;--accent:#fbbf24;
+  background:#090d1a;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.6;max-width:780px;margin:0 auto;padding:8px 20px 60px}
+.vv-page *{box-sizing:border-box}
+.vv-brand{display:flex;align-items:center;gap:12px;padding:18px 0 8px}
+.vv-brand__logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:1.1rem}
+.vv-brand__name{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+.vv-brand__tag{color:var(--muted);font-size:.8rem}
+.vv-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 22px 8px;margin-top:14px;box-shadow:0 2px 8px #00000066,0 22px 48px -18px #00000099}
+.vv-card h1{font-size:1.55rem;letter-spacing:-.01em;margin:0 0 6px}
+.vv-card h2{font-size:1.12rem;color:var(--accent);margin:26px 0 8px}
+.vv-card p,.vv-card li{color:var(--muted);margin:0 0 12px}
+.vv-card ul{padding-left:22px}
+.vv-card strong{color:var(--text)}
+.vv-card a{color:var(--accent)}
+.vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
+.vv-cta{display:inline-block;margin-top:18px;color:#101725!important;background:var(--accent);padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none}
+.vv-nav{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.vv-nav a{color:var(--muted);font-size:.86rem;text-decoration:none}
+.vv-nav a:hover{color:var(--accent)}
+.vv-back{display:inline-block;margin-top:16px;color:#101725!important;background:var(--accent);padding:11px 18px;border-radius:12px;font-weight:700;text-decoration:none}
+</style>
+<div class="vv-page"><div class="vv-brand"><div class="vv-brand__logo">V</div><div><div class="vv-brand__name">VistaViva</div><div class="vv-brand__tag">Coach de entrenamiento visual</div></div></div><div class="vv-card"><h1>Luz natural y prevención de la miopía</h1>
+<p>En las últimas décadas la miopía ha crecido mucho, sobre todo entre niños y jóvenes. Entre los factores que la investigación relaciona con ese aumento hay uno que se puede cambiar sin coste: el <strong>tiempo al aire libre</strong>.</p>
+
+<h2>Qué dice la evidencia</h2>
+<p>Varios estudios en población infantil han observado que quienes pasan <strong>más tiempo al aire libre</strong> tienen menos riesgo de desarrollar miopía o de que avance tan rápido. La cifra que suele citarse es de alrededor de <strong>dos horas diarias</strong> de luz natural. No es una cura, pero sí un factor protector durante la etapa de crecimiento del ojo.</p>
+
+<h2>Por qué la luz importa</h2>
+<p>La hipótesis más aceptada es que la luz natural, mucho más intensa que la de interiores, estimula la liberación de dopamina en la retina, y esa señal ayudaría a regular el crecimiento del ojo. Además, al aire libre miramos de lejos con más frecuencia, lo que da descanso al enfoque de cerca.</p>
+
+<h2>Ideas prácticas</h2>
+<ul>
+<li>Buscar cada día un rato de exterior: recreo, paseo, ir andando a clase o al trabajo.</li>
+<li>Alternar el estudio o la pantalla con salidas breves a la luz del día.</li>
+<li>En casa, trabajar cerca de una ventana con buena luz natural.</li>
+<li>Recordar que se trata de <strong>estar al aire libre</strong>, no de mirar directamente al sol (eso nunca).</li>
+</ul>
+
+<h2>Qué no hace</h2>
+<p>La luz natural no elimina una miopía ya existente ni sustituye las gafas o el control que indique el especialista. Es una medida de prevención y de freno, especialmente valiosa en la infancia.</p>
+
+<p class="vv-note">La información de este artículo es divulgativa. El control de la miopía debe seguirlo un oftalmólogo u optometrista; si hay antecedentes familiares o cambios de visión en un niño, conviene una revisión.</p>
+
+<a class="vv-cta" href="/vistaviva/">▶ Probar los ejercicios en VistaViva</a></div><nav class="vv-nav">
+<a href="/vistaviva/">Abrir la app</a><a href="/salud-visual/">Artículos</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+</nav></div>
+]]></content:encoded>
+    <excerpt:encoded><![CDATA[
+Por qué el tiempo al aire libre protege la vista de niños y jóvenes.
+]]></excerpt:encoded>
+    <wp:post_id>2004</wp:post_id>
+    <wp:post_date><![CDATA[2025-09-01 10:00:00]]></wp:post_date>
+    <wp:post_date_gmt><![CDATA[2025-09-01 10:00:00]]></wp:post_date_gmt>
+    <wp:comment_status><![CDATA[closed]]></wp:comment_status>
+    <wp:ping_status><![CDATA[closed]]></wp:ping_status>
+    <wp:post_name><![CDATA[luz-natural-y-miopia]]></wp:post_name>
+    <wp:status><![CDATA[publish]]></wp:status>
+    <wp:post_parent>0</wp:post_parent>
+    <wp:menu_order>0</wp:menu_order>
+    <wp:post_type><![CDATA[post]]></wp:post_type>
+    <wp:post_password><![CDATA[]]></wp:post_password>
+    <wp:is_sticky>0</wp:is_sticky>
+    <category domain="category" nicename="salud-visual"><![CDATA[Salud visual]]></category>
+  </item>
+
+  <item>
+    <title>El método Bates y el mito de tirar las gafas</title>
+    <link>https://example.com/metodo-bates-mitos/</link>
+    <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
+    <dc:creator><![CDATA[admin]]></dc:creator>
+    <guid isPermaLink="false">https://example.com/?p=2005</guid>
+    <description></description>
+    <content:encoded><![CDATA[
+
+<style>
+body{background:#090d1a!important}
+.vv-page{--bg:#090d1a;--surface:#16203c;--line:#29365a;--text:#eef2fb;--muted:#aab5cf;--accent:#fbbf24;
+  background:#090d1a;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.6;max-width:780px;margin:0 auto;padding:8px 20px 60px}
+.vv-page *{box-sizing:border-box}
+.vv-brand{display:flex;align-items:center;gap:12px;padding:18px 0 8px}
+.vv-brand__logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:1.1rem}
+.vv-brand__name{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+.vv-brand__tag{color:var(--muted);font-size:.8rem}
+.vv-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 22px 8px;margin-top:14px;box-shadow:0 2px 8px #00000066,0 22px 48px -18px #00000099}
+.vv-card h1{font-size:1.55rem;letter-spacing:-.01em;margin:0 0 6px}
+.vv-card h2{font-size:1.12rem;color:var(--accent);margin:26px 0 8px}
+.vv-card p,.vv-card li{color:var(--muted);margin:0 0 12px}
+.vv-card ul{padding-left:22px}
+.vv-card strong{color:var(--text)}
+.vv-card a{color:var(--accent)}
+.vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
+.vv-cta{display:inline-block;margin-top:18px;color:#101725!important;background:var(--accent);padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none}
+.vv-nav{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.vv-nav a{color:var(--muted);font-size:.86rem;text-decoration:none}
+.vv-nav a:hover{color:var(--accent)}
+.vv-back{display:inline-block;margin-top:16px;color:#101725!important;background:var(--accent);padding:11px 18px;border-radius:12px;font-weight:700;text-decoration:none}
+</style>
+<div class="vv-page"><div class="vv-brand"><div class="vv-brand__logo">V</div><div><div class="vv-brand__name">VistaViva</div><div class="vv-brand__tag">Coach de entrenamiento visual</div></div></div><div class="vv-card"><h1>El método Bates y el mito de tirar las gafas</h1>
+<p>Cada cierto tiempo reaparece la promesa de "tirar las gafas" con ejercicios. Gran parte de esa idea viene del <strong>método Bates</strong>, un conjunto de técnicas de principios del siglo XX. Conviene separar lo que ayuda de lo que es simplemente un mito.</p>
+
+<h2>Qué propone el método Bates</h2>
+<p>El oftalmólogo William Bates sostenía que los defectos de graduación se debían a "tensión" y que con relajación (palming, mirar al sol, movimientos oculares, visualización) se podía corregir la miopía, el astigmatismo o la presbicia sin gafas.</p>
+
+<h2>Qué dice la ciencia hoy</h2>
+<p>La miopía, la hipermetropía y el astigmatismo son sobre todo cuestión de <strong>anatomía</strong>: la longitud del ojo y la curvatura de la córnea. Ningún ejercicio cambia esa forma. Por eso <strong>no existe evidencia de que el método Bates corrija la graduación</strong>, y algunas de sus recomendaciones, como mirar al sol, son directamente <strong>peligrosas</strong> y pueden dañar la retina. No lo hagas nunca.</p>
+
+<h2>Entonces, ¿los ejercicios no sirven de nada?</h2>
+<p>Sí sirven, pero para otra cosa. La terapia visual con base científica ayuda en problemas <strong>funcionales</strong>: insuficiencia de convergencia, coordinación entre los dos ojos o fatiga por trabajo de cerca. Ahí los ejercicios mejoran el confort y el rendimiento. Lo que no hacen es eliminar una miopía ni librarte de las gafas si las necesitas.</p>
+
+<h2>La idea que conviene quedarse</h2>
+<p>Desconfía de cualquier método que prometa "curar" la vista o "tirar las gafas". Los ejercicios visuales son útiles como <strong>higiene y entrenamiento de la función</strong>, no como sustituto de una corrección óptica. Ante dudas, un profesional te dirá qué puede ayudarte de verdad.</p>
+
+<p class="vv-note">VistaViva propone ejercicios de confort y entrenamiento visual, no un método para dejar las gafas. Para cualquier defecto de graduación, consulta a tu óptico u oftalmólogo.</p>
+
+<a class="vv-cta" href="/vistaviva/">▶ Probar los ejercicios en VistaViva</a></div><nav class="vv-nav">
+<a href="/vistaviva/">Abrir la app</a><a href="/salud-visual/">Artículos</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+</nav></div>
+]]></content:encoded>
+    <excerpt:encoded><![CDATA[
+Qué ayuda de verdad y qué es solo un mito en los ejercicios visuales.
+]]></excerpt:encoded>
+    <wp:post_id>2005</wp:post_id>
+    <wp:post_date><![CDATA[2025-09-01 10:00:00]]></wp:post_date>
+    <wp:post_date_gmt><![CDATA[2025-09-01 10:00:00]]></wp:post_date_gmt>
+    <wp:comment_status><![CDATA[closed]]></wp:comment_status>
+    <wp:ping_status><![CDATA[closed]]></wp:ping_status>
+    <wp:post_name><![CDATA[metodo-bates-mitos]]></wp:post_name>
+    <wp:status><![CDATA[publish]]></wp:status>
+    <wp:post_parent>0</wp:post_parent>
+    <wp:menu_order>0</wp:menu_order>
+    <wp:post_type><![CDATA[post]]></wp:post_type>
+    <wp:post_password><![CDATA[]]></wp:post_password>
+    <wp:is_sticky>0</wp:is_sticky>
+    <category domain="category" nicename="salud-visual"><![CDATA[Salud visual]]></category>
   </item>
 </channel>
 </rss>

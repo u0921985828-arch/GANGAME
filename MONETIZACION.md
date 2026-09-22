@@ -1,9 +1,9 @@
 # Monetizar VistaViva con Google AdSense
 
 Todo está **preparado y desactivado por defecto**. La app sigue funcionando
-100 % offline y sin scripts externos hasta que tú actives los anuncios con tu
-propia cuenta. Los anuncios **nunca** aparecen durante los ejercicios: solo en
-la pantalla de inicio y en la de «rutina completada».
+100 % offline. Los anuncios van en la **página de WordPress**, **fuera** del
+iframe de la app (uno arriba y otro abajo), nunca durante los ejercicios.
+Mientras no pongas tus IDs de AdSense, los anuncios simplemente no se muestran.
 
 ---
 
@@ -11,106 +11,97 @@ la pantalla de inicio y en la de «rutina completada».
 
 | Archivo | Para qué sirve |
 |---|---|
-| `app.js` | Lógica de anuncios (bloque `ADS`), consentimiento de cookies y carga diferida. |
-| `index.html` | Huecos de anuncio (`#ad-home`, `#ad-done`), banner de consentimiento y enlace a privacidad. |
-| `styles.css` | Estilos del hueco de anuncio y del banner de cookies. |
-| `privacidad.html` | Página de política de privacidad (exigida por AdSense). |
+| `vistaviva-wordpress.xml` | Importa TODO a WordPress: 6 páginas + 5 artículos, con los huecos de anuncio ya puestos en la página de la app. |
+| `articulos/*.html` | Los 5 artículos de salud visual (contenido que AdSense pide para aprobar). |
 | `ads.txt` | Autoriza a Google a vender tu inventario (va en la raíz del dominio). |
-| `vistaviva-wordpress.xml` | Importa a WordPress dos páginas: landing + privacidad. |
+| `app.js` / `index.html` / `styles.css` | Anuncios internos opcionales de la app (bloque `ADS`), desactivados; no hacen falta si usas los de la página. |
 
 ---
 
-## Paso 0 — La app va DENTRO de tu WordPress (sin terceros)
+## Paso 0 — Todo va DENTRO de tu WordPress (sin terceros)
 
-No hace falta Netlify ni ningún otro servicio. La app entera viaja embebida en
-la página «VistaViva» del archivo `vistaviva-wordpress.xml` (dentro de un
-`<iframe srcdoc>`), así que corre 100 % dentro de tu propio WordPress:
+No hace falta Netlify ni ningún otro servicio. Al importar
+`vistaviva-wordpress.xml` se crean:
+
+- **6 páginas**: VistaViva (la app), Política de privacidad, Aviso legal,
+  Política de cookies, Términos y condiciones y Contacto.
+- **5 artículos** (categoría «Salud visual»): la regla 20-20-20, fatiga por
+  pantallas, insuficiencia de convergencia, luz natural y miopía, y el método
+  Bates. Son el **contenido de texto** que AdSense necesita para aprobarte.
+
+Los anuncios están en la página **VistaViva**, encima y debajo del iframe de la
+app (fuera de él, para que Google pueda rastrearlos).
 
 1. WordPress → **Herramientas → Importar → «Importador de WordPress»**.
 2. Sube `vistaviva-wordpress.xml` → **Subir archivo e importar**.
-3. Cuando pregunte el autor, **asigna las entradas a tu usuario admin**
-   (así WordPress conserva los scripts de la app).
-4. Se crean dos páginas: **VistaViva** (la app a pantalla completa) y
-   **Política de privacidad**.
+3. Cuando pregunte el autor, **asigna a tu usuario admin** (así WordPress
+   conserva los `<script>` y `<iframe>` del contenido).
 
-> Si tu WordPress tiene un plugin de seguridad que elimina `<script>` o
-> `<iframe>` del contenido, desactívalo mientras importas, o sube el archivo
-> `VistaViva.html` por el Administrador de archivos del host y cámbialo por un
-> iframe con `src="/VistaViva.html"` (misma idea, sin terceros).
+> Si un plugin de seguridad elimina `<script>`/`<iframe>` del contenido,
+> desactívalo mientras importas. Para los anuncios, alternativamente puedes
+> pegar cada bloque de AdSense en un bloque **HTML personalizado** en la página.
 
 ## Paso 1 — Añade tu dominio
 
 AdSense **exige un dominio real** (no vale `file://` ni un subdominio de pruebas
-que caduque). Apunta tu dominio a tu WordPress; la app ya vive ahí.
+que caduque). Apunta tu dominio a tu WordPress; la app y los artículos ya viven ahí.
 
 ## Paso 2 — Crea tu cuenta de AdSense y pide aprobación
 
 1. Entra en <https://adsense.google.com> y date de alta con tu dominio.
 2. Copia tu **ID de editor**: tiene la forma `ca-pub-XXXXXXXXXXXXXXXX`.
-3. Espera la aprobación (Google revisa que haya contenido y política de privacidad).
+3. Espera la aprobación. Google revisa que haya **contenido propio** (por eso los
+   artículos) y **política de privacidad** (ya incluida).
 
 ## Paso 3 — Sube el `ads.txt`
 
 Edita `ads.txt` y cambia `pub-XXXXXXXXXXXXXXXX` por tu número real (sin el
-prefijo `ca-`). Súbelo a la **raíz** del dominio, de modo que sea accesible en
+prefijo `ca-`). Súbelo a la **raíz** del dominio, accesible en
 `https://tudominio.com/ads.txt`.
 
 ## Paso 4 — Crea tus bloques de anuncio
 
 En AdSense → **Anuncios → Por bloque de anuncios**, crea dos bloques
-«display» y copia el **ID de slot** (10 dígitos) de cada uno.
+«display» y copia el **ID de slot** (10 dígitos) de cada uno (superior e inferior).
 
-## Paso 5 — Activa los anuncios en el código
+## Paso 5 — Pon tus IDs en la página de la app
 
-Abre `app.js` y busca el bloque `const ADS = {`:
+Edita la página **VistaViva** en WordPress (**Páginas → VistaViva → Editar**) y
+sustituye en su HTML:
 
-```js
-const ADS = {
-  enabled: true,                       // 1) pásalo a true
-  client: 'ca-pub-1234567890123456',   // 2) tu ID de editor
-  slots: { home: '1122334455', done: '6677889900' }, // 3) tus dos slots
-};
-```
+- `ca-pub-XXXXXXXXXXXXXXXX` → tu ID de editor (aparece 3 veces: el cargador y
+  los dos `data-ad-client`).
+- `data-ad-slot="0000000001"` → el ID del bloque **superior**.
+- `data-ad-slot="0000000002"` → el ID del bloque **inferior**.
 
-Guarda y vuelve a subir. A partir de ahí:
+Guarda. A partir de ahí Google rellena los dos huecos «Publicidad» que rodean la
+app. (El bloque `ADS` de `app.js` es una alternativa interna que puedes dejar
+desactivada; con los anuncios de la página ya es suficiente.)
 
-- Al usuario le aparece **una sola vez** el banner de cookies.
-- Si acepta, se carga el script de AdSense y se rellenan los huecos.
-- Si rechaza, no se carga ningún script de anuncios.
-- Sin conexión, no se intenta cargar nada; se reintenta al recuperar la red.
+## Paso 6 — Rellena tus datos legales
 
-## Paso 6 — Rellena tus datos en la privacidad
-
-En `privacidad.html` (y en la página importada a WordPress) sustituye
-`[TU NOMBRE O MARCA]` y `[TU-EMAIL]` por los tuyos.
+Sustituye los textos entre `[corchetes]` en las páginas legales (ver `LEGAL.md`):
+titular, NIF, dirección, correo y dominio.
 
 ---
 
 ## Europa (RGPD) — importante
 
-Para mostrar anuncios **personalizados** a usuarios de la UE, Reino Unido o
-Suiza, Google exige una **CMP certificada** (plataforma de consentimiento).
-La más sencilla es el **mensaje de consentimiento de Google** (Funding Choices),
-que se activa gratis desde tu cuenta de AdSense en **Privacidad y mensajes**.
-El banner incluido en la app cubre el consentimiento básico, pero **no**
-sustituye a la CMP certificada si tu público es europeo.
+Para mostrar anuncios a usuarios de la UE, Reino Unido o Suiza, Google exige una
+**CMP certificada**. La más sencilla es el **mensaje de consentimiento de
+Google**, gratis desde tu cuenta de AdSense en **Privacidad y mensajes**; o un
+plugin como **Complianz**/**CookieYes**. Actívala antes de recibir tráfico europeo.
 
----
-
-## WordPress (tu host) — recordatorio
-
-La app ya va embebida dentro de la página «VistaViva» al importar el WXR
-(ver Paso 0). No hay que enlazar a ningún sitio externo.
-
-> El `ads.txt` va en la raíz del dominio de WordPress. En muchos hosts se sube
-> por FTP/administrador de archivos, o con un plugin tipo «Ads.txt Manager».
+> El `ads.txt` va en la raíz del dominio. En muchos hosts se sube por
+> administrador de archivos, o con un plugin tipo «Ads.txt Manager».
 
 ---
 
 ## Comprobación rápida
 
-- [ ] La app abre y funciona con `enabled: false` (estado por defecto).
-- [ ] Con `enabled: true` y tus IDs, aparece el banner de cookies una vez.
-- [ ] Al aceptar, se ve el hueco «Publicidad» en inicio y al terminar.
+- [ ] Importado el `.xml`: se ven 6 páginas y 5 artículos.
+- [ ] En la página VistaViva, la app abre dentro del marco y hay un hueco
+      «Publicidad» arriba y otro abajo.
+- [ ] Con tus IDs puestos, Google empieza a rellenar esos huecos (tras aprobación).
 - [ ] `https://tudominio.com/ads.txt` responde con tu línea de editor.
-- [ ] `privacidad.html` es accesible y tiene tus datos.
+- [ ] CMP de cookies activa si tienes público europeo.

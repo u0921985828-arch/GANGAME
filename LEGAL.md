@@ -19,7 +19,8 @@ términos y contacto.
 3. Sube **`vistaviva-wordpress.xml`** → asigna a **admin** → importar.
 4. Se crean 6 páginas ya enlazadas entre sí:
    **VistaViva** (app), **Política de privacidad**, **Aviso legal**,
-   **Política de cookies**, **Términos y condiciones** y **Contacto**.
+   **Política de cookies**, **Términos y condiciones** y **Contacto**,
+   más **5 artículos** en la categoría «Salud visual» (mismo estilo oscuro).
 
 ## 2. Rellena tus datos
 
