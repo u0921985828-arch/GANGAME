@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
   VistaViva — Contenido para WordPress (formato WXR / WordPress eXtended RSS).
-  Cómo usar: en tu WordPress → Herramientas → Importar → «Importador WordPress»,
-  sube este archivo .xml y pulsa «Subir archivo e importar».
-  Crea dos PÁGINAS: «VistaViva» (landing) y «Política de privacidad».
-  DESPUÉS de importar, edita la página «VistaViva» y cambia el enlace
-  https://TU-APP.netlify.app por la URL real de tu app.
+  La app COMPLETA va embebida dentro de la página «VistaViva» (iframe srcdoc),
+  así corre 100% dentro de tu WordPress, sin depender de ningún servicio externo.
+
+  Cómo usar: WordPress -> Herramientas -> Importar -> «Importador de WordPress»,
+  sube este .xml y pulsa «Subir archivo e importar». Asigna las entradas al
+  usuario admin (así conserva los scripts). Crea dos PAGINAS:
+    - «VistaViva»              -> la app a pantalla completa
+    - «Política de privacidad» -> texto legal (lo exige AdSense)
 -->
 <rss version="2.0"
   xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
@@ -37,33 +40,2120 @@
     <guid isPermaLink="false">https://example.com/?page_id=1001</guid>
     <description></description>
     <content:encoded><![CDATA[
-<p><strong>VistaViva</strong> es un coach de entrenamiento visual: una rutina diaria y guiada de ejercicios para los ojos, pensada para relajar la vista, reducir la fatiga por pantallas y ejercitar la coordinación y el enfoque. Es gratuita, funciona sin conexión y no necesita registro.</p>
+<style>
+.vv-wrap{position:fixed;inset:0;z-index:99999;margin:0;padding:0;border:0;background:#090d1a}
+.vv-wrap iframe{width:100%;height:100%;border:0;display:block}
+</style>
+<div class="vv-wrap">
+<iframe title="VistaViva" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;es&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot; /&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0, viewport-fit=cover&quot; /&gt;
+  &lt;meta name=&quot;theme-color&quot; content=&quot;#0b1020&quot; /&gt;
+  &lt;meta name=&quot;description&quot; content=&quot;Coach de entrenamiento visual: rutina guiada de ejercicios oculares (seguimientos, sacádicos, convergencia y enfoque) basada en evidencia. Instalable y sin conexión.&quot; /&gt;
+  &lt;meta name=&quot;color-scheme&quot; content=&quot;dark&quot; /&gt;
+  &lt;meta name=&quot;mobile-web-app-capable&quot; content=&quot;yes&quot; /&gt;
+  &lt;meta name=&quot;apple-mobile-web-app-capable&quot; content=&quot;yes&quot; /&gt;
+  &lt;meta name=&quot;apple-mobile-web-app-status-bar-style&quot; content=&quot;black-translucent&quot; /&gt;
+  &lt;meta name=&quot;apple-mobile-web-app-title&quot; content=&quot;VistaViva&quot; /&gt;
+  &lt;link rel=&quot;icon&quot; href=&quot;data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzE2MjAzYSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwYjEwMjAiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImlyaXMiIGN4PSIwLjUiIGN5PSIwLjUiIHI9IjAuNSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZjZDM0ZCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmNTllMGIiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMTEyIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZiYmYyNCIgc3Ryb2tlLXdpZHRoPSIyMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik05NiAyNTZjNDgtODQgMjcyLTg0IDMyMCAwLTQ4IDg0LTI3MiA4NC0zMjAgMFoiLz4KICA8L2c+CiAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSI3MCIgZmlsbD0idXJsKCNpcmlzKSIvPgogIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMzAiIGZpbGw9IiMwYjEwMjAiLz4KICA8Y2lyY2xlIGN4PSIyMzQiIGN5PSIyMzQiIHI9IjE0IiBmaWxsPSIjZmZmZmZmIiBvcGFjaXR5PSIwLjg1Ii8+Cjwvc3ZnPgo=&quot; type=&quot;image/svg+xml&quot; /&gt;
+  &lt;link rel=&quot;apple-touch-icon&quot; href=&quot;data:image/png;base64,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&quot; /&gt;
+  &lt;style&gt;
+/* ============ VistaViva — estilos ============ */
+:root {
+  --bg: #090d1a;
+  --bg-2: #111a30;
+  --surface: #16203c;
+  --surface-2: #1e2a4c;
+  --line: #29365a;
+  --line-2: #34456e;
+  --text: #eef2fb;
+  --muted: #aab5cf;
+  --muted-2: #828fb0;
+  --accent: #fbbf24;
+  --accent-2: #38bdf8;
+  --danger: #f87171;
+  --ok: #34d399;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --pad: clamp(16px, 5vw, 28px);
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --font: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif;
+  /* Elevación */
+  --shadow-1: 0 1px 2px #0000004d, 0 8px 20px -10px #0000007a;
+  --shadow-2: 0 2px 8px #00000066, 0 22px 48px -18px #00000099;
+  --glow: 0 10px 34px -10px #f59e0b66;
+  /* Easing (Material 3 + snappy) */
+  --ease-standard: cubic-bezier(.4, 0, .2, 1);
+  --ease-emphasized: cubic-bezier(.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0, 0, .2, 1);
+  --ease-snappy: cubic-bezier(.22, 1, .36, 1);
+}
 
-<h2>Abrir la aplicación</h2>
-<p><a href="https://TU-APP.netlify.app" target="_blank" rel="noopener"><strong>👉 Abrir VistaViva</strong></a> (sustituye este enlace por la URL real de tu app tras publicarla).</p>
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-<h2>Qué entrenas</h2>
-<p>El programa incluye 14 ejercicios repartidos en 7 categorías:</p>
-<ul>
-<li><strong>Calentamiento:</strong> parpadeo consciente para la película lagrimal.</li>
-<li><strong>Seguimientos (pursuits):</strong> horizontal, vertical, diagonales, círculos y ochos.</li>
-<li><strong>Sacádicos:</strong> saltos de fijación para agilidad ocular.</li>
-<li><strong>Flexibilidad de enfoque:</strong> ejercicios cerca–lejos (acomodación).</li>
-<li><strong>Convergencia y visión binocular:</strong> cuerda de Brock y convergencia.</li>
-<li><strong>Visión periférica:</strong> fijación central con detección lateral.</li>
-<li><strong>Descanso y hábitos:</strong> regla 20-20-20, palming y luz natural.</li>
-</ul>
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
 
-<h2>Basado en evidencia</h2>
-<p>Los ejercicios se apoyan en fuentes serias: el <em>Convergence Insufficiency Treatment Trial</em> (CITT) del Instituto Nacional del Ojo de EE. UU. sobre la terapia de convergencia; la posición de la Academia Americana de Oftalmología sobre lo que los ejercicios pueden y no pueden lograr; y la investigación sobre el tiempo al aire libre y la luz natural en la prevención de la miopía infantil.</p>
+body {
+  max-width: 560px;
+  margin-inline: auto;
+  position: relative;
+  background:
+    radial-gradient(1100px 460px at 50% -12%, #1b2a5266 0%, transparent 62%),
+    radial-gradient(760px 380px at 100% 8%, #12325a33 0%, transparent 55%),
+    radial-gradient(900px 500px at 0% 100%, #1a14302e 0%, transparent 60%),
+    var(--bg);
+}
 
-<h2>Honestidad clínica</h2>
-<p>Estos ejercicios entrenan músculos, coordinación, enfoque y hábitos, y alivian la fatiga visual. <strong>No</strong> reshapean el ojo ni corrigen defectos refractivos (miopía, hipermetropía, astigmatismo), así que <strong>no sustituyen tu graduación</strong>. El llamado «método Bates» está desmentido por estudios controlados. La app lo explica sin humo en su ficha «¿Puedo dejar las gafas?».</p>
+button { font-family: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent-2); outline-offset: 2px; border-radius: 8px; }
 
-<h2>Aviso de salud</h2>
-<p>VistaViva ayuda a relajar la vista y reducir la fatiga visual por pantallas. No cura ni corrige defectos refractivos ni sustituye la revisión de un profesional. Si notas dolor, mareo o visión borrosa persistente, detente y consulta a tu oftalmólogo u optometrista.</p>
+/* ---- Pantallas ---- */
+.screen { display: none; min-height: 100dvh; }
+.screen.is-active { display: block; }
+#player.is-active, #done.is-active { display: flex; }
+#home.is-active, #done.is-active { animation: screenIn .42s var(--ease-emphasized) both; }
+#player.is-active { animation: fadeIn .26s var(--ease-decelerate) both; }
+@keyframes screenIn { from { opacity: 0; transform: translateY(14px) scale(.99); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ============ INICIO ============ */
+#home {
+  padding: calc(var(--safe-t) + 18px) var(--pad) calc(var(--safe-b) + 32px);
+}
+.home__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand__logo { color: var(--accent); display: grid; place-items: center; }
+.brand__name { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+.brand__tag { font-size: 0.82rem; color: var(--muted); }
+
+.icon-btn {
+  background: var(--surface); color: var(--muted); border: 1px solid var(--line);
+  width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+  box-shadow: var(--shadow-1);
+  transition: background .18s var(--ease-standard), color .18s, border-color .18s, transform .18s var(--ease-snappy);
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--line-2); transform: translateY(-1px); }
+.icon-btn:active { transform: scale(.94); }
+
+/* Racha */
+.streak {
+  margin-top: 22px; display: flex; align-items: center; gap: 18px;
+  background: linear-gradient(135deg, var(--surface), var(--bg-2));
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px;
+  box-shadow: var(--shadow-1);
+}
+.streak__flame {
+  flex: 0 0 auto; width: 84px; height: 84px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #f59e0b40, transparent 72%), var(--surface-2);
+  border: 2px solid #f59e0b66; display: grid; place-items: center; text-align: center; line-height: 1;
+  box-shadow: inset 0 0 22px -6px #f59e0b55, 0 0 0 4px #f59e0b12;
+  animation: flamePulse 3.6s var(--ease-standard) infinite;
+}
+@keyframes flamePulse {
+  0%, 100% { box-shadow: inset 0 0 22px -6px #f59e0b55, 0 0 0 4px #f59e0b12; }
+  50%      { box-shadow: inset 0 0 26px -4px #f59e0b85, 0 0 0 7px #f59e0b1a; }
+}
+.streak__count { display: block; font-size: 2rem; font-weight: 800; color: var(--accent); letter-spacing: -.02em; }
+.streak__unit { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.streak__meta { flex: 1; min-width: 0; }
+.streak__status { font-weight: 600; margin-bottom: 12px; }
+.week { display: flex; gap: 8px; }
+.week span {
+  flex: 1; height: 10px; border-radius: 6px; background: var(--surface-2);
+  border: 1px solid var(--line); transition: background .2s var(--ease-standard);
+}
+.week span.on { background: linear-gradient(180deg, #fcd34d, #f59e0b); border-color: transparent; box-shadow: 0 2px 10px -4px #f59e0baa; }
+.week span.today { box-shadow: 0 0 0 2px var(--accent-2) inset; }
+
+/* CTA */
+.cta {
+  margin-top: 22px; width: 100%; border: none; border-radius: var(--radius);
+  background: linear-gradient(135deg, #fcd34d, var(--accent) 46%, #f59e0b);
+  color: #241800; padding: 18px 20px; text-align: left;
+  display: flex; flex-direction: column; gap: 3px;
+  box-shadow: var(--glow);
+  transition: transform .16s var(--ease-snappy), box-shadow .2s var(--ease-standard), filter .2s;
+}
+.cta:hover { filter: brightness(1.03); }
+.cta:active { transform: translateY(1px) scale(.99); box-shadow: 0 6px 18px -10px #f59e0b99; }
+.cta__title { font-size: 1.2rem; font-weight: 800; letter-spacing: -.01em; }
+.cta__sub { font-size: 0.85rem; opacity: .82; font-weight: 600; }
+.cta--ghost {
+  background: var(--surface); color: var(--text); border: 1px solid var(--line);
+  box-shadow: var(--shadow-1); text-align: center; align-items: center;
+}
+.cta--ghost:hover { filter: none; background: var(--surface-2); }
+
+/* Lista de ejercicios */
+.list { margin-top: 28px; }
+.list__head { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted-2); margin-bottom: 12px; }
+
+/* Selector de programa (rutinas por objetivo) */
+.programs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.programs::-webkit-scrollbar { display: none; }
+.prog {
+  flex: 0 0 auto; min-width: 132px; text-align: left; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px;
+  display: flex; flex-direction: column; gap: 2px; box-shadow: var(--shadow-1);
+  transition: border-color .18s, background .18s, transform .16s var(--ease-snappy), box-shadow .18s;
+}
+.prog:hover { border-color: var(--line-2); }
+.prog:active { transform: scale(.97); }
+.prog b { font-size: 0.92rem; font-weight: 700; }
+.prog small { font-size: 0.72rem; color: var(--muted); }
+.prog.is-on { border-color: var(--accent); background: linear-gradient(135deg, #2a2512, var(--surface)); box-shadow: 0 0 0 1px #fbbf2433, 0 8px 22px -12px #f59e0b66; }
+.prog.is-on b { color: var(--accent); }
+.exercises { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.exercises .ex-cat {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--accent); font-weight: 700; margin: 12px 2px 2px;
+}
+.exercises .ex-cat:first-child { margin-top: 0; }
+.exercises .ex-item {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 14px; padding: 12px 14px; box-shadow: var(--shadow-1);
+  transition: border-color .18s, background .18s, transform .16s var(--ease-snappy);
+}
+.ex-dot { flex: 0 0 auto; width: 12px; height: 12px; border-radius: 50%; }
+.ex-prev {
+  flex: 0 0 auto; width: 44px; height: 44px; border-radius: 11px;
+  background: radial-gradient(circle at 50% 42%, #131d33, #0a0f1e);
+  border: 1px solid var(--line); box-shadow: inset 0 1px 4px #00000066;
+}
+.ex-body { flex: 1; min-width: 0; }
+.ex-body b { font-size: 0.98rem; font-weight: 600; display: block; }
+.ex-body small { color: var(--muted); font-size: 0.78rem; }
+.ex-time { color: var(--muted-2); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+
+/* Rutina personalizada: filas con interruptor */
+.ex-item--toggle { cursor: pointer; }
+.ex-item--toggle:active { transform: scale(.995); }
+.ex-check {
+  flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--line); position: relative; transition: background .15s, border-color .15s;
+}
+.ex-check.is-on { border-color: var(--ok); background: var(--ok); }
+.ex-check.is-on::after {
+  content: &quot;✓&quot;; position: absolute; inset: 0; display: grid; place-items: center;
+  color: #06281c; font-size: 14px; font-weight: 800;
+}
+
+.cta:disabled { opacity: .5; box-shadow: none; cursor: not-allowed; filter: grayscale(.35); }
+
+.disclaimer {
+  margin-top: 26px; font-size: 0.74rem; line-height: 1.5; color: var(--muted-2);
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px;
+}
+
+/* Nota del coach (abre el diálogo honesto) */
+.coach-note {
+  margin-top: 26px; width: 100%; display: flex; align-items: center; gap: 12px;
+  text-align: left; background: var(--bg-2); border: 1px solid var(--line);
+  border-radius: 14px; padding: 14px 16px; color: var(--text); box-shadow: var(--shadow-1);
+  transition: background .18s var(--ease-standard), border-color .18s, transform .16s var(--ease-snappy);
+}
+.coach-note:hover { background: var(--surface); border-color: var(--line-2); }
+.coach-note:active { transform: scale(.99); }
+.coach-note__icon { font-size: 1.3rem; flex: 0 0 auto; }
+.coach-note span:nth-child(2) { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.coach-note strong { font-size: 0.92rem; }
+.coach-note small { color: var(--muted); font-size: 0.78rem; line-height: 1.4; }
+.coach-note__chev { color: var(--muted-2); font-size: 1.4rem; flex: 0 0 auto; }
+
+/* Contenido del diálogo del coach */
+.coach__lead { color: var(--muted); font-size: 0.9rem; margin-top: -4px; }
+.coach__block { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--surface); }
+.coach__block h3 { font-size: 0.98rem; margin-bottom: 6px; }
+.coach__block p, .coach__block li { font-size: 0.85rem; line-height: 1.5; color: #d6def0; }
+.coach__block ul { padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.coach__block--no { border-left: 3px solid var(--danger); }
+.coach__block--yes { border-left: 3px solid var(--ok); }
+.coach__block--tip { border-left: 3px solid var(--accent-2); }
+.coach__block u { text-decoration-color: currentColor; text-underline-offset: 2px; }
+.coach__foot { font-size: 0.76rem; color: var(--muted-2); line-height: 1.5; }
+.sheet--tall .sheet__inner { max-height: 86vh; overflow-y: auto; }
+
+/* ============ REPRODUCTOR ============ */
+.player { flex-direction: column; position: relative; background: #05070f; overflow: hidden; }
+.stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.player__ui {
+  position: relative; z-index: 2; display: flex; flex-direction: column;
+  min-height: 100dvh; padding: calc(var(--safe-t) + 14px) var(--pad) calc(var(--safe-b) + 22px);
+  pointer-events: none;
+}
+.player__ui button { pointer-events: auto; }
+
+.player__top { display: flex; align-items: center; gap: 12px; }
+.chip {
+  background: #ffffff14; color: var(--text); border: 1px solid #ffffff22;
+  min-width: 40px; height: 40px; padding: 0 12px; border-radius: 20px;
+  display: grid; place-items: center; font-weight: 700; backdrop-filter: blur(6px);
+}
+.chip--time { font-variant-numeric: tabular-nums; letter-spacing: .02em; min-width: 64px; }
+.progress { flex: 1; height: 6px; background: #ffffff1f; border-radius: 4px; overflow: hidden; }
+.progress__bar { height: 100%; width: 0%; background: var(--accent); border-radius: 4px; box-shadow: 0 0 10px -1px currentColor; transition: width .3s var(--ease-standard); }
+
+.player__mid { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; text-align: center; padding-bottom: 6px; }
+.ex-index { color: var(--muted); font-weight: 700; font-size: 0.82rem; letter-spacing: .08em; }
+.ex-name { font-size: 1.55rem; font-weight: 800; margin: 6px 0 8px; letter-spacing: -.01em; text-shadow: 0 2px 24px #000, 0 0 2px #0008; }
+.ex-instruction {
+  color: #dce4f6; font-size: 0.98rem; line-height: 1.45; max-width: 30ch; margin-inline: auto;
+  background: #0a0f1ecc; border: 1px solid #ffffff14; border-radius: 14px; padding: 11px 15px; backdrop-filter: blur(6px);
+}
+
+.player__bottom { display: flex; align-items: center; justify-content: center; gap: 26px; margin-top: 22px; }
+.pausewrap { position: relative; width: 78px; height: 78px; flex: 0 0 auto; }
+.pausewrap .ctl--main { position: absolute; inset: 0; }
+.ring { position: absolute; inset: -7px; width: calc(100% + 14px); height: calc(100% + 14px); transform: rotate(-90deg); pointer-events: none; }
+.ring circle { fill: none; stroke-width: 5; }
+.ring__bg { stroke: #ffffff1f; }
+.ring__fg { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 289.03; stroke-dashoffset: 289.03; filter: drop-shadow(0 0 4px currentColor); }
+.ctl {
+  background: #ffffff14; border: 1px solid #ffffff26; color: var(--text);
+  width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center;
+  backdrop-filter: blur(6px); box-shadow: var(--shadow-1);
+  transition: transform .16s var(--ease-snappy), background .18s;
+}
+.ctl:hover { background: #ffffff22; }
+.ctl:active { transform: scale(.9); }
+.ctl--main { width: 78px; height: 78px; background: var(--accent); color: #241800; border-color: transparent; box-shadow: 0 10px 30px -10px #f59e0baa; }
+.ctl--main:hover { background: #fcd34d; }
+
+/* ============ FIN ============ */
+.done {
+  position: relative;
+  flex-direction: column; align-items: center; justify-content: safe center; text-align: center;
+  padding: calc(var(--safe-t) + 24px) var(--pad) calc(var(--safe-b) + 32px); gap: 6px;
+  overflow-y: auto;
+}
+.confetti { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+.done__badge { color: var(--ok); filter: drop-shadow(0 6px 20px #34d39955); animation: pop .6s var(--ease-snappy) both; }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.done__title { font-size: 1.8rem; font-weight: 800; margin-top: 8px; letter-spacing: -.01em; }
+.done__sub { color: var(--muted); margin-bottom: 14px; }
+.milestone {
+  display: inline-flex; align-items: center; gap: 9px; margin: 2px 0 16px;
+  padding: 10px 16px 10px 12px; border-radius: 999px;
+  background: linear-gradient(135deg, #fbbf2422, #f472b622);
+  border: 1px solid #fbbf2455; color: var(--text); font-weight: 700; font-size: 0.92rem;
+  box-shadow: 0 6px 22px #fbbf2426; animation: pop .55s var(--ease-snappy) both .1s;
+}
+.milestone[hidden] { display: none; }
+.milestone__emoji { font-size: 1.25rem; line-height: 1; }
+.done__stats { display: flex; gap: 12px; margin: 8px 0 26px; width: 100%; }
+.stat {
+  flex: 1; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 8px;
+  box-shadow: var(--shadow-1); animation: riseIn .5s var(--ease-decelerate) both;
+}
+.stat:nth-child(1) { animation-delay: .06s; }
+.stat:nth-child(2) { animation-delay: .14s; }
+.stat:nth-child(3) { animation-delay: .22s; }
+@keyframes riseIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.stat__num { display: block; font-size: 1.6rem; font-weight: 800; color: var(--accent); letter-spacing: -.02em; }
+.stat__lbl { font-size: 0.72rem; color: var(--muted); }
+.done .cta { max-width: 320px; }
+.done__skills { width: 100%; margin: -6px 0 24px; }
+.done__skills-h { font-size: 0.76rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted-2); margin-bottom: 10px; }
+.skills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.skill { display: inline-flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; font-size: 0.82rem; font-weight: 600; color: var(--text); box-shadow: var(--shadow-1); animation: riseIn .5s var(--ease-decelerate) both; animation-delay: .3s; }
+.skill__dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+
+/* ============ HOJA DE AJUSTES ============ */
+.sheet {
+  border: none; padding: 0; background: transparent; color: var(--text);
+  width: 100%; max-width: 560px; margin: auto auto 0; position: fixed; inset: auto 0 0 0;
+}
+.sheet::backdrop { background: #000000aa; backdrop-filter: blur(2px); }
+.sheet__inner {
+  background: var(--bg-2); border: 1px solid var(--line); border-bottom: none;
+  border-radius: 22px 22px 0 0; padding: 10px var(--pad) calc(var(--safe-b) + 22px);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.sheet__grip { width: 44px; height: 5px; background: var(--line); border-radius: 3px; margin: 4px auto 8px; }
+.sheet__title { font-size: 1.2rem; font-weight: 800; }
+.row {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px;
+}
+.row span { display: flex; flex-direction: column; gap: 3px; }
+.row small { color: var(--muted); font-size: 0.78rem; }
+.select {
+  background: var(--surface-2); color: var(--text); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 12px; font-size: 0.95rem; min-width: 110px;
+}
+.switch { appearance: none; width: 50px; height: 30px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--line); position: relative; flex: 0 0 auto; transition: background .18s; }
+.switch::after { content: &quot;&quot;; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--muted); transition: transform .18s, background .18s; }
+.switch:checked { background: var(--ok); border-color: transparent; }
+.switch:checked::after { transform: translateX(20px); background: #06281c; }
+
+.btn-primary { background: var(--accent); color: #201500; border: none; border-radius: 14px; padding: 15px; font-weight: 800; font-size: 1rem; }
+.btn-secondary { background: transparent; color: var(--danger); border: 1px solid #f8717155; border-radius: 14px; padding: 13px; font-weight: 700; }
+.sheet__ver { text-align: center; color: var(--muted-2); font-size: 0.72rem; }
+
+/* ============ ESCRITORIO / PANTALLAS GRANDES ============ */
+/* El reproductor siempre ocupa toda la ventana, sin quedar encajonado en la
+   columna central; así el punto recorre toda la pantalla (mejor rango ocular). */
+#player.is-active {
+  position: fixed;
+  inset: 0;
+  max-width: none;
+  width: 100vw;
+  margin: 0;
+  z-index: 50;
+}
+
+.player__hint { display: none; }
+
+@media (min-width: 900px) {
+  /* La app deja de ser una columna estrecha y usa el ancho disponible.
+     Se condiciona a .is-active para no romper el ocultado de pantallas
+     (una regla #home sin .is-active ganaría a .screen{display:none}). */
+  body { max-width: 1060px; }
+
+  #home.is-active {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+    grid-template-rows: auto auto auto auto 1fr;
+    grid-template-areas:
+      &quot;top    top&quot;
+      &quot;streak list&quot;
+      &quot;cta    list&quot;
+      &quot;note   list&quot;
+      &quot;pad    list&quot;;
+    column-gap: 44px;
+    row-gap: 16px;
+    align-content: start;
+    padding-top: calc(var(--safe-t) + 40px);
+  }
+  .home__top { grid-area: top; margin-bottom: 8px; }
+  .streak    { grid-area: streak; margin-top: 0; align-self: start; }
+  .cta       { grid-area: cta; margin-top: 4px; align-self: start; }
+  .list      { grid-area: list; margin-top: 0; align-self: start; }
+  .disclaimer { grid-area: note; margin-top: 4px; align-self: start; }
+  .coach-note { grid-area: note; margin-top: 4px; align-self: start; }
+
+  /* Un poco más de presencia en el héroe. */
+  .brand__name { font-size: 1.7rem; }
+  .streak { padding: 22px 24px; }
+  .streak__flame { width: 96px; height: 96px; }
+  .streak__count { font-size: 2.3rem; }
+  .cta { padding: 22px 24px; }
+  .cta__title { font-size: 1.35rem; }
+  .cta:hover { box-shadow: 0 16px 40px -14px #f59e0baa; transform: translateY(-1px); }
+
+  /* Tarjetas de ejercicio con hover en escritorio. */
+  .exercises .ex-item { padding: 14px 16px; transition: border-color .15s, background .15s, transform .12s; }
+  .exercises .ex-item:hover { background: var(--surface-2); border-color: #3a4a70; transform: translateX(2px); }
+
+  /* Reproductor: escenario centrado y acotado para que el barrido no obligue a
+     girar la cabeza en monitores anchos (la vista debe moverse, no el cuello). */
+  .stage {
+    inset: 0 auto 0 50%;
+    width: min(940px, 100vw);
+    transform: translateX(-50%);
+    border-inline: 1px solid #ffffff0d;
+  }
+  .player__ui { max-width: 900px; margin-inline: auto; }
+
+  /* Pantalla de fin como columna centrada (no estirar a todo el ancho). */
+  .done__stats, .done__skills { max-width: 480px; margin-inline: auto; }
+}
+
+@media (min-width: 900px) and (pointer: fine) {
+  .player__hint {
+    display: block; text-align: center; margin: 16px auto 0; color: var(--muted-2);
+    font-size: 0.82rem; letter-spacing: .01em;
+  }
+  .player__hint kbd {
+    display: inline-block; background: #ffffff14; border: 1px solid #ffffff26;
+    border-radius: 6px; padding: 1px 7px; font: inherit; font-size: 0.78rem; color: var(--text);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
+/* El ajuste &quot;movimiento reducido&quot; de la app espeja lo anterior (aunque el SO no lo tenga). */
+:root.reduce-motion *, :root.reduce-motion *::before, :root.reduce-motion *::after {
+  animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important;
+}
+
+/* ---------- Monetización: bloque de anuncio y aviso de cookies ---------- */
+.adbox {
+  width: 100%; max-width: 480px; margin: 18px auto 4px; padding: 8px;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--surface);
+  box-shadow: var(--shadow-1); text-align: center; min-height: 60px;
+}
+.adbox[hidden] { display: none; }
+.adbox__label {
+  display: block; font-size: 0.62rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted-2); margin-bottom: 6px;
+}
+.adbox .adsbygoogle { display: block; min-height: 50px; }
+.sheet__link { color: var(--accent); text-decoration: none; font-weight: 600; }
+.sheet__link:hover { text-decoration: underline; }
+
+.consent {
+  position: fixed; left: 50%; bottom: 0; transform: translateX(-50%);
+  z-index: 60; width: min(680px, 100%);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface-2, #121a30); border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 30px #00000055; animation: consentUp .4s var(--ease-decelerate) both;
+}
+.consent[hidden] { display: none; }
+@keyframes consentUp { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+.consent__text { flex: 1 1 240px; margin: 0; font-size: 0.86rem; color: var(--muted); line-height: 1.45; }
+.consent__text a { color: var(--accent); }
+.consent__actions { display: flex; gap: 10px; margin-left: auto; }
+.consent__btn {
+  border: 0; border-radius: 999px; padding: 10px 20px; font: inherit; font-weight: 700;
+  color: #071018; background: var(--accent); cursor: pointer;
+  transition: transform .15s var(--ease-snappy), filter .15s ease;
+}
+.consent__btn:hover { filter: brightness(1.06); }
+.consent__btn:active { transform: scale(.96); }
+.consent__btn--ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+
+&lt;/style&gt;
+  &lt;title&gt;VistaViva — Coach de entrenamiento visual&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- ============ PANTALLA: INICIO ============ --&gt;
+  &lt;main id=&quot;home&quot; class=&quot;screen is-active&quot; aria-label=&quot;Inicio&quot;&gt;
+    &lt;header class=&quot;home__top&quot;&gt;
+      &lt;div class=&quot;brand&quot;&gt;
+        &lt;span class=&quot;brand__logo&quot; aria-hidden=&quot;true&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 48 48&quot; width=&quot;34&quot; height=&quot;34&quot;&gt;&lt;use href=&quot;#logo-glyph&quot;&gt;&lt;/use&gt;&lt;/svg&gt;
+        &lt;/span&gt;
+        &lt;div&gt;
+          &lt;h1 class=&quot;brand__name&quot;&gt;VistaViva&lt;/h1&gt;
+          &lt;p class=&quot;brand__tag&quot;&gt;Tu coach de entrenamiento visual&lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;button id=&quot;btn-settings&quot; class=&quot;icon-btn&quot; aria-label=&quot;Ajustes&quot; type=&quot;button&quot;&gt;
+        &lt;svg viewBox=&quot;0 0 24 24&quot; width=&quot;24&quot; height=&quot;24&quot; aria-hidden=&quot;true&quot;&gt;&lt;path fill=&quot;currentColor&quot; d=&quot;M12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.3 7.3 0 0 0-1.69-.98l-.38-2.65A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.38 2.65a7.3 7.3 0 0 0-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46a.5.5 0 0 0 .12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97L2.46 14.6a.5.5 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65A.49.49 0 0 0 10 22h4a.49.49 0 0 0 .49-.42l.38-2.65a7.3 7.3 0 0 0 1.69-.98l2.49 1a.5.5 0 0 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64Z&quot;/&gt;&lt;/svg&gt;
+      &lt;/button&gt;
+    &lt;/header&gt;
+
+    &lt;section class=&quot;streak&quot; aria-label=&quot;Tu progreso&quot;&gt;
+      &lt;div class=&quot;streak__flame&quot;&gt;
+        &lt;span id=&quot;streak-count&quot; class=&quot;streak__count&quot;&gt;0&lt;/span&gt;
+        &lt;span class=&quot;streak__unit&quot;&gt;días&lt;br&gt;seguidos&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;streak__meta&quot;&gt;
+        &lt;p id=&quot;streak-status&quot; class=&quot;streak__status&quot;&gt;Empieza tu racha hoy&lt;/p&gt;
+        &lt;div class=&quot;week&quot; id=&quot;week-dots&quot; aria-label=&quot;Últimos 7 días&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;button id=&quot;btn-start&quot; class=&quot;cta&quot; type=&quot;button&quot;&gt;
+      &lt;span class=&quot;cta__title&quot;&gt;Comenzar rutina&lt;/span&gt;
+      &lt;span id=&quot;routine-summary&quot; class=&quot;cta__sub&quot;&gt;9 ejercicios · ~5 min&lt;/span&gt;
+    &lt;/button&gt;
+
+    &lt;section class=&quot;list&quot; aria-label=&quot;Ejercicios&quot;&gt;
+      &lt;h2 class=&quot;list__head&quot;&gt;Elige tu programa&lt;/h2&gt;
+      &lt;div id=&quot;programs&quot; class=&quot;programs&quot; role=&quot;tablist&quot; aria-label=&quot;Programas de entrenamiento&quot;&gt;&lt;/div&gt;
+      &lt;ul id=&quot;exercise-list&quot; class=&quot;exercises&quot; aria-label=&quot;Ejercicios del programa&quot;&gt;&lt;/ul&gt;
+    &lt;/section&gt;
+
+    &lt;button id=&quot;btn-coach&quot; class=&quot;coach-note&quot; type=&quot;button&quot;&gt;
+      &lt;span class=&quot;coach-note__icon&quot; aria-hidden=&quot;true&quot;&gt;💡&lt;/span&gt;
+      &lt;span&gt;
+        &lt;strong&gt;¿Esto me quita las gafas?&lt;/strong&gt;
+        &lt;small&gt;Te lo explico sin humo: qué puede y qué no puede lograr el entrenamiento visual.&lt;/small&gt;
+      &lt;/span&gt;
+      &lt;span class=&quot;coach-note__chev&quot; aria-hidden=&quot;true&quot;&gt;›&lt;/span&gt;
+    &lt;/button&gt;
+
+    &lt;!-- Anuncio (solo visible con AdSense configurado y consentimiento) --&gt;
+    &lt;aside id=&quot;ad-home&quot; class=&quot;adbox&quot; aria-label=&quot;Publicidad&quot; hidden&gt;
+      &lt;span class=&quot;adbox__label&quot;&gt;Publicidad&lt;/span&gt;
+      &lt;ins class=&quot;adsbygoogle&quot; style=&quot;display:block&quot; data-ad-format=&quot;auto&quot; data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+    &lt;/aside&gt;
+  &lt;/main&gt;
+
+  &lt;!-- ============ DIÁLOGO: COACH (honestidad clínica) ============ --&gt;
+  &lt;dialog id=&quot;coach&quot; class=&quot;sheet sheet--tall&quot; aria-label=&quot;¿Puedo dejar las gafas?&quot;&gt;
+    &lt;div class=&quot;sheet__inner&quot;&gt;
+      &lt;div class=&quot;sheet__grip&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+      &lt;h2 class=&quot;sheet__title&quot;&gt;¿Puedo dejar las gafas?&lt;/h2&gt;
+      &lt;p class=&quot;coach__lead&quot;&gt;Como coach honesto, te doy la versión real, no la de los anuncios.&lt;/p&gt;
+
+      &lt;div class=&quot;coach__block coach__block--no&quot;&gt;
+        &lt;h3&gt;Lo que el entrenamiento &lt;u&gt;no&lt;/u&gt; hace&lt;/h3&gt;
+        &lt;p&gt;La miopía, la hipermetropía y el astigmatismo dependen de la &lt;strong&gt;forma
+        del ojo y de la córnea&lt;/strong&gt;. Ningún ejercicio los reshapea, así que
+        &lt;strong&gt;no eliminan tu graduación&lt;/strong&gt;. La Academia Americana de Oftalmología
+        es clara, y el “método Bates” (dejar las gafas a base de ejercicios) está
+        desmentido por estudios controlados. Desconfía de quien te prometa lo contrario.&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;coach__block coach__block--yes&quot;&gt;
+        &lt;h3&gt;Lo que &lt;u&gt;sí&lt;/u&gt; entrena (y con evidencia)&lt;/h3&gt;
+        &lt;ul&gt;
+          &lt;li&gt;&lt;strong&gt;Convergencia y visión binocular:&lt;/strong&gt; la terapia visual funciona
+            (ensayo CITT del Instituto Nacional del Ojo, EE. UU.). Aquí: cuerda de Brock y convergencia.&lt;/li&gt;
+          &lt;li&gt;&lt;strong&gt;Flexibilidad de enfoque:&lt;/strong&gt; ejercicios cerca–lejos (tipo “flippers”).&lt;/li&gt;
+          &lt;li&gt;&lt;strong&gt;Músculos y movimientos oculares:&lt;/strong&gt; seguimientos y sacádicos.&lt;/li&gt;
+          &lt;li&gt;&lt;strong&gt;Fatiga visual por pantallas:&lt;/strong&gt; parpadeo, regla 20-20-20 y palming.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;coach__block coach__block--tip&quot;&gt;
+        &lt;h3&gt;El mejor hábito para tus ojos&lt;/h3&gt;
+        &lt;p&gt;&lt;strong&gt;Luz natural exterior&lt;/strong&gt;: ~2 horas al día al aire libre es lo único
+        con evidencia sólida para &lt;em&gt;retrasar la aparición&lt;/em&gt; de la miopía en niños
+        (por la dopamina que libera la retina con la luz brillante). No es un ejercicio,
+        es un hábito — y este coach te lo va a recordar.&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;p class=&quot;coach__foot&quot;&gt;Si notas dolor, mareo o visión borrosa persistente, detente y
+        consulta a tu oftalmólogo u optometrista. Esto complementa, no sustituye, su criterio.&lt;/p&gt;
+      &lt;button class=&quot;btn-primary&quot; id=&quot;coach-close&quot; type=&quot;button&quot;&gt;Entendido, vamos a entrenar&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/dialog&gt;
+
+  &lt;!-- ============ PANTALLA: REPRODUCTOR ============ --&gt;
+  &lt;section id=&quot;player&quot; class=&quot;screen player&quot; aria-label=&quot;Reproductor de ejercicios&quot; aria-hidden=&quot;true&quot;&gt;
+    &lt;canvas id=&quot;stage&quot; class=&quot;stage&quot;&gt;&lt;/canvas&gt;
+
+    &lt;div class=&quot;player__ui&quot;&gt;
+      &lt;header class=&quot;player__top&quot;&gt;
+        &lt;button id=&quot;btn-exit&quot; class=&quot;chip&quot; type=&quot;button&quot; aria-label=&quot;Salir de la rutina&quot;&gt;✕&lt;/button&gt;
+        &lt;div class=&quot;progress&quot;&gt;
+          &lt;div id=&quot;progress-bar&quot; class=&quot;progress__bar&quot;&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div id=&quot;ex-timer&quot; class=&quot;chip chip--time&quot; aria-live=&quot;off&quot;&gt;0:30&lt;/div&gt;
+      &lt;/header&gt;
+
+      &lt;div class=&quot;player__mid&quot;&gt;
+        &lt;p id=&quot;ex-index&quot; class=&quot;ex-index&quot;&gt;1 / 14&lt;/p&gt;
+        &lt;h2 id=&quot;ex-name&quot; class=&quot;ex-name&quot; aria-live=&quot;polite&quot;&gt;Ejercicio&lt;/h2&gt;
+        &lt;p id=&quot;ex-instruction&quot; class=&quot;ex-instruction&quot;&gt;Instrucción&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;footer class=&quot;player__bottom&quot;&gt;
+        &lt;button id=&quot;btn-prev&quot; class=&quot;ctl&quot; type=&quot;button&quot; aria-label=&quot;Anterior&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 24 24&quot; width=&quot;26&quot; height=&quot;26&quot; aria-hidden=&quot;true&quot;&gt;&lt;path fill=&quot;currentColor&quot; d=&quot;M6 6h2v12H6zm3.5 6 8.5 6V6z&quot;/&gt;&lt;/svg&gt;
+        &lt;/button&gt;
+        &lt;div class=&quot;pausewrap&quot;&gt;
+          &lt;svg class=&quot;ring&quot; viewBox=&quot;0 0 100 100&quot; aria-hidden=&quot;true&quot;&gt;
+            &lt;circle class=&quot;ring__bg&quot; cx=&quot;50&quot; cy=&quot;50&quot; r=&quot;46&quot;&gt;&lt;/circle&gt;
+            &lt;circle id=&quot;ring-fg&quot; class=&quot;ring__fg&quot; cx=&quot;50&quot; cy=&quot;50&quot; r=&quot;46&quot;&gt;&lt;/circle&gt;
+          &lt;/svg&gt;
+          &lt;button id=&quot;btn-pause&quot; class=&quot;ctl ctl--main&quot; type=&quot;button&quot; aria-label=&quot;Pausar&quot;&gt;
+            &lt;svg id=&quot;ic-pause&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;34&quot; height=&quot;34&quot; aria-hidden=&quot;true&quot;&gt;&lt;path fill=&quot;currentColor&quot; d=&quot;M6 5h4v14H6zm8 0h4v14h-4z&quot;/&gt;&lt;/svg&gt;
+            &lt;svg id=&quot;ic-play&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;34&quot; height=&quot;34&quot; aria-hidden=&quot;true&quot; hidden&gt;&lt;path fill=&quot;currentColor&quot; d=&quot;M8 5v14l11-7z&quot;/&gt;&lt;/svg&gt;
+          &lt;/button&gt;
+        &lt;/div&gt;
+        &lt;button id=&quot;btn-next&quot; class=&quot;ctl&quot; type=&quot;button&quot; aria-label=&quot;Siguiente&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 24 24&quot; width=&quot;26&quot; height=&quot;26&quot; aria-hidden=&quot;true&quot;&gt;&lt;path fill=&quot;currentColor&quot; d=&quot;M16 6h2v12h-2zM6 6l8.5 6L6 18z&quot;/&gt;&lt;/svg&gt;
+        &lt;/button&gt;
+      &lt;/footer&gt;
+
+      &lt;p class=&quot;player__hint&quot; aria-hidden=&quot;true&quot;&gt;
+        &lt;kbd&gt;Espacio&lt;/kbd&gt; pausa · &lt;kbd&gt;←&lt;/kbd&gt; &lt;kbd&gt;→&lt;/kbd&gt; cambiar · &lt;kbd&gt;Esc&lt;/kbd&gt; salir
+      &lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- ============ PANTALLA: FIN ============ --&gt;
+  &lt;section id=&quot;done&quot; class=&quot;screen done&quot; aria-label=&quot;Rutina completada&quot; aria-hidden=&quot;true&quot;&gt;
+    &lt;canvas id=&quot;confetti&quot; class=&quot;confetti&quot; aria-hidden=&quot;true&quot;&gt;&lt;/canvas&gt;
+    &lt;div class=&quot;done__badge&quot; aria-hidden=&quot;true&quot;&gt;
+      &lt;svg viewBox=&quot;0 0 48 48&quot; width=&quot;72&quot; height=&quot;72&quot;&gt;&lt;use href=&quot;#logo-glyph&quot;&gt;&lt;/use&gt;&lt;/svg&gt;
+    &lt;/div&gt;
+    &lt;h2 class=&quot;done__title&quot;&gt;¡Rutina completada!&lt;/h2&gt;
+    &lt;p id=&quot;done-sub&quot; class=&quot;done__sub&quot;&gt;Tus ojos te lo agradecen.&lt;/p&gt;
+    &lt;div id=&quot;done-milestone&quot; class=&quot;milestone&quot; role=&quot;status&quot; hidden&gt;
+      &lt;span class=&quot;milestone__emoji&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;
+      &lt;span class=&quot;milestone__text&quot;&gt;&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;done__stats&quot;&gt;
+      &lt;div class=&quot;stat&quot;&gt;&lt;span id=&quot;done-streak&quot; class=&quot;stat__num&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;stat__lbl&quot;&gt;días seguidos&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;stat&quot;&gt;&lt;span id=&quot;done-total&quot; class=&quot;stat__num&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;stat__lbl&quot;&gt;rutinas totales&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;stat&quot;&gt;&lt;span id=&quot;done-mins&quot; class=&quot;stat__num&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;stat__lbl&quot;&gt;min entrenados&lt;/span&gt;&lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;section class=&quot;done__skills&quot; aria-label=&quot;Habilidades entrenadas&quot;&gt;
+      &lt;p class=&quot;done__skills-h&quot;&gt;Hoy has entrenado&lt;/p&gt;
+      &lt;div id=&quot;done-skills&quot; class=&quot;skills&quot;&gt;&lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;!-- Anuncio (solo visible con AdSense configurado y consentimiento) --&gt;
+    &lt;aside id=&quot;ad-done&quot; class=&quot;adbox&quot; aria-label=&quot;Publicidad&quot; hidden&gt;
+      &lt;span class=&quot;adbox__label&quot;&gt;Publicidad&lt;/span&gt;
+      &lt;ins class=&quot;adsbygoogle&quot; style=&quot;display:block&quot; data-ad-format=&quot;auto&quot; data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;
+    &lt;/aside&gt;
+
+    &lt;button id=&quot;btn-home&quot; class=&quot;cta cta--ghost&quot; type=&quot;button&quot;&gt;&lt;span class=&quot;cta__title&quot;&gt;Volver al inicio&lt;/span&gt;&lt;/button&gt;
+  &lt;/section&gt;
+
+  &lt;!-- ============ DIÁLOGO: AJUSTES ============ --&gt;
+  &lt;dialog id=&quot;settings&quot; class=&quot;sheet&quot; aria-label=&quot;Ajustes&quot;&gt;
+    &lt;form method=&quot;dialog&quot; class=&quot;sheet__inner&quot;&gt;
+      &lt;div class=&quot;sheet__grip&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+      &lt;h2 class=&quot;sheet__title&quot;&gt;Ajustes&lt;/h2&gt;
+
+      &lt;label class=&quot;row row--toggle&quot;&gt;
+        &lt;span&gt;&lt;strong&gt;Sonidos&lt;/strong&gt;&lt;small&gt;Aviso al cambiar de ejercicio&lt;/small&gt;&lt;/span&gt;
+        &lt;input id=&quot;set-sound&quot; type=&quot;checkbox&quot; class=&quot;switch&quot; /&gt;
+      &lt;/label&gt;
+
+      &lt;label class=&quot;row row--toggle&quot;&gt;
+        &lt;span&gt;&lt;strong&gt;Vibración&lt;/strong&gt;&lt;small&gt;Si tu dispositivo lo permite&lt;/small&gt;&lt;/span&gt;
+        &lt;input id=&quot;set-haptics&quot; type=&quot;checkbox&quot; class=&quot;switch&quot; /&gt;
+      &lt;/label&gt;
+
+      &lt;label class=&quot;row row--toggle&quot;&gt;
+        &lt;span&gt;&lt;strong&gt;Movimiento reducido&lt;/strong&gt;&lt;small&gt;Animaciones más suaves y lentas&lt;/small&gt;&lt;/span&gt;
+        &lt;input id=&quot;set-reduced&quot; type=&quot;checkbox&quot; class=&quot;switch&quot; /&gt;
+      &lt;/label&gt;
+
+      &lt;label class=&quot;row row--toggle&quot;&gt;
+        &lt;span&gt;&lt;strong&gt;Modo daltónico&lt;/strong&gt;&lt;small&gt;Paleta accesible de alto contraste&lt;/small&gt;&lt;/span&gt;
+        &lt;input id=&quot;set-colorblind&quot; type=&quot;checkbox&quot; class=&quot;switch&quot; /&gt;
+      &lt;/label&gt;
+
+      &lt;label class=&quot;row&quot;&gt;
+        &lt;span&gt;&lt;strong&gt;Duración de la rutina&lt;/strong&gt;&lt;small&gt;Ajusta el tiempo de cada ejercicio&lt;/small&gt;&lt;/span&gt;
+        &lt;select id=&quot;set-intensity&quot; class=&quot;select&quot;&gt;
+          &lt;option value=&quot;0.6&quot;&gt;Corta&lt;/option&gt;
+          &lt;option value=&quot;1&quot; selected&gt;Normal&lt;/option&gt;
+          &lt;option value=&quot;1.5&quot;&gt;Larga&lt;/option&gt;
+        &lt;/select&gt;
+      &lt;/label&gt;
+
+      &lt;button class=&quot;btn-secondary&quot; id=&quot;set-reset&quot; type=&quot;button&quot;&gt;Reiniciar progreso&lt;/button&gt;
+      &lt;button class=&quot;btn-primary&quot; value=&quot;close&quot; type=&quot;submit&quot;&gt;Listo&lt;/button&gt;
+      &lt;p class=&quot;sheet__ver&quot;&gt;VistaViva · funciona sin conexión · &lt;a href=&quot;/politica-de-privacidad/&quot; target=&quot;_top&quot; class=&quot;sheet__link&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Privacidad&lt;/a&gt;&lt;/p&gt;
+    &lt;/form&gt;
+  &lt;/dialog&gt;
+
+  &lt;!-- ============ AVISO DE COOKIES / ANUNCIOS (solo con AdSense activo) ============ --&gt;
+  &lt;div id=&quot;ad-consent&quot; class=&quot;consent&quot; role=&quot;dialog&quot; aria-label=&quot;Aviso de cookies&quot; hidden&gt;
+    &lt;p class=&quot;consent__text&quot;&gt;
+      Usamos cookies de terceros para mostrar anuncios que mantienen la app gratuita.
+      &lt;a href=&quot;/politica-de-privacidad/&quot; target=&quot;_top&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Más información&lt;/a&gt;.
+    &lt;/p&gt;
+    &lt;div class=&quot;consent__actions&quot;&gt;
+      &lt;button id=&quot;consent-no&quot; class=&quot;consent__btn consent__btn--ghost&quot; type=&quot;button&quot;&gt;Rechazar&lt;/button&gt;
+      &lt;button id=&quot;consent-yes&quot; class=&quot;consent__btn&quot; type=&quot;button&quot;&gt;Aceptar&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Definiciones SVG reutilizables --&gt;
+  &lt;svg width=&quot;0&quot; height=&quot;0&quot; style=&quot;position:absolute&quot; aria-hidden=&quot;true&quot;&gt;
+    &lt;defs&gt;
+      &lt;g id=&quot;logo-glyph&quot;&gt;
+        &lt;circle cx=&quot;24&quot; cy=&quot;24&quot; r=&quot;22&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;3&quot;/&gt;
+        &lt;path d=&quot;M6 24c6-9 30-9 36 0-6 9-30 9-36 0Z&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;3&quot; stroke-linejoin=&quot;round&quot;/&gt;
+        &lt;circle cx=&quot;24&quot; cy=&quot;24&quot; r=&quot;6&quot; fill=&quot;currentColor&quot;/&gt;
+      &lt;/g&gt;
+    &lt;/defs&gt;
+  &lt;/svg&gt;
+
+  &lt;script&gt;
+/**
+ * VistaViva — Programa de entrenamiento visual (coach).
+ *
+ * Diseñado a partir de la evidencia de terapia visual / optometría:
+ *  - Motilidad ocular: seguimientos (pursuits) y sacádicos.
+ *  - Acomodación: flexibilidad de enfoque cerca–lejos (accommodative rock/flippers).
+ *  - Convergencia / binocular: cuerda de Brock y convergencia tipo &quot;lápiz&quot;
+ *    (base del Convergence Insufficiency Treatment Trial del NEI).
+ *  - Visión periférica: fijación central con detección periférica.
+ *  - Higiene y descanso: parpadeo, regla 20-20-20 y palming.
+ *
+ * IMPORTANTE (honestidad clínica): estos ejercicios entrenan MÚSCULOS,
+ * COORDINACIÓN, ENFOQUE y HÁBITOS visuales, y alivian la fatiga. NO reshapean
+ * el ojo ni corrigen defectos refractivos (miopía, hipermetropía, astigmatismo),
+ * así que no sustituyen tu graduación. Fuente: Academia Americana de Oftalmología.
+ */
+
+const CATEGORIES = {
+  calentamiento: 'Calentamiento',
+  seguimiento:   'Seguimiento (músculos oculares)',
+  sacadicos:     'Saltos de mirada (sacádicos)',
+  enfoque:       'Flexibilidad de enfoque',
+  convergencia:  'Convergencia y visión binocular',
+  periferia:     'Visión periférica',
+  habitos:       'Descanso y hábitos',
+};
+
+/**
+ * Programas (rutinas por objetivo). Declarativos y ampliables: añade uno nuevo
+ * con `ids` (lista explícita, respeta ese orden) o `cats` (todas las de esas
+ * categorías, en el orden de EXERCISES). Sin `ids` ni `cats` → rutina completa.
+ */
+const PROGRAMS = [
+  { id: 'completa',  name: 'Completa',   desc: 'Entrenamiento visual integral' },
+  { id: 'pantallas', name: 'Pantallas',  desc: 'Descanso rápido para la vista', ids: ['blink', 'pursuit-h', 'rule20', 'palming'] },
+  { id: 'enfoque',   name: 'Enfoque',    desc: 'Acomodación y convergencia',    cats: ['enfoque', 'convergencia'] },
+  { id: 'motilidad', name: 'Movimiento', desc: 'Seguimientos y sacádicos',      cats: ['seguimiento', 'sacadicos'] },
+  { id: 'custom',    name: 'Personalizada', desc: 'Elige tus ejercicios',       custom: true },
+];
+
+const EXERCISES = [
+  // ---- Calentamiento ----
+  {
+    id: 'blink', category: 'calentamiento',
+    name: 'Parpadeo consciente', goal: 'Lágrima · ojo seco',
+    instruction: 'Parpadea de forma completa y suave cada vez que el círculo se cierre. Renueva la película lagrimal y evita el ojo seco por pantallas.',
+    duration: 24, accent: '#7dd3fc',
+    motion: { type: 'blink', period: 2.4 },
+  },
+
+  // ---- Seguimiento (pursuits) ----
+  {
+    id: 'pursuit-h', category: 'seguimiento',
+    name: 'Seguimiento horizontal', goal: 'Rectos laterales',
+    instruction: 'Sigue el punto solo con los ojos, de lado a lado, sin mover la cabeza. Trabaja el seguimiento suave y los músculos horizontales.',
+    duration: 28, accent: '#fbbf24',
+    motion: { type: 'linear', axis: 'x', period: 3.2, span: 0.82 },
+  },
+  {
+    id: 'pursuit-v', category: 'seguimiento',
+    name: 'Seguimiento vertical', goal: 'Rectos verticales',
+    instruction: 'Sigue el punto de arriba a abajo. Cabeza inmóvil; que trabajen solo los ojos.',
+    duration: 28, accent: '#fbbf24',
+    motion: { type: 'linear', axis: 'y', period: 3.2, span: 0.74 },
+  },
+  {
+    id: 'pursuit-d', category: 'seguimiento',
+    name: 'Diagonales', goal: 'Oblicuos',
+    instruction: 'Recorre las esquinas siguiendo el punto en diagonal. Alterna las dos diagonales.',
+    duration: 28, accent: '#fb923c',
+    motion: { type: 'diagonal', period: 3.0, span: 0.78 },
+  },
+  {
+    id: 'pursuit-c', category: 'seguimiento',
+    name: 'Círculos', goal: 'Rotación completa',
+    instruction: 'Acompaña al punto trazando un círculo amplio. Cambiará de sentido a la mitad.',
+    duration: 34, accent: '#f472b6',
+    motion: { type: 'circle', period: 4.0, radius: 0.4, reverseAt: 0.5 },
+  },
+  {
+    id: 'pursuit-8', category: 'seguimiento',
+    name: 'Ocho infinito', goal: 'Coordinación binocular',
+    instruction: 'Sigue el recorrido en forma de ∞. Suaviza y coordina el movimiento de ambos ojos.',
+    duration: 34, accent: '#a78bfa',
+    motion: { type: 'figure8', period: 5.0, width: 0.8, height: 0.5 },
+  },
+
+  // ---- Sacádicos ----
+  {
+    id: 'saccade-h', category: 'sacadicos',
+    name: 'Sacádicos horizontales', goal: 'Saltos de lectura',
+    instruction: 'Salta la mirada de golpe al punto que se enciende, sin “barrer” por el medio. Entrena los movimientos sacádicos que usas al leer.',
+    duration: 26, accent: '#22d3ee',
+    motion: { type: 'saccade', pattern: 'horizontal', interval: 1.1 },
+  },
+  {
+    id: 'saccade-grid', category: 'sacadicos',
+    name: 'Sacádicos en rejilla', goal: 'Agilidad de fijación',
+    instruction: 'Fija la mirada de un salto en cada punto que aparece. Amplía tu campo de exploración y la velocidad de fijación.',
+    duration: 28, accent: '#2dd4bf',
+    motion: { type: 'saccade', pattern: 'grid', interval: 1.0 },
+  },
+
+  // ---- Flexibilidad de enfoque (acomodación) ----
+  {
+    id: 'accommodation', category: 'enfoque',
+    name: 'Enfoque cerca–lejos', goal: 'Flexibilidad acomodativa',
+    instruction: 'Alterna el enfoque siguiendo la señal: nítido de CERCA y relajado de LEJOS. Entrena la flexibilidad acomodativa (tipo “flippers”).',
+    duration: 40, accent: '#34d399',
+    motion: { type: 'accommodation', period: 5.0 },
+  },
+
+  // ---- Convergencia / binocular ----
+  {
+    id: 'brock', category: 'convergencia',
+    name: 'Cuerda de Brock', goal: 'Convergencia · fusión',
+    instruction: 'Mira la cuenta iluminada; deberías percibir dos “cuerdas” que se cruzan en X justo sobre ella. Base de la terapia de convergencia (cuerda de Brock).',
+    duration: 40, accent: '#f59e0b',
+    motion: { type: 'brock', interval: 2.4 },
+  },
+  {
+    id: 'convergence', category: 'convergencia',
+    name: 'Convergencia (acercamiento)', goal: 'Punto próximo',
+    instruction: 'Mantén el punto ÚNICO y nítido mientras se acerca; si se desdobla, para y vuelve a fusionarlo. Análogo digital del “push-up” con lápiz.',
+    duration: 34, accent: '#fca5a5',
+    motion: { type: 'convergence', period: 4.5 },
+  },
+
+  // ---- Visión periférica ----
+  {
+    id: 'peripheral', category: 'periferia',
+    name: 'Visión periférica', goal: 'Campo visual',
+    instruction: 'Mantén la vista CLAVADA en la cruz central y detecta los destellos con la visión periférica, SIN mover los ojos.',
+    duration: 30, accent: '#c084fc',
+    motion: { type: 'peripheral', interval: 1.3 },
+  },
+
+  // ---- Descanso y hábitos ----
+  {
+    id: 'rule20', category: 'habitos',
+    name: 'Regla 20-20-20', goal: 'Descanso del enfoque',
+    instruction: 'Mira algo a 6 metros (una ventana, el fondo de la sala) durante toda la cuenta. Cada 20 min de pantalla, 20 segundos a 20 pies. Si puedes, hazlo con luz natural.',
+    duration: 20, accent: '#38bdf8',
+    motion: { type: 'far' },
+  },
+  {
+    id: 'palming', category: 'habitos',
+    name: 'Palming y respiración', goal: 'Relajación profunda',
+    instruction: 'Frota tus manos, cúbrete los ojos sin presionar y respira al ritmo del círculo. Oscuridad y calor para descargar la vista.',
+    duration: 45, accent: '#94a3b8',
+    motion: { type: 'rest', breath: 8 },
+  },
+];
+
+if (typeof module !== 'undefined' &amp;&amp; module.exports) {
+  module.exports = { EXERCISES, CATEGORIES, PROGRAMS };
+}
+
+/* ============ VistaViva — lógica de la aplicación ============ */
+(function () {
+  'use strict';
+
+  // ---------- Utilidades ----------
+  const $ = (sel, ctx = document) =&gt; ctx.querySelector(sel);
+  const clamp = (v, a, b) =&gt; Math.max(a, Math.min(b, v));
+  const TAU = Math.PI * 2;
+  const STORE_KEY = 'vistaviva.v1';
+
+  const todayKey = () =&gt; {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const dayDiff = (a, b) =&gt; {
+    const pa = a.split('-').map(Number), pb = b.split('-').map(Number);
+    const da = Date.UTC(pa[0], pa[1] - 1, pa[2]);
+    const db = Date.UTC(pb[0], pb[1] - 1, pb[2]);
+    return Math.round((db - da) / 86400000);
+  };
+  const fmtTime = (s) =&gt; `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+  // ============================================================
+  //  Monetización (Google AdSense) — DESACTIVADA hasta configurar
+  //  Cuando tengas dominio propio y una cuenta de AdSense aprobada:
+  //    1) pon ADS.enabled = true
+  //    2) sustituye ADS.client por tu ID de editor  (ca-pub-XXXXXXXXXXXXXXXX)
+  //    3) sustituye los slots por los IDs de tus bloques de anuncio
+  //  Mientras siga desactivada, la app funciona 100% offline y sin scripts
+  //  externos. Los anuncios NUNCA aparecen durante los ejercicios.
+  // ============================================================
+  const ADS = {
+    enabled: false,
+    client: 'ca-pub-XXXXXXXXXXXXXXXX',
+    slots: { home: 'XXXXXXXXXX', done: 'XXXXXXXXXX' },
+  };
+  const CONSENT_KEY = 'vistaviva.ads.consent';
+  const getConsent = () =&gt; { try { return localStorage.getItem(CONSENT_KEY); } catch { return null; } };
+  const setConsent = (v) =&gt; { try { localStorage.setItem(CONSENT_KEY, v); } catch { /* sin almacenamiento */ } };
+  const adsConfigured = () =&gt; ADS.enabled &amp;&amp; ADS.client.indexOf('XXXX') === -1;
+  const adsAllowed = () =&gt; adsConfigured() &amp;&amp; getConsent() === 'yes';
+  let adScriptLoading = false;
+  function loadAdSenseScript() {
+    if (adScriptLoading || window.adsbygoogle || !navigator.onLine) return;
+    adScriptLoading = true;
+    const s = document.createElement('script');
+    s.async = true; s.crossOrigin = 'anonymous';
+    s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(ADS.client);
+    s.onerror = () =&gt; { adScriptLoading = false; };   // sin conexión: se reintenta al volver
+    document.head.appendChild(s);
+  }
+  function fillSlot(boxId, slotId) {
+    const box = document.getElementById(boxId);
+    if (!box) return;
+    const ins = box.querySelector('.adsbygoogle');
+    box.hidden = false;
+    if (!ins || ins.dataset.filled === '1') return;
+    ins.setAttribute('data-ad-client', ADS.client);
+    ins.setAttribute('data-ad-slot', slotId);
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      ins.dataset.filled = '1';
+    } catch { /* el script aún no está listo; se reintenta al volver a la pantalla */ }
+  }
+  function showAdFor(name) {
+    if (!adsAllowed() || !navigator.onLine) return;
+    loadAdSenseScript();
+    if (name === 'home') fillSlot('ad-home', ADS.slots.home);
+    else if (name === 'done') fillSlot('ad-done', ADS.slots.done);
+  }
+  function maybeConsentBanner() {
+    if (!adsConfigured() || getConsent() !== null) return;
+    const banner = document.getElementById('ad-consent');
+    if (banner) banner.hidden = false;
+  }
+  function bindConsent() {
+    const banner = document.getElementById('ad-consent');
+    const yes = document.getElementById('consent-yes');
+    const no = document.getElementById('consent-no');
+    if (yes) yes.addEventListener('click', () =&gt; { setConsent('yes'); if (banner) banner.hidden = true; showAdFor('home'); });
+    if (no) no.addEventListener('click', () =&gt; { setConsent('no'); if (banner) banner.hidden = true; });
+  }
+
+  // ---------- Estado persistente ----------
+  const DEFAULT_STATE = {
+    streak: 0,
+    lastDone: null,     // clave de día de la última rutina completada
+    total: 0,           // rutinas totales
+    history: [],        // claves de día completadas (para la semana)
+    settings: { sound: true, haptics: true, reduced: false, intensity: 1, program: 'completa', colorblind: false, custom: null },
+  };
+
+  // Paleta segura para daltonismo (Okabe–Ito) por categoría.
+  const CVD_CAT = {
+    calentamiento: '#56b4e9', seguimiento: '#e69f00', sacadicos: '#009e73',
+    enfoque: '#f0e442', convergencia: '#d55e00', periferia: '#cc79a7', habitos: '#0072b2',
+  };
+  const accentOf = (ex) =&gt; (state.settings.colorblind ? (CVD_CAT[ex.category] || ex.accent) : ex.accent);
+
+  const prefersReducedMotion = () =&gt; {
+    try { return !!(window.matchMedia &amp;&amp; window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch { return false; }
+  };
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) {
+        // Primer arranque: respeta la preferencia del sistema.
+        const s = structuredClone(DEFAULT_STATE);
+        s.settings.reduced = prefersReducedMotion();
+        return s;
+      }
+      const parsed = JSON.parse(raw);
+      return {
+        ...structuredClone(DEFAULT_STATE),
+        ...parsed,
+        settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) },
+      };
+    } catch {
+      return structuredClone(DEFAULT_STATE);
+    }
+  }
+  function saveState() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch { /* almacenamiento no disponible */ }
+  }
+
+  let state = loadState();
+
+  // ---------- Rutina activa (según el programa elegido) ----------
+  const customIds = () =&gt; (Array.isArray(state.settings.custom) ? state.settings.custom : EXERCISES.map((e) =&gt; e.id));
+  function resolveRoutine(id) {
+    if (id === 'custom') {
+      const sel = new Set(customIds());
+      return EXERCISES.filter((e) =&gt; sel.has(e.id));   // puede quedar vacío → se deshabilita &quot;Comenzar&quot;
+    }
+    const prog = (typeof PROGRAMS !== 'undefined' &amp;&amp; PROGRAMS.find((p) =&gt; p.id === id)) || null;
+    let list;
+    if (prog &amp;&amp; prog.ids) list = prog.ids.map((x) =&gt; EXERCISES.find((e) =&gt; e.id === x)).filter(Boolean);
+    else if (prog &amp;&amp; prog.cats) list = EXERCISES.filter((e) =&gt; prog.cats.includes(e.category));
+    else list = EXERCISES.slice();
+    return list.length ? list : EXERCISES.slice();
+  }
+  let routine = resolveRoutine(state.settings.program);
+
+  // ---------- Audio (motor de cues suaves con WebAudio) ----------
+  let audioCtx = null, masterGain = null;
+  function ensureAudio() {
+    if (!state.settings.sound) return null;
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.5;
+        // suavizado de agudos para un timbre menos “pitido”
+        const lp = audioCtx.createBiquadFilter();
+        lp.type = 'lowpass'; lp.frequency.value = 2600; lp.Q.value = 0.6;
+        masterGain.connect(lp).connect(audioCtx.destination);
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    } catch { return null; }
+  }
+  // Una nota con envolvente suave (ataque corto, caída exponencial).
+  function tone(freq, dur, vol, type = 'triangle', delay = 0) {
+    const ac = ensureAudio();
+    if (!ac) return;
+    try {
+      const t0 = ac.currentTime + delay;
+      const osc = ac.createOscillator();
+      const g = ac.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g).connect(masterGain);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.03);
+    } catch { /* audio no disponible */ }
+  }
+  // Cues con nombre (timbre y musicalidad cuidados).
+  function sfx(name) {
+    switch (name) {
+      case 'tick':  tone(392, 0.06, 0.05, 'sine'); break;                 // preparación (sol)
+      case 'count': tone(523, 0.07, 0.05, 'sine'); break;                 // últimos 3 s (do)
+      case 'go':    tone(587, 0.10, 0.06, 'triangle'); tone(880, 0.14, 0.05, 'triangle', 0.09); break; // re→la
+      case 'jump':  tone(680, 0.045, 0.045, 'sine'); break;               // salto sacádico
+      case 'win':   [523, 659, 784, 1047].forEach((f, i) =&gt; tone(f, 0.28, 0.06, 'triangle', i * 0.11)); break; // do-mi-sol-do
+      case 'toggle': tone(523, 0.05, 0.04, 'sine'); break;
+    }
+  }
+  function haptic(ms = 20) {
+    if (state.settings.haptics &amp;&amp; navigator.vibrate) { try { navigator.vibrate(ms); } catch {} }
+  }
+
+  // ---------- Referencias DOM ----------
+  const screens = { home: $('#home'), player: $('#player'), done: $('#done') };
+  const canvas = $('#stage');
+  const ctx = canvas.getContext('2d');
+  // Fuente del canvas cacheada (leerla por frame forzaría reflow).
+  let FONT = &quot;-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif&quot;;
+  const el = {
+    streakCount: $('#streak-count'), streakStatus: $('#streak-status'), weekDots: $('#week-dots'),
+    routineSummary: $('#routine-summary'), exerciseList: $('#exercise-list'), programs: $('#programs'),
+    exIndex: $('#ex-index'), exName: $('#ex-name'), exInstruction: $('#ex-instruction'),
+    exTimer: $('#ex-timer'), progressBar: $('#progress-bar'), ringFg: $('#ring-fg'),
+    icPause: $('#ic-pause'), icPlay: $('#ic-play'),
+    doneStreak: $('#done-streak'), doneTotal: $('#done-total'), doneMins: $('#done-mins'), doneSub: $('#done-sub'),
+    doneMilestone: $('#done-milestone'),
+    doneSkills: $('#done-skills'), btnStart: $('#btn-start'),
+  };
+  let previewItems = [];   // {ctx, ex, size} de las vistas previas animadas del inicio
+
+  // ---------- Navegación de pantallas ----------
+  function show(name) {
+    Object.entries(screens).forEach(([k, node]) =&gt; {
+      const active = k === name;
+      node.classList.toggle('is-active', active);
+      node.setAttribute('aria-hidden', active ? 'false' : 'true');
+    });
+    showAdFor(name);   // anuncios solo en inicio/fin, nunca durante el ejercicio
+  }
+
+  // ---------- Duración efectiva ----------
+  const effDuration = (ex) =&gt; Math.round(ex.duration * state.settings.intensity);
+  const totalRoutineSeconds = () =&gt; routine.reduce((s, ex) =&gt; s + effDuration(ex), 0);
+
+  // ---------- Selector de programa (rutinas por objetivo) ----------
+  function setProgram(id) {
+    state.settings.program = id;
+    routine = resolveRoutine(id);
+    saveState();
+    renderHome();
+  }
+  function renderPrograms() {
+    if (!el.programs || typeof PROGRAMS === 'undefined') return;
+    el.programs.innerHTML = '';
+    PROGRAMS.forEach((p) =&gt; {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'prog' + (p.id === state.settings.program ? ' is-on' : '');
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', p.id === state.settings.program ? 'true' : 'false');
+      btn.innerHTML = '&lt;b&gt;&lt;/b&gt;&lt;small&gt;&lt;/small&gt;';
+      btn.querySelector('b').textContent = p.name;
+      btn.querySelector('small').textContent = p.desc;
+      btn.addEventListener('click', () =&gt; setProgram(p.id));
+      el.programs.appendChild(btn);
+    });
+  }
+
+  // ---------- Render de inicio ----------
+  function renderHome() {
+    renderPrograms();
+    el.streakCount.textContent = state.streak;
+    const doneToday = state.lastDone === todayKey();
+    el.streakStatus.textContent = doneToday
+      ? '¡Hecho por hoy! Vuelve mañana'
+      : state.streak &gt; 0 ? 'Mantén viva tu racha hoy' : 'Empieza tu racha hoy';
+
+    // semana (7 días, hoy al final)
+    el.weekDots.innerHTML = '';
+    const set = new Set(state.history);
+    for (let i = 6; i &gt;= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const span = document.createElement('span');
+      if (set.has(key)) span.classList.add('on');
+      if (i === 0) span.classList.add('today');
+      el.weekDots.appendChild(span);
+    }
+
+    const isCustom = state.settings.program === 'custom';
+    const sel = new Set(customIds());
+    updateStartState();
+
+    // En &quot;Personalizada&quot; se muestran TODOS los ejercicios con interruptor.
+    const listSource = isCustom ? EXERCISES : routine;
+    const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
+    el.exerciseList.innerHTML = '';
+    previewItems = [];
+    let currentCat = null;
+    listSource.forEach((ex) =&gt; {
+      if (ex.category !== currentCat) {
+        currentCat = ex.category;
+        const head = document.createElement('li');
+        head.className = 'ex-cat';
+        head.textContent = (typeof CATEGORIES !== 'undefined' &amp;&amp; CATEGORIES[currentCat]) || currentCat;
+        el.exerciseList.appendChild(head);
+      }
+      const li = document.createElement('li');
+      li.className = 'ex-item' + (isCustom ? ' ex-item--toggle' : '');
+
+      // Vista previa animada (mini-lienzo por ejercicio).
+      const prev = document.createElement('canvas');
+      prev.className = 'ex-prev'; prev.setAttribute('aria-hidden', 'true');
+      prev.width = Math.round(44 * dpr); prev.height = Math.round(44 * dpr);
+      const pctx = prev.getContext('2d');
+      pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const body = document.createElement('span'); body.className = 'ex-body';
+      const b = document.createElement('b'); b.textContent = ex.name;
+      const sm = document.createElement('small'); sm.textContent = ex.goal || ex.instruction.split('.')[0] + '.';
+      body.appendChild(b); body.appendChild(sm);
+      const time = document.createElement('span'); time.className = 'ex-time'; time.textContent = `${effDuration(ex)}s`;
+
+      li.appendChild(prev); li.appendChild(body); li.appendChild(time);
+
+      if (isCustom) {
+        const on = sel.has(ex.id);
+        const chk = document.createElement('span');
+        chk.className = 'ex-check' + (on ? ' is-on' : '');
+        chk.setAttribute('aria-hidden', 'true');
+        li.appendChild(chk);
+        li.setAttribute('role', 'button');
+        li.setAttribute('aria-pressed', on ? 'true' : 'false');
+        li.tabIndex = 0;
+        // Actualiza SOLO esta fila (sin re-render: conserva el scroll).
+        const toggle = () =&gt; {
+          const cur = new Set(customIds());
+          const nowOn = !cur.has(ex.id);
+          if (nowOn) cur.add(ex.id); else cur.delete(ex.id);
+          state.settings.custom = EXERCISES.filter((e) =&gt; cur.has(e.id)).map((e) =&gt; e.id);
+          routine = resolveRoutine('custom');
+          saveState();
+          chk.classList.toggle('is-on', nowOn);
+          li.setAttribute('aria-pressed', nowOn ? 'true' : 'false');
+          updateStartState();
+          haptic(10);
+        };
+        li.addEventListener('click', toggle);
+        li.addEventListener('keydown', (e) =&gt; { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+      }
+
+      previewItems.push({ ctx: pctx, ex, size: 44 });
+      el.exerciseList.appendChild(li);
+    });
+    startPreviews();
+  }
+
+  function updateStartState() {
+    const mins = Math.max(1, Math.round(totalRoutineSeconds() / 60));
+    el.routineSummary.textContent = routine.length === 0
+      ? 'Elige al menos 1 ejercicio'
+      : `${routine.length} ejercicios · ~${mins} min`;
+    if (el.btnStart) el.btnStart.disabled = routine.length === 0;
+  }
+
+  // ---------- Vistas previas animadas del inicio ----------
+  // Posición/escala normalizada [-1,1] representativa de cada tipo de ejercicio.
+  function previewPos(ex, t) {
+    const m = ex.motion;
+    switch (m.type) {
+      case 'linear':       { const s = Math.sin(t * 2) * 0.72; return m.axis === 'x' ? { x: s, y: 0 } : { x: 0, y: s }; }
+      case 'diagonal':     { const s = Math.sin(t * 2) * 0.72; return { x: s, y: s }; }
+      case 'circle':       { const a = t * 2; return { x: Math.cos(a) * 0.72, y: Math.sin(a) * 0.72 }; }
+      case 'figure8':      { const a = t * 2; return { x: Math.sin(a) * 0.76, y: Math.sin(a) * Math.cos(a) * 1.4 }; }
+      case 'saccade':      { const idx = Math.floor(t / 0.5) % 2; return { x: idx ? 0.72 : -0.72, y: 0 }; }
+      case 'brock':        { const s = Math.sin(t * 1.5) * 0.7; return { x: 0, y: s, scale: 0.8 + (s + 0.7) * 0.35 }; }
+      case 'peripheral':   { const a = t * 2.2; return { x: Math.cos(a) * 0.72, y: Math.sin(a) * 0.72 }; }
+      case 'convergence':  { const p = (Math.sin(t * 2) + 1) / 2; return { x: 0, y: 0, scale: 0.5 + p * 0.9 }; }
+      case 'accommodation':{ const far = Math.floor(t / 1.2) % 2 === 0; return { x: 0, y: 0, scale: far ? 1.15 : 0.55, ring: far }; }
+      case 'blink':        { const c = Math.abs(Math.sin(t * 2.2)); return { x: 0, y: 0, scale: 0.45 + (1 - c) * 0.75 }; }
+      case 'far':          return { x: 0, y: 0, scale: 0.7 };
+      case 'rest':         { const p = (Math.sin(t * 1.3) + 1) / 2; return { x: 0, y: 0, scale: 0.5 + p * 0.8 }; }
+      default:             return { x: 0, y: 0 };
+    }
+  }
+  function drawPreview(pctx, ex, t, size) {
+    pctx.clearRect(0, 0, size, size);
+    const cx = size / 2, cy = size / 2, R = size * 0.32, col = accentOf(ex);
+    const p = previewPos(ex, t);
+    if (p.ring) {
+      pctx.strokeStyle = col; pctx.lineWidth = 2;
+      pctx.beginPath(); pctx.arc(cx, cy, R * 0.85, 0, TAU); pctx.stroke();
+      return;
+    }
+    const px = cx + (p.x || 0) * R, py = cy + (p.y || 0) * R;
+    const base = size * 0.11 * (p.scale || 1);
+    const g = pctx.createRadialGradient(px, py, 0, px, py, base * 2.4);
+    g.addColorStop(0, col + 'aa'); g.addColorStop(1, col + '00');
+    pctx.fillStyle = g; pctx.beginPath(); pctx.arc(px, py, base * 2.4, 0, TAU); pctx.fill();
+    pctx.fillStyle = col; pctx.beginPath(); pctx.arc(px, py, base, 0, TAU); pctx.fill();
+  }
+  let previewRaf = 0, previewStart = 0, previewLast = 0;
+  function stopPreviews() { cancelAnimationFrame(previewRaf); previewRaf = 0; }
+  function startPreviews() {
+    stopPreviews();
+    if (!previewItems.length) return;
+    if (state.settings.reduced) {                       // reducido: fotograma estático
+      previewItems.forEach((it) =&gt; drawPreview(it.ctx, it.ex, 0, it.size));
+      return;
+    }
+    previewStart = 0; previewLast = 0;
+    function tick(now) {
+      if (!previewStart) previewStart = now;
+      if (now - previewLast &gt;= 33) {                     // ~30 fps (ahorro de batería)
+        previewLast = now;
+        const t = (now - previewStart) / 1000;
+        for (const it of previewItems) drawPreview(it.ctx, it.ex, t, it.size);
+      }
+      previewRaf = requestAnimationFrame(tick);
+    }
+    previewRaf = requestAnimationFrame(tick);
+  }
+
+  // ============================================================
+  //  MOTOR DE ANIMACIÓN (canvas)
+  // ============================================================
+  const READY_SECS = 3;              // cuenta atrás &quot;prepárate&quot; antes de cada ejercicio
+  const player = {
+    index: 0,
+    phase: 'ready',                  // 'ready' | 'active'
+    exElapsed: 0,                    // segundos transcurridos (fase activa)
+    readyElapsed: 0,                 // segundos transcurridos (cuenta atrás)
+    paused: false,
+    running: false,
+    lastTs: 0,
+    rafId: 0,
+    lastWholeSec: -1,
+    lastReadyTick: -1,
+    saccadeIdx: -1,                  // para el tic al saltar en sacádicos
+    trail: [],                       // estela del objetivo (seguimientos)
+  };
+
+  let cssW = 0, cssH = 0;
+  function resizeCanvas() {
+    const dpr = clamp(window.devicePixelRatio || 1, 1, 3);
+    const rect = canvas.getBoundingClientRect();
+    cssW = rect.width; cssH = rect.height;
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  // Evalúa la posición/estado del objetivo. Devuelve coords normalizadas [-1,1],
+  // escala de radio y un modo opcional para renderizados especiales.
+  function evaluate(ex, t) {
+    const m = ex.motion;
+    const slow = state.settings.reduced ? 1.4 : 1;
+    switch (m.type) {
+      case 'blink': {
+        const phase = (t % (m.period * slow)) / (m.period * slow); // 0..1
+        // cierre rápido cerca de phase 0.5
+        const d = Math.abs(phase - 0.5);
+        const close = clamp(1 - d / 0.12, 0, 1); // 1 = cerrado
+        return { mode: 'blink', close };
+      }
+      case 'linear': {
+        const s = Math.sin((t / (m.period * slow)) * TAU) * m.span;
+        return m.axis === 'x' ? { x: s, y: 0, r: 1 } : { x: 0, y: s, r: 1 };
+      }
+      case 'diagonal': {
+        const s = Math.sin((t / (m.period * slow)) * TAU) * m.span;
+        const flip = Math.floor(t / (m.period * slow)) % 2 === 0 ? 1 : -1;
+        return { x: s, y: s * flip, r: 1 };
+      }
+      case 'circle': {
+        const prog = t / (effDuration(ex));
+        const dir = prog &gt;= (m.reverseAt || 1) ? -1 : 1;
+        const ang = (t / (m.period * slow)) * TAU * dir;
+        return { x: Math.cos(ang) * m.radius / 0.5 * 0.85, y: Math.sin(ang) * m.radius / 0.5 * 0.85, r: 1 };
+      }
+      case 'figure8': {
+        const a = (t / (m.period * slow)) * TAU;
+        return { x: Math.sin(a) * m.width, y: Math.sin(a) * Math.cos(a) * 2 * m.height, r: 1 };
+      }
+      case 'convergence': {
+        const p = (Math.sin((t / (m.period * slow)) * TAU) + 1) / 2; // 0..1
+        return { x: 0, y: 0, r: 0.55 + p * 1.7, mode: 'convergence', near: p };
+      }
+      case 'far':
+        return { mode: 'far' };
+      case 'rest':
+        return { mode: 'rest', breath: m.breath * (state.settings.reduced ? 1.25 : 1) };
+      default:
+        return { x: 0, y: 0, r: 1 };
+    }
+  }
+
+  // Convierte coordenadas normalizadas [-1,1] a píxeles del lienzo, dejando
+  // márgenes (más grande abajo, donde están los controles y el texto).
+  function norm2px(nx, ny) {
+    // Reservamos abajo el espacio del texto/controles para que ningún objetivo
+    // los invada; el campo de juego se centra en la mitad superior visible.
+    const marginX = 48, marginTop = 54;
+    const marginBot = Math.min(cssH * 0.30, 240);
+    const halfX = (cssW - marginX * 2) / 2;
+    const cx = cssW / 2 + nx * halfX;
+    const midY = (marginTop + (cssH - marginBot)) / 2;
+    const halfY = (cssH - marginBot - marginTop) / 2;
+    const cy = midY + ny * halfY;
+    return { cx, cy };
+  }
+
+  function drawTarget(nx, ny, rScale, accent, alpha) {
+    const { cx, cy } = norm2px(nx, ny);
+    const base = Math.min(cssW, cssH) * 0.05;
+    const r = base * rScale;
+    ctx.save();
+    ctx.globalAlpha = alpha == null ? 1 : alpha;
+    // halo
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 3);
+    g.addColorStop(0, accent + 'aa');
+    g.addColorStop(1, accent + '00');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(cx, cy, r * 3, 0, TAU); ctx.fill();
+    // núcleo con brillo neón
+    ctx.shadowColor = accent; ctx.shadowBlur = r * 1.5;
+    ctx.fillStyle = accent;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();   // segunda pasada refuerza el halo
+    ctx.shadowBlur = 0;
+    // reflejo especular
+    ctx.fillStyle = '#ffffffdd';
+    ctx.beginPath(); ctx.arc(cx - r * 0.3, cy - r * 0.3, r * 0.3, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+
+  // Marcador tenue (posición candidata en sacádicos/Brock).
+  function drawGhostDot(nx, ny, rScale, accent) {
+    const { cx, cy } = norm2px(nx, ny);
+    const r = Math.min(cssW, cssH) * 0.05 * rScale;
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = accent;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+
+  const slowFactor = () =&gt; (state.settings.reduced ? 1.4 : 1);
+
+  // Sacádicos: dos o cinco dianas fijas; se ilumina una a saltos.
+  function drawSaccade(ex, t) {
+    const m = ex.motion;
+    const interval = m.interval * slowFactor();
+    const idx = Math.floor(t / interval);
+    let pts, order;
+    if (m.pattern === 'horizontal') {
+      pts = [[-0.82, 0], [0.82, 0]];
+      order = [0, 1];
+    } else {
+      pts = [[-0.78, -0.58], [0.78, 0.58], [0.78, -0.58], [-0.78, 0.58], [0, 0]];
+      order = [0, 1, 2, 3, 4, 2, 0, 3, 1, 4];
+    }
+    const active = order[idx % order.length];
+    if (idx !== player.saccadeIdx) { player.saccadeIdx = idx; sfx('jump'); }
+    pts.forEach((p, i) =&gt; { if (i !== active) drawGhostDot(p[0], p[1], 0.7, accentOf(ex)); });
+    // pulso al aparecer
+    const frac = (t % interval) / interval;
+    const pulse = 1 + Math.max(0, 0.5 - frac) * 0.8;
+    drawTarget(pts[active][0], pts[active][1], pulse, accentOf(ex));
+  }
+
+  // Cuerda de Brock: línea en perspectiva con 3 cuentas; se ilumina una.
+  function drawBrock(ex, t) {
+    const m = ex.motion;
+    const interval = m.interval * slowFactor();
+    const nearY = 0.62, farY = -0.82;
+    const fracs = [0.16, 0.5, 0.86]; // near, media, lejos (0=near)
+    const labels = ['Cerca', 'Media', 'Lejos'];
+    const active = Math.floor(t / interval) % 3;
+    const near = norm2px(0, nearY), far = norm2px(0, farY);
+    // cuerda
+    ctx.save();
+    ctx.strokeStyle = accentOf(ex) + '66'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(near.cx, near.cy); ctx.lineTo(far.cx, far.cy); ctx.stroke();
+    ctx.restore();
+    fracs.forEach((f, i) =&gt; {
+      const ny = nearY + (farY - nearY) * f;
+      const sizeScale = 1.15 - f * 0.7; // más grande cerca (abajo)
+      if (i === active) drawTarget(0, ny, sizeScale * 1.1, accentOf(ex));
+      else drawGhostDot(0, ny, sizeScale, accentOf(ex));
+    });
+    drawCenterTextBelow(labels[active], accentOf(ex));
+  }
+
+  // Flexibilidad de enfoque: alterna una diana LEJOS (aro grande) y CERCA (punto).
+  function drawAccommodation(ex, t) {
+    const m = ex.motion;
+    const half = (m.period * slowFactor()) / 2;
+    const far = Math.floor(t / half) % 2 === 0;
+    const { cx, cy } = norm2px(0, 0);
+    if (far) {
+      const R = Math.min(Math.min(cssW, cssH) * 0.22, 140);
+      ctx.save();
+      ctx.strokeStyle = accentOf(ex); ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
+      ctx.globalAlpha = 0.5; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(cx, cy, R * 1.35, 0, TAU); ctx.stroke();
+      ctx.restore();
+      drawCenterTextBelow('Lejos · relaja', accentOf(ex));
+    } else {
+      drawTarget(0, 0, 0.72, accentOf(ex));
+      drawCenterTextBelow('Cerca · enfoca', accentOf(ex));
+    }
+  }
+
+  // Visión periférica: cruz central fija + destellos en la periferia.
+  function drawPeripheral(ex, t) {
+    const m = ex.motion;
+    const interval = m.interval * slowFactor();
+    const idx = Math.floor(t / interval);
+    // cruz central
+    const c = norm2px(0, 0);
+    ctx.save();
+    ctx.strokeStyle = accentOf(ex); ctx.lineWidth = 3; ctx.globalAlpha = 0.9;
+    const s = Math.min(cssW, cssH) * 0.03;
+    ctx.beginPath();
+    ctx.moveTo(c.cx - s, c.cy); ctx.lineTo(c.cx + s, c.cy);
+    ctx.moveTo(c.cx, c.cy - s); ctx.lineTo(c.cx, c.cy + s);
+    ctx.stroke();
+    ctx.restore();
+    // destello periférico (ángulo áureo para repartir; aparece y se desvanece)
+    const ang = idx * 2.39996;
+    const rad = 0.82;
+    const frac = (t % interval) / interval;
+    const alpha = Math.max(0, 1 - frac * 1.1);
+    if (alpha &gt; 0.02) {
+      drawTarget(Math.cos(ang) * rad, Math.sin(ang) * rad * 0.9, 0.9, accentOf(ex), alpha);
+    }
+  }
+
+  function drawBlink(close, accent) {
+    const { cx, cy } = norm2px(0, 0);   // centro del campo (reserva el texto inferior)
+    // Acotado para que en pantallas grandes no invada el texto inferior.
+    const w = Math.min(Math.min(cssW, cssH) * 0.34, 230);
+    const openH = w * 0.6 * (1 - close * 0.92);
+    ctx.save();
+    ctx.translate(cx, cy);
+    // globo/esclera
+    ctx.fillStyle = '#0a1022';
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 4;
+    ctx.shadowColor = accent; ctx.shadowBlur = 16;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, w, Math.max(openH, 3), 0, 0, TAU);
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    if (close &lt; 0.6) {
+      // iris
+      ctx.fillStyle = accent;
+      ctx.beginPath(); ctx.arc(0, 0, Math.min(w * 0.34, openH), 0, TAU); ctx.fill();
+      ctx.fillStyle = '#04070f';
+      ctx.beginPath(); ctx.arc(0, 0, Math.min(w * 0.16, openH * 0.5), 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawBreath(breath, t, accent) {
+    const phase = (t % breath) / breath;
+    const inhale = phase &lt; 0.5;
+    const p = inhale ? phase / 0.5 : 1 - (phase - 0.5) / 0.5; // 0..1..0
+    const eased = 0.5 - 0.5 * Math.cos(p * Math.PI);
+    const { cx, cy } = norm2px(0, 0);   // centro del campo (reserva el texto inferior)
+    const rMin = Math.min(cssW, cssH) * 0.11;
+    const rMax = Math.min(Math.min(cssW, cssH) * 0.24, 210);
+    const r = rMin + (rMax - rMin) * eased;
+    ctx.strokeStyle = accent + '55'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, cy, rMax, 0, TAU); ctx.stroke();
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    g.addColorStop(0, accent + '55'); g.addColorStop(1, accent + '10');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = accent; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.stroke();
+    return inhale ? 'Inspira' : 'Espira';
+  }
+
+  function drawCenterText(text, accent) {
+    const { cx, cy } = norm2px(0, 0);
+    ctx.fillStyle = '#eef2fb';
+    ctx.font = `600 ${Math.min(cssW, cssH) * 0.06}px ${FONT}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, cx, cy);
+  }
+
+  // Tinte ambiental sutil del color del ejercicio (profundidad).
+  function drawAmbient(accent) {
+    const { cx, cy } = norm2px(0, 0);
+    const R = Math.max(cssW, cssH) * 0.7;
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+    g.addColorStop(0, accent + '14');
+    g.addColorStop(1, accent + '00');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, cssW, cssH);
+  }
+
+  // Estela del objetivo en los seguimientos (facilita el seguimiento suave).
+  function drawTrail(accent) {
+    const n = player.trail.length;
+    const base = Math.min(cssW, cssH) * 0.05;
+    for (let i = 0; i &lt; n; i++) {
+      const p = player.trail[i];
+      const k = (i + 1) / n;             // 0 (viejo) → 1 (reciente)
+      const { cx, cy } = norm2px(p.x, p.y);
+      ctx.save();
+      ctx.globalAlpha = 0.10 * k;
+      ctx.fillStyle = accent;
+      ctx.beginPath(); ctx.arc(cx, cy, base * (0.35 + 0.5 * k), 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function renderFrame(ex, t) {
+    ctx.clearRect(0, 0, cssW, cssH);
+    drawAmbient(accentOf(ex));
+    // Tipos con dibujo propio (no pasan por evaluate).
+    switch (ex.motion.type) {
+      case 'saccade': drawSaccade(ex, t); return;
+      case 'brock': drawBrock(ex, t); return;
+      case 'accommodation': drawAccommodation(ex, t); return;
+      case 'peripheral': drawPeripheral(ex, t); return;
+    }
+    const s = evaluate(ex, t);
+    if (s.mode === 'blink') {
+      drawBlink(s.close, accentOf(ex));
+      if (s.close &gt; 0.6) { ctx.save(); drawCenterTextBelow('Parpadea', accentOf(ex)); ctx.restore(); }
+      return;
+    }
+    if (s.mode === 'far') {
+      const remain = Math.ceil(effDuration(ex) - t);
+      drawCenterText(String(Math.max(remain, 0)), accentOf(ex));
+      drawCenterTextBelow('Mira a lo lejos (6 m)', accentOf(ex));
+      return;
+    }
+    if (s.mode === 'rest') {
+      const word = drawBreath(s.breath, t, accentOf(ex));
+      drawCenterTextBelow(word, accentOf(ex));
+      return;
+    }
+    if (s.mode === 'convergence') {
+      drawTarget(0, 0, s.r, accentOf(ex));
+      drawCenterTextBelow(s.near &gt; 0.5 ? 'Cerca' : 'Lejos', accentOf(ex));
+      return;
+    }
+    // Seguimientos: estela (salvo movimiento reducido) + objetivo.
+    if (!state.settings.reduced) {
+      player.trail.push({ x: s.x, y: s.y });
+      if (player.trail.length &gt; 16) player.trail.shift();
+      drawTrail(accentOf(ex));
+    }
+    drawTarget(s.x, s.y, s.r || 1, accentOf(ex));
+  }
+
+  // Superposición al pausar.
+  function drawPausedOverlay() {
+    const { cx, cy } = norm2px(0, 0);
+    ctx.save();
+    ctx.fillStyle = 'rgba(5,7,15,0.6)';
+    ctx.fillRect(0, 0, cssW, cssH);
+    const s = Math.min(cssW, cssH) * 0.05;
+    ctx.fillStyle = '#eef2fb';
+    ctx.fillRect(cx - s * 0.7, cy - s, s * 0.5, s * 2);
+    ctx.fillRect(cx + s * 0.2, cy - s, s * 0.5, s * 2);
+    ctx.font = `700 ${Math.min(cssW, cssH) * 0.045}px ${FONT}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('En pausa', cx, cy + s * 3);
+    ctx.restore();
+  }
+
+  // Pantalla de preparación: aro que se llena + cuenta atrás.
+  function renderReady(ex, prog) {
+    ctx.clearRect(0, 0, cssW, cssH);
+    drawAmbient(accentOf(ex));
+    const { cx, cy } = norm2px(0, 0);
+    const R = Math.min(Math.min(cssW, cssH) * 0.16, 118);
+    const font = FONT;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    // &quot;Prepárate&quot; encima del aro (zona despejada, no invade la cabecera)
+    ctx.fillStyle = accentOf(ex);
+    ctx.font = `700 ${R * 0.34}px ${font}`;
+    ctx.fillText('Prepárate', cx, cy - R - R * 0.5);
+    ctx.save();
+    ctx.strokeStyle = '#ffffff1f'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = accentOf(ex); ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.shadowColor = accentOf(ex); ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(prog, 0, 1)); ctx.stroke();
+    ctx.restore();
+    const n = Math.max(1, Math.ceil(READY_SECS - prog * READY_SECS));
+    ctx.fillStyle = '#eef2fb';
+    ctx.font = `800 ${R * 0.9}px ${font}`;
+    ctx.fillText(String(n), cx, cy + 2);
+  }
+
+  // Rótulo de estado dinámico (Cerca/Lejos, Inspira/Espira…): anclado al borde
+  // superior del campo — siempre bajo la barra y sobre el elemento, en cualquier
+  // proporción de pantalla, sin invadir el texto del DOM.
+  function drawCenterTextBelow(text, accent) {
+    const top = norm2px(0, -1);   // borde superior del campo de juego
+    const fs = Math.min(cssW, cssH) * 0.05;
+    ctx.fillStyle = accent;
+    ctx.font = `700 ${fs}px ${FONT}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, top.cx, top.cy + fs * 0.9);
+  }
+
+  // ---------- Wake Lock (evita que la pantalla se apague al entrenar) ----------
+  let wakeLock = null;
+  async function acquireWake() {
+    try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch { /* no disponible */ }
+  }
+  function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch {} wakeLock = null; }
+
+  // ---------- Anillo de progreso del ejercicio (alrededor del botón) ----------
+  const RING_C = 2 * Math.PI * 46;
+  function setRing(p, accent) {
+    if (!el.ringFg) return;
+    el.ringFg.style.stroke = accent;
+    el.ringFg.style.strokeDashoffset = String(RING_C * (1 - clamp(p, 0, 1)));
+  }
+  const overallPct = (frac) =&gt; ((player.index + frac) / routine.length) * 100;
+
+  // ---------- Bucle principal ----------
+  function loop(ts) {
+    if (!player.running) return;
+    if (!player.lastTs) player.lastTs = ts;
+    const dt = Math.min((ts - player.lastTs) / 1000, 0.1);
+    player.lastTs = ts;
+
+    const ex = routine[player.index];
+    const readySecs = state.settings.reduced ? READY_SECS + 0.5 : READY_SECS;
+
+    // --- Fase: prepárate (cuenta atrás) ---
+    if (player.phase === 'ready') {
+      if (!player.paused) player.readyElapsed += dt;
+      const n = Math.max(1, Math.ceil(readySecs - player.readyElapsed));
+      if (n !== player.lastReadyTick) { player.lastReadyTick = n; sfx('tick'); }
+      renderReady(ex, player.readyElapsed / readySecs);
+      el.exTimer.textContent = '···';
+      el.progressBar.style.width = `${overallPct(0)}%`;
+      setRing(0, accentOf(ex));
+      if (player.paused) drawPausedOverlay();
+      if (player.readyElapsed &gt;= readySecs) enterActive();
+      player.rafId = requestAnimationFrame(loop);
+      return;
+    }
+
+    // --- Fase: activo ---
+    const dur = effDuration(ex);
+    if (!player.paused) player.exElapsed += dt;
+
+    const remain = dur - player.exElapsed;
+    const wholeRemain = Math.ceil(remain);
+    if (wholeRemain !== player.lastWholeSec) {
+      player.lastWholeSec = wholeRemain;
+      if (wholeRemain &lt;= 3 &amp;&amp; wholeRemain &gt;= 1) sfx('count');
+    }
+
+    renderFrame(ex, player.exElapsed);
+    // transición de entrada (aparición desde negro), salvo movimiento reducido
+    const fade = clamp(player.exElapsed / 0.45, 0, 1);
+    if (fade &lt; 1 &amp;&amp; !state.settings.reduced) { ctx.save(); ctx.fillStyle = `rgba(5,7,15,${1 - fade})`; ctx.fillRect(0, 0, cssW, cssH); ctx.restore(); }
+
+    el.exTimer.textContent = fmtTime(Math.max(remain, 0));
+    el.progressBar.style.width = `${overallPct(clamp(player.exElapsed / dur, 0, 1))}%`;
+    setRing(player.exElapsed / dur, accentOf(ex));
+    if (player.paused) drawPausedOverlay();
+
+    if (player.exElapsed &gt;= dur) { advance(1); }
+
+    player.rafId = requestAnimationFrame(loop);
+  }
+
+  function enterActive() {
+    player.phase = 'active';
+    player.exElapsed = 0;
+    player.lastWholeSec = -1;
+    player.trail.length = 0;
+    player.saccadeIdx = 0;   // evita un tic extra en el primer fotograma de sacádicos
+    sfx('go');
+    haptic(20);
+  }
+
+  function loadExercise(i) {
+    const ex = routine[i];
+    el.exIndex.textContent = `${i + 1} / ${routine.length}`;
+    el.exName.textContent = ex.name;
+    el.exInstruction.textContent = ex.instruction;
+    el.progressBar.style.background = accentOf(ex);
+    player.phase = 'ready';
+    player.readyElapsed = 0;
+    player.exElapsed = 0;
+    player.lastReadyTick = -1;
+    player.lastWholeSec = -1;
+    player.trail.length = 0;
+    player.saccadeIdx = -1;
+    el.exTimer.textContent = '···';
+    setRing(0, accentOf(ex));
+    haptic(15);
+  }
+
+  function advance(dir) {
+    const next = player.index + dir;
+    if (next &gt;= routine.length) { finishRoutine(); return; }
+    if (next &lt; 0) { loadExercise(0); return; }   // en el primer ejercicio, reinicia su cuenta atrás
+    player.index = next;
+    loadExercise(next);
+  }
+
+  // Salta la cuenta atrás y empieza ya el ejercicio.
+  function skipReady() { if (player.running &amp;&amp; player.phase === 'ready') enterActive(); }
+
+  function startRoutine() {
+    if (!routine.length) return;   // rutina personalizada vacía
+    stopConfetti();
+    stopCounts();
+    stopPreviews();
+    player.index = 0;
+    player.paused = false;
+    player.running = true;
+    player.lastTs = 0;
+    show('player');
+    resizeCanvas();
+    loadExercise(0);
+    setPaused(false);
+    ensureAudio();     // desbloquea el audio dentro del gesto (necesario en iOS)
+    acquireWake();
+    cancelAnimationFrame(player.rafId);
+    player.rafId = requestAnimationFrame(loop);
+  }
+
+  function stopLoop() {
+    player.running = false;
+    cancelAnimationFrame(player.rafId);
+    player.rafId = 0;
+    player.lastTs = 0;
+  }
+
+  function setPaused(p) {
+    player.paused = p;
+    el.icPause.style.display = p ? 'none' : 'block';
+    el.icPlay.style.display = p ? 'block' : 'none';
+    $('#btn-pause').setAttribute('aria-label', p ? 'Reanudar' : 'Pausar');
+  }
+
+  function exitToHome() {
+    stopLoop();
+    stopConfetti();
+    stopCounts();
+    releaseWake();
+    renderHome();
+    show('home');
+  }
+
+  function finishRoutine() {
+    stopLoop();
+    releaseWake();
+    recordCompletion();
+    renderDone();
+    show('done');
+    const milestone = milestoneFor(state.streak);
+    haptic(milestone ? [30, 40, 60, 40, 90] : [30, 40, 60]);
+    sfx('win');
+    launchConfetti(!!milestone);
+  }
+
+  // ---------- Registro de progreso ----------
+  function recordCompletion() {
+    const today = todayKey();
+    if (state.lastDone === today) {
+      // ya contaba hoy: no duplicar racha ni total
+      renderHome();
+      return;
+    }
+    if (state.lastDone &amp;&amp; dayDiff(state.lastDone, today) === 1) state.streak += 1;
+    else state.streak = 1;
+    state.lastDone = today;
+    state.total += 1;
+    if (!state.history.includes(today)) state.history.push(today);
+    if (state.history.length &gt; 60) state.history = state.history.slice(-60);
+    saveState();
+  }
+
+  const SKILL_LABEL = {
+    calentamiento: 'Calentamiento', seguimiento: 'Seguimiento', sacadicos: 'Sacádicos',
+    enfoque: 'Enfoque', convergencia: 'Convergencia', periferia: 'Periferia', habitos: 'Descanso',
+  };
+  // Conteo animado (0 → valor) con easeOutCubic; instantáneo en movimiento reducido.
+  let countRafs = [];
+  function stopCounts() { countRafs.forEach((id) =&gt; cancelAnimationFrame(id)); countRafs = []; }
+  function countUp(node, to) {
+    if (!node) return;
+    if (state.settings.reduced || to &lt;= 0) { node.textContent = String(to); return; }
+    const dur = 850; let start = 0;
+    const step = (now) =&gt; {
+      if (!start) start = now;
+      const p = clamp((now - start) / dur, 0, 1);
+      node.textContent = String(Math.round(to * (1 - Math.pow(1 - p, 3))));
+      if (p &lt; 1) countRafs.push(requestAnimationFrame(step));
+    };
+    countRafs.push(requestAnimationFrame(step));
+  }
+  // Hitos de racha: se celebran exactamente el día en que se alcanzan.
+  const MILESTONES = [
+    { days: 3, emoji: '🌱', text: '3 días seguidos. El hábito echa raíces.' },
+    { days: 7, emoji: '🔥', text: '¡Una semana completa! Racha en marcha.' },
+    { days: 14, emoji: '⚡', text: '14 días. Tu constancia se nota.' },
+    { days: 21, emoji: '💪', text: '21 días: el hábito ya es tuyo.' },
+    { days: 30, emoji: '🏆', text: '¡Un mes entero! Eres imparable.' },
+    { days: 50, emoji: '💎', text: '50 días. Disciplina de diamante.' },
+    { days: 100, emoji: '👑', text: '¡100 días! Leyenda del entrenamiento visual.' },
+  ];
+  function milestoneFor(streak) {
+    return MILESTONES.find((m) =&gt; m.days === streak) || null;
+  }
+  function renderDone() {
+    stopCounts();
+    countUp(el.doneStreak, state.streak);
+    countUp(el.doneTotal, state.total);
+    countUp(el.doneMins, Math.max(1, Math.round(totalRoutineSeconds() / 60)));
+
+    const milestone = milestoneFor(state.streak);
+    if (el.doneMilestone) {
+      if (milestone) {
+        el.doneMilestone.querySelector('.milestone__emoji').textContent = milestone.emoji;
+        el.doneMilestone.querySelector('.milestone__text').textContent = milestone.text;
+        el.doneMilestone.hidden = false;
+      } else {
+        el.doneMilestone.hidden = true;
+      }
+    }
+    el.doneSub.textContent = milestone
+      ? '¡Nuevo hito desbloqueado!'
+      : state.streak &gt; 1
+        ? `¡${state.streak} días seguidos! Sigue así.`
+        : 'Tus ojos te lo agradecen.';
+
+    // Resumen de habilidades entrenadas (categorías de la rutina + conteo).
+    const order = [], byCat = {};
+    routine.forEach((ex) =&gt; {
+      if (!byCat[ex.category]) { byCat[ex.category] = { n: 0, accent: accentOf(ex) }; order.push(ex.category); }
+      byCat[ex.category].n += 1;
+    });
+    el.doneSkills.innerHTML = '';
+    order.forEach((cat) =&gt; {
+      const chip = document.createElement('span');
+      chip.className = 'skill';
+      chip.innerHTML = `&lt;span class=&quot;skill__dot&quot; style=&quot;background:${byCat[cat].accent}&quot;&gt;&lt;/span&gt;`;
+      chip.appendChild(document.createTextNode(`${SKILL_LABEL[cat] || cat} · ${byCat[cat].n}`));
+      el.doneSkills.appendChild(chip);
+    });
+  }
+
+  // ---------- Celebración (confeti al completar) ----------
+  let confettiRaf = 0;
+  function stopConfetti() {
+    cancelAnimationFrame(confettiRaf); confettiRaf = 0;
+    const cv = $('#confetti');
+    if (cv) { const c = cv.getContext('2d'); if (c) c.clearRect(0, 0, cv.width, cv.height); }
+  }
+  function launchConfetti(intense) {
+    if (state.settings.reduced) return;               // respeta movimiento reducido
+    const cv = $('#confetti'); if (!cv) return;
+    const cctx = cv.getContext('2d'); if (!cctx) return;
+    const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
+    const W = cv.clientWidth || window.innerWidth, H = cv.clientHeight || window.innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const base = ['#fbbf24', '#38bdf8', '#34d399', '#f472b6', '#a78bfa', '#22d3ee', '#fb923c', '#fca5a5'];
+    // En un hito, añade dorados para un estallido más festivo.
+    const colors = intense ? base.concat(['#ffd700', '#fde68a', '#f59e0b']) : base;
+    const shapes = ['rect', 'rect', 'square', 'circle'];   // mezcla estilo canvas-confetti
+    const N = intense ? 240 : 150;                     // más partículas en un hito
+    // Dos focos (izquierda y derecha) para un estallido más lleno.
+    const parts = Array.from({ length: N }, (_, i) =&gt; {
+      const left = i % 2 === 0;
+      return {
+        x: W * (left ? 0.34 : 0.66) + (Math.random() * 40 - 20),
+        y: H * 0.28 + (Math.random() * 30 - 15),
+        vx: (left ? 1 : -1) * (1 + Math.random() * 3) + (Math.random() - 0.5) * 4,
+        vy: (intense ? -8 : -7) - Math.random() * (intense ? 7 : 6),
+        g: 0.17 + Math.random() * 0.09, size: 5 + Math.random() * (intense ? 7 : 6),
+        rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 0.34,
+        wob: Math.random() * TAU, wv: 0.12 + Math.random() * 0.12,   // bamboleo (giro 3D simulado)
+        shape: shapes[(Math.random() * shapes.length) | 0],
+        color: colors[(Math.random() * colors.length) | 0], life: 1,
+      };
+    });
+    const DUR = intense ? 2.6 : 2.1;
+    let start = 0;
+    cancelAnimationFrame(confettiRaf);
+    function tick(now) {
+      if (!start) start = now;
+      const t = (now - start) / 1000;
+      cctx.clearRect(0, 0, W, H);
+      let alive = 0;
+      for (const p of parts) {
+        p.vy += p.g; p.vx *= 0.995; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.wob += p.wv;
+        p.life = clamp(1 - t / DUR, 0, 1);
+        if (p.y &lt; H + 24 &amp;&amp; p.life &gt; 0) alive++;
+        const sx = Math.cos(p.wob);              // aplasta/estira para simular volteo
+        cctx.save(); cctx.globalAlpha = p.life; cctx.translate(p.x, p.y); cctx.rotate(p.rot); cctx.scale(sx, 1);
+        cctx.fillStyle = p.color;
+        if (p.shape === 'circle') { cctx.beginPath(); cctx.arc(0, 0, p.size / 2, 0, TAU); cctx.fill(); }
+        else if (p.shape === 'square') { cctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size); }
+        else { cctx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * 0.66); }
+        cctx.restore();
+      }
+      if (t &lt; DUR &amp;&amp; alive &gt; 0) confettiRaf = requestAnimationFrame(tick);
+      else { cctx.clearRect(0, 0, W, H); confettiRaf = 0; }
+    }
+    confettiRaf = requestAnimationFrame(tick);
+  }
+
+  // ============================================================
+  //  AJUSTES
+  // ============================================================
+  const dlg = $('#settings');
+  const setInputs = {
+    sound: $('#set-sound'), haptics: $('#set-haptics'),
+    reduced: $('#set-reduced'), intensity: $('#set-intensity'), colorblind: $('#set-colorblind'),
+  };
+  function syncSettingsUI() {
+    setInputs.sound.checked = state.settings.sound;
+    setInputs.haptics.checked = state.settings.haptics;
+    setInputs.reduced.checked = state.settings.reduced;
+    setInputs.colorblind.checked = state.settings.colorblind;
+    setInputs.intensity.value = String(state.settings.intensity);
+  }
+  function bindSettings() {
+    setInputs.sound.addEventListener('change', (e) =&gt; { state.settings.sound = e.target.checked; saveState(); if (e.target.checked) sfx('toggle'); });
+    setInputs.haptics.addEventListener('change', (e) =&gt; { state.settings.haptics = e.target.checked; saveState(); haptic(); });
+    setInputs.reduced.addEventListener('change', (e) =&gt; { state.settings.reduced = e.target.checked; saveState(); applyReduceClass(); renderHome(); });
+    setInputs.colorblind.addEventListener('change', (e) =&gt; { state.settings.colorblind = e.target.checked; saveState(); renderHome(); });
+    setInputs.intensity.addEventListener('change', (e) =&gt; { state.settings.intensity = parseFloat(e.target.value) || 1; saveState(); renderHome(); });
+    $('#set-reset').addEventListener('click', () =&gt; {
+      if (confirm('¿Reiniciar tu racha y estadísticas? Esta acción no se puede deshacer.')) {
+        const settings = state.settings;
+        state = structuredClone(DEFAULT_STATE);
+        state.settings = settings;
+        saveState(); renderHome();
+        dlg.close();
+      }
+    });
+  }
+
+  // ============================================================
+  //  EVENTOS
+  // ============================================================
+  function bindEvents() {
+    $('#btn-start').addEventListener('click', startRoutine);
+    $('#btn-exit').addEventListener('click', exitToHome);
+    $('#btn-home').addEventListener('click', exitToHome);
+    $('#btn-pause').addEventListener('click', () =&gt; { setPaused(!player.paused); haptic(); });
+    $('#btn-next').addEventListener('click', () =&gt; advance(1));
+    $('#btn-prev').addEventListener('click', () =&gt; {
+      // en cuenta atrás o en los primeros 2s → retrocede; si no, reinicia el actual
+      if (player.phase === 'active' &amp;&amp; player.exElapsed &gt; 2) {
+        player.exElapsed = 0; player.lastWholeSec = -1; player.trail.length = 0; player.saccadeIdx = -1;
+      } else advance(-1);
+    });
+    // tocar el lienzo salta la cuenta atrás
+    canvas.addEventListener('pointerdown', skipReady);
+    $('#btn-settings').addEventListener('click', () =&gt; { syncSettingsUI(); dlg.showModal(); });
+
+    const coach = $('#coach');
+    $('#btn-coach').addEventListener('click', () =&gt; coach.showModal());
+    $('#coach-close').addEventListener('click', () =&gt; coach.close());
+    // cerrar diálogos al tocar fuera del contenido
+    [coach, dlg].forEach((d) =&gt; d.addEventListener('click', (e) =&gt; { if (e.target === d) d.close(); }));
+
+    window.addEventListener('resize', () =&gt; { if (player.running) resizeCanvas(); });
+    document.addEventListener('visibilitychange', () =&gt; {
+      if (document.hidden) {
+        stopPreviews();              // ahorra batería con la pestaña oculta
+        if (player.running &amp;&amp; !player.paused) setPaused(true);
+      } else if (player.running) {
+        acquireWake();               // el Wake Lock se libera al ocultar: re-adquirir
+      } else if (screens.home.classList.contains('is-active')) {
+        startPreviews();             // reanudar previews al volver al inicio
+      }
+    });
+    // teclado (accesibilidad de escritorio)
+    document.addEventListener('keydown', (e) =&gt; {
+      if (!player.running) return;
+      if (e.key === ' ') {
+        e.preventDefault();
+        if (player.phase === 'ready') skipReady(); else setPaused(!player.paused);
+      } else if (e.key === 'ArrowRight') advance(1);
+      else if (e.key === 'ArrowLeft') advance(-1);
+      else if (e.key === 'Escape') exitToHome();
+    });
+  }
+
+  // ============================================================
+  //  PWA / Service worker
+  // ============================================================
+  function registerSW() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () =&gt; {
+        /* service worker no aplica en archivo único */
+      });
+    }
+  }
+
+  // ---------- Init ----------
+  function applyReduceClass() {
+    document.documentElement.classList.toggle('reduce-motion', !!state.settings.reduced);
+  }
+  function init() {
+    try { FONT = getComputedStyle(document.body).fontFamily || FONT; } catch {}
+    applyReduceClass();
+    renderHome();
+    bindEvents();
+    bindSettings();
+    bindConsent();
+    maybeConsentBanner();
+    showAdFor('home');          // el inicio ya está activo al cargar
+    // si el usuario recupera la conexión, intenta cargar el anuncio pendiente
+    window.addEventListener('online', () =&gt; {
+      if (screens.home.classList.contains('is-active')) showAdFor('home');
+      else if (screens.done.classList.contains('is-active')) showAdFor('done');
+    });
+    registerSW();
+  }
+  init();
+})();
+
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+" referrerpolicy="no-referrer"></iframe>
+</div>
 ]]></content:encoded>
-    <excerpt:encoded><![CDATA[Coach de entrenamiento visual: rutina diaria de ejercicios para los ojos, basada en evidencia. Gratis y sin conexión.]]></excerpt:encoded>
+    <excerpt:encoded><![CDATA[
+Coach de entrenamiento visual: rutina diaria de ejercicios para los ojos. Gratis y sin conexión.
+]]></excerpt:encoded>
     <wp:post_id>1001</wp:post_id>
     <wp:post_date><![CDATA[2025-09-01 10:00:00]]></wp:post_date>
     <wp:post_date_gmt><![CDATA[2025-09-01 10:00:00]]></wp:post_date_gmt>
@@ -108,8 +2198,11 @@
 
 <h2>7. Aviso de salud</h2>
 <p>VistaViva ayuda a relajar la vista y reducir la fatiga visual. No cura ni corrige defectos refractivos ni sustituye la revisión de un profesional. Ante dolor, mareo o visión borrosa persistente, detente y consulta a tu oftalmólogo u optometrista.</p>
+
 ]]></content:encoded>
-    <excerpt:encoded><![CDATA[Cómo VistaViva maneja tus datos: sin cuentas, progreso solo en tu dispositivo, y anuncios de Google AdSense con consentimiento.]]></excerpt:encoded>
+    <excerpt:encoded><![CDATA[
+Cómo VistaViva maneja tus datos: sin cuentas, progreso solo en tu dispositivo y anuncios de AdSense con consentimiento.
+]]></excerpt:encoded>
     <wp:post_id>1002</wp:post_id>
     <wp:post_date><![CDATA[2025-09-01 10:00:00]]></wp:post_date>
     <wp:post_date_gmt><![CDATA[2025-09-01 10:00:00]]></wp:post_date_gmt>
@@ -123,6 +2216,5 @@
     <wp:post_password><![CDATA[]]></wp:post_password>
     <wp:is_sticky>0</wp:is_sticky>
   </item>
-
 </channel>
 </rss>

@@ -20,11 +20,28 @@ la pantalla de inicio y en la de «rutina completada».
 
 ---
 
-## Paso 1 — Publica la app con un dominio propio
+## Paso 0 — La app va DENTRO de tu WordPress (sin terceros)
 
-AdSense **exige un dominio real** (no vale `file://` ni un subdominio gratis de
-pruebas). Sube los archivos de la app a tu hosting o a Netlify/Vercel/Cloudflare
-Pages y apunta tu dominio.
+No hace falta Netlify ni ningún otro servicio. La app entera viaja embebida en
+la página «VistaViva» del archivo `vistaviva-wordpress.xml` (dentro de un
+`<iframe srcdoc>`), así que corre 100 % dentro de tu propio WordPress:
+
+1. WordPress → **Herramientas → Importar → «Importador de WordPress»**.
+2. Sube `vistaviva-wordpress.xml` → **Subir archivo e importar**.
+3. Cuando pregunte el autor, **asigna las entradas a tu usuario admin**
+   (así WordPress conserva los scripts de la app).
+4. Se crean dos páginas: **VistaViva** (la app a pantalla completa) y
+   **Política de privacidad**.
+
+> Si tu WordPress tiene un plugin de seguridad que elimina `<script>` o
+> `<iframe>` del contenido, desactívalo mientras importas, o sube el archivo
+> `VistaViva.html` por el Administrador de archivos del host y cámbialo por un
+> iframe con `src="/VistaViva.html"` (misma idea, sin terceros).
+
+## Paso 1 — Añade tu dominio
+
+AdSense **exige un dominio real** (no vale `file://` ni un subdominio de pruebas
+que caduque). Apunta tu dominio a tu WordPress; la app ya vive ahí.
 
 ## Paso 2 — Crea tu cuenta de AdSense y pide aprobación
 
@@ -80,13 +97,10 @@ sustituye a la CMP certificada si tu público es europeo.
 
 ---
 
-## WordPress (tu host)
+## WordPress (tu host) — recordatorio
 
-1. En tu WordPress: **Herramientas → Importar → Importador de WordPress**.
-2. Sube `vistaviva-wordpress.xml` y pulsa **Subir archivo e importar**.
-3. Se crean dos páginas: **VistaViva** (landing) y **Política de privacidad**.
-4. Edita la página «VistaViva» y cambia `https://TU-APP.netlify.app` por la URL
-   real de tu app.
+La app ya va embebida dentro de la página «VistaViva» al importar el WXR
+(ver Paso 0). No hay que enlazar a ningún sitio externo.
 
 > El `ads.txt` va en la raíz del dominio de WordPress. En muchos hosts se sube
 > por FTP/administrador de archivos, o con un plugin tipo «Ads.txt Manager».
