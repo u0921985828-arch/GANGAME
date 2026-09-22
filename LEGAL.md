@@ -7,15 +7,19 @@ salud y contacto, todo enlazado y visible.
 > Aviso: estas páginas son **plantillas**, no asesoramiento jurídico. Rellena tus
 > datos reales; si tu caso es delicado, consúltalo con un profesional.
 
-## 1. Importa las páginas legales
+## 1. Importa el sitio completo (un solo archivo, mismo estilo)
 
-Ya tienes importadas **VistaViva** y **Política de privacidad**. Ahora:
+Todas las páginas van en **`vistaviva-wordpress.xml`** y comparten el **mismo
+estilo oscuro de VistaViva**: la app, privacidad, aviso legal, cookies,
+términos y contacto.
 
-1. WordPress → **Herramientas → Importar → «Importador de WordPress»**.
-2. Sube **`vistaviva-legal-wordpress.xml`** → asigna a **admin** → importar.
-3. Se añaden 4 páginas: **Aviso legal**, **Política de cookies**,
-   **Términos y condiciones** y **Contacto**.
-   (No duplica lo que ya tenías.)
+1. **Borra primero** las páginas que ya hubieras importado
+   (**Páginas → Papelera**), para que no salgan duplicadas con `-2`.
+2. WordPress → **Herramientas → Importar → «Importador de WordPress»**.
+3. Sube **`vistaviva-wordpress.xml`** → asigna a **admin** → importar.
+4. Se crean 6 páginas ya enlazadas entre sí:
+   **VistaViva** (app), **Política de privacidad**, **Aviso legal**,
+   **Política de cookies**, **Términos y condiciones** y **Contacto**.
 
 ## 2. Rellena tus datos
 
