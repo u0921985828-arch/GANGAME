@@ -281,6 +281,15 @@ button { font-family: inherit; cursor: pointer; }
 @keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .done__title { font-size: 1.8rem; font-weight: 800; margin-top: 8px; letter-spacing: -.01em; }
 .done__sub { color: var(--muted); margin-bottom: 14px; }
+.milestone {
+  display: inline-flex; align-items: center; gap: 9px; margin: 2px 0 16px;
+  padding: 10px 16px 10px 12px; border-radius: 999px;
+  background: linear-gradient(135deg, #fbbf2422, #f472b622);
+  border: 1px solid #fbbf2455; color: var(--text); font-weight: 700; font-size: 0.92rem;
+  box-shadow: 0 6px 22px #fbbf2426; animation: pop .55s var(--ease-snappy) both .1s;
+}
+.milestone[hidden] { display: none; }
+.milestone__emoji { font-size: 1.25rem; line-height: 1; }
 .done__stats { display: flex; gap: 12px; margin: 8px 0 26px; width: 100%; }
 .stat {
   flex: 1; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 8px;

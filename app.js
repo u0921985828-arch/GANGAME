@@ -144,6 +144,7 @@
     exTimer: $('#ex-timer'), progressBar: $('#progress-bar'), ringFg: $('#ring-fg'),
     icPause: $('#ic-pause'), icPlay: $('#ic-play'),
     doneStreak: $('#done-streak'), doneTotal: $('#done-total'), doneMins: $('#done-mins'), doneSub: $('#done-sub'),
+    doneMilestone: $('#done-milestone'),
     doneSkills: $('#done-skills'), btnStart: $('#btn-start'),
   };
   let previewItems = [];   // {ctx, ex, size} de las vistas previas animadas del inicio
@@ -886,9 +887,10 @@
     recordCompletion();
     renderDone();
     show('done');
-    haptic([30, 40, 60]);
+    const milestone = milestoneFor(state.streak);
+    haptic(milestone ? [30, 40, 60, 40, 90] : [30, 40, 60]);
     sfx('win');
-    launchConfetti();
+    launchConfetti(!!milestone);
   }
 
   // ---------- Registro de progreso ----------
@@ -927,14 +929,40 @@
     };
     countRafs.push(requestAnimationFrame(step));
   }
+  // Hitos de racha: se celebran exactamente el día en que se alcanzan.
+  const MILESTONES = [
+    { days: 3, emoji: '🌱', text: '3 días seguidos. El hábito echa raíces.' },
+    { days: 7, emoji: '🔥', text: '¡Una semana completa! Racha en marcha.' },
+    { days: 14, emoji: '⚡', text: '14 días. Tu constancia se nota.' },
+    { days: 21, emoji: '💪', text: '21 días: el hábito ya es tuyo.' },
+    { days: 30, emoji: '🏆', text: '¡Un mes entero! Eres imparable.' },
+    { days: 50, emoji: '💎', text: '50 días. Disciplina de diamante.' },
+    { days: 100, emoji: '👑', text: '¡100 días! Leyenda del entrenamiento visual.' },
+  ];
+  function milestoneFor(streak) {
+    return MILESTONES.find((m) => m.days === streak) || null;
+  }
   function renderDone() {
     stopCounts();
     countUp(el.doneStreak, state.streak);
     countUp(el.doneTotal, state.total);
     countUp(el.doneMins, Math.max(1, Math.round(totalRoutineSeconds() / 60)));
-    el.doneSub.textContent = state.streak > 1
-      ? `¡${state.streak} días seguidos! Sigue así.`
-      : 'Tus ojos te lo agradecen.';
+
+    const milestone = milestoneFor(state.streak);
+    if (el.doneMilestone) {
+      if (milestone) {
+        el.doneMilestone.querySelector('.milestone__emoji').textContent = milestone.emoji;
+        el.doneMilestone.querySelector('.milestone__text').textContent = milestone.text;
+        el.doneMilestone.hidden = false;
+      } else {
+        el.doneMilestone.hidden = true;
+      }
+    }
+    el.doneSub.textContent = milestone
+      ? '¡Nuevo hito desbloqueado!'
+      : state.streak > 1
+        ? `¡${state.streak} días seguidos! Sigue así.`
+        : 'Tus ojos te lo agradecen.';
 
     // Resumen de habilidades entrenadas (categorías de la rutina + conteo).
     const order = [], byCat = {};
@@ -959,7 +987,7 @@
     const cv = $('#confetti');
     if (cv) { const c = cv.getContext('2d'); if (c) c.clearRect(0, 0, cv.width, cv.height); }
   }
-  function launchConfetti() {
+  function launchConfetti(intense) {
     if (state.settings.reduced) return;               // respeta movimiento reducido
     const cv = $('#confetti'); if (!cv) return;
     const cctx = cv.getContext('2d'); if (!cctx) return;
@@ -967,24 +995,27 @@
     const W = cv.clientWidth || window.innerWidth, H = cv.clientHeight || window.innerHeight;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const colors = ['#fbbf24', '#38bdf8', '#34d399', '#f472b6', '#a78bfa', '#22d3ee', '#fb923c', '#fca5a5'];
+    const base = ['#fbbf24', '#38bdf8', '#34d399', '#f472b6', '#a78bfa', '#22d3ee', '#fb923c', '#fca5a5'];
+    // En un hito, añade dorados para un estallido más festivo.
+    const colors = intense ? base.concat(['#ffd700', '#fde68a', '#f59e0b']) : base;
     const shapes = ['rect', 'rect', 'square', 'circle'];   // mezcla estilo canvas-confetti
+    const N = intense ? 240 : 150;                     // más partículas en un hito
     // Dos focos (izquierda y derecha) para un estallido más lleno.
-    const parts = Array.from({ length: 150 }, (_, i) => {
+    const parts = Array.from({ length: N }, (_, i) => {
       const left = i % 2 === 0;
       return {
         x: W * (left ? 0.34 : 0.66) + (Math.random() * 40 - 20),
         y: H * 0.28 + (Math.random() * 30 - 15),
         vx: (left ? 1 : -1) * (1 + Math.random() * 3) + (Math.random() - 0.5) * 4,
-        vy: -7 - Math.random() * 6,
-        g: 0.17 + Math.random() * 0.09, size: 5 + Math.random() * 6,
+        vy: (intense ? -8 : -7) - Math.random() * (intense ? 7 : 6),
+        g: 0.17 + Math.random() * 0.09, size: 5 + Math.random() * (intense ? 7 : 6),
         rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 0.34,
         wob: Math.random() * TAU, wv: 0.12 + Math.random() * 0.12,   // bamboleo (giro 3D simulado)
         shape: shapes[(Math.random() * shapes.length) | 0],
         color: colors[(Math.random() * colors.length) | 0], life: 1,
       };
     });
-    const DUR = 2.1;
+    const DUR = intense ? 2.6 : 2.1;
     let start = 0;
     cancelAnimationFrame(confettiRaf);
     function tick(now) {

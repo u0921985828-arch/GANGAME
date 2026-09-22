@@ -101,6 +101,13 @@ visión borrosa persistente, detente y consulta a tu oftalmólogo.
 
 ## Changelog
 
+- **v6.2** — Hitos de racha: al alcanzar 3, 7, 14, 21, 30, 50 o 100 días seguidos
+  se desbloquea una insignia celebratoria en la pantalla final (emoji + mensaje)
+  y el confeti se intensifica (más partículas, tonos dorados y estallido más
+  largo), con vibración reforzada. Respeta *movimiento reducido*.
+- **v6.1** — Conteo animado de las estadísticas finales (easeOutCubic) y ajuste
+  *movimiento reducido* coherente: aplica una clase que calma también las
+  animaciones decorativas de CSS, no solo el canvas.
 - **v6** — Remaster visual (HQ, sin dependencias):
   - Sistema de **easing Material 3** (emphasized/decelerate/snappy) en todas las
     transiciones y entradas; micro-interacciones con lift/press.
