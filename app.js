@@ -20,6 +20,67 @@
   };
   const fmtTime = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
+  // ============================================================
+  //  Monetización (Google AdSense) — DESACTIVADA hasta configurar
+  //  Cuando tengas dominio propio y una cuenta de AdSense aprobada:
+  //    1) pon ADS.enabled = true
+  //    2) sustituye ADS.client por tu ID de editor  (ca-pub-XXXXXXXXXXXXXXXX)
+  //    3) sustituye los slots por los IDs de tus bloques de anuncio
+  //  Mientras siga desactivada, la app funciona 100% offline y sin scripts
+  //  externos. Los anuncios NUNCA aparecen durante los ejercicios.
+  // ============================================================
+  const ADS = {
+    enabled: false,
+    client: 'ca-pub-XXXXXXXXXXXXXXXX',
+    slots: { home: 'XXXXXXXXXX', done: 'XXXXXXXXXX' },
+  };
+  const CONSENT_KEY = 'vistaviva.ads.consent';
+  const getConsent = () => { try { return localStorage.getItem(CONSENT_KEY); } catch { return null; } };
+  const setConsent = (v) => { try { localStorage.setItem(CONSENT_KEY, v); } catch { /* sin almacenamiento */ } };
+  const adsConfigured = () => ADS.enabled && ADS.client.indexOf('XXXX') === -1;
+  const adsAllowed = () => adsConfigured() && getConsent() === 'yes';
+  let adScriptLoading = false;
+  function loadAdSenseScript() {
+    if (adScriptLoading || window.adsbygoogle || !navigator.onLine) return;
+    adScriptLoading = true;
+    const s = document.createElement('script');
+    s.async = true; s.crossOrigin = 'anonymous';
+    s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(ADS.client);
+    s.onerror = () => { adScriptLoading = false; };   // sin conexión: se reintenta al volver
+    document.head.appendChild(s);
+  }
+  function fillSlot(boxId, slotId) {
+    const box = document.getElementById(boxId);
+    if (!box) return;
+    const ins = box.querySelector('.adsbygoogle');
+    box.hidden = false;
+    if (!ins || ins.dataset.filled === '1') return;
+    ins.setAttribute('data-ad-client', ADS.client);
+    ins.setAttribute('data-ad-slot', slotId);
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      ins.dataset.filled = '1';
+    } catch { /* el script aún no está listo; se reintenta al volver a la pantalla */ }
+  }
+  function showAdFor(name) {
+    if (!adsAllowed() || !navigator.onLine) return;
+    loadAdSenseScript();
+    if (name === 'home') fillSlot('ad-home', ADS.slots.home);
+    else if (name === 'done') fillSlot('ad-done', ADS.slots.done);
+  }
+  function maybeConsentBanner() {
+    if (!adsConfigured() || getConsent() !== null) return;
+    const banner = document.getElementById('ad-consent');
+    if (banner) banner.hidden = false;
+  }
+  function bindConsent() {
+    const banner = document.getElementById('ad-consent');
+    const yes = document.getElementById('consent-yes');
+    const no = document.getElementById('consent-no');
+    if (yes) yes.addEventListener('click', () => { setConsent('yes'); if (banner) banner.hidden = true; showAdFor('home'); });
+    if (no) no.addEventListener('click', () => { setConsent('no'); if (banner) banner.hidden = true; });
+  }
+
   // ---------- Estado persistente ----------
   const DEFAULT_STATE = {
     streak: 0,
@@ -156,6 +217,7 @@
       node.classList.toggle('is-active', active);
       node.setAttribute('aria-hidden', active ? 'false' : 'true');
     });
+    showAdFor(name);   // anuncios solo en inicio/fin, nunca durante el ejercicio
   }
 
   // ---------- Duración efectiva ----------
@@ -1142,6 +1204,14 @@
     renderHome();
     bindEvents();
     bindSettings();
+    bindConsent();
+    maybeConsentBanner();
+    showAdFor('home');          // el inicio ya está activo al cargar
+    // si el usuario recupera la conexión, intenta cargar el anuncio pendiente
+    window.addEventListener('online', () => {
+      if (screens.home.classList.contains('is-active')) showAdFor('home');
+      else if (screens.done.classList.contains('is-active')) showAdFor('done');
+    });
     registerSW();
   }
   init();

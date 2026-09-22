@@ -64,6 +64,12 @@
       </span>
       <span class="coach-note__chev" aria-hidden="true">›</span>
     </button>
+
+    <!-- Anuncio (solo visible con AdSense configurado y consentimiento) -->
+    <aside id="ad-home" class="adbox" aria-label="Publicidad" hidden>
+      <span class="adbox__label">Publicidad</span>
+      <ins class="adsbygoogle" style="display:block" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    </aside>
   </main>
 
   <!-- ============ DIÁLOGO: COACH (honestidad clínica) ============ -->
@@ -174,6 +180,12 @@
       <div id="done-skills" class="skills"></div>
     </section>
 
+    <!-- Anuncio (solo visible con AdSense configurado y consentimiento) -->
+    <aside id="ad-done" class="adbox" aria-label="Publicidad" hidden>
+      <span class="adbox__label">Publicidad</span>
+      <ins class="adsbygoogle" style="display:block" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    </aside>
+
     <button id="btn-home" class="cta cta--ghost" type="button"><span class="cta__title">Volver al inicio</span></button>
   </section>
 
@@ -214,9 +226,21 @@
 
       <button class="btn-secondary" id="set-reset" type="button">Reiniciar progreso</button>
       <button class="btn-primary" value="close" type="submit">Listo</button>
-      <p class="sheet__ver">VistaViva · funciona sin conexión</p>
+      <p class="sheet__ver">VistaViva · funciona sin conexión · <a href="privacidad.html" class="sheet__link" target="_blank" rel="noopener">Privacidad</a></p>
     </form>
   </dialog>
+
+  <!-- ============ AVISO DE COOKIES / ANUNCIOS (solo con AdSense activo) ============ -->
+  <div id="ad-consent" class="consent" role="dialog" aria-label="Aviso de cookies" hidden>
+    <p class="consent__text">
+      Usamos cookies de terceros para mostrar anuncios que mantienen la app gratuita.
+      <a href="privacidad.html" target="_blank" rel="noopener">Más información</a>.
+    </p>
+    <div class="consent__actions">
+      <button id="consent-no" class="consent__btn consent__btn--ghost" type="button">Rechazar</button>
+      <button id="consent-yes" class="consent__btn" type="button">Aceptar</button>
+    </div>
+  </div>
 
   <!-- Definiciones SVG reutilizables -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">

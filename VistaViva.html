@@ -443,6 +443,43 @@ button { font-family: inherit; cursor: pointer; }
   animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important;
 }
 
+/* ---------- Monetización: bloque de anuncio y aviso de cookies ---------- */
+.adbox {
+  width: 100%; max-width: 480px; margin: 18px auto 4px; padding: 8px;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--surface);
+  box-shadow: var(--shadow-1); text-align: center; min-height: 60px;
+}
+.adbox[hidden] { display: none; }
+.adbox__label {
+  display: block; font-size: 0.62rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted-2); margin-bottom: 6px;
+}
+.adbox .adsbygoogle { display: block; min-height: 50px; }
+.sheet__link { color: var(--accent); text-decoration: none; font-weight: 600; }
+.sheet__link:hover { text-decoration: underline; }
+
+.consent {
+  position: fixed; left: 50%; bottom: 0; transform: translateX(-50%);
+  z-index: 60; width: min(680px, 100%);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface-2, #121a30); border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 30px #00000055; animation: consentUp .4s var(--ease-decelerate) both;
+}
+.consent[hidden] { display: none; }
+@keyframes consentUp { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+.consent__text { flex: 1 1 240px; margin: 0; font-size: 0.86rem; color: var(--muted); line-height: 1.45; }
+.consent__text a { color: var(--accent); }
+.consent__actions { display: flex; gap: 10px; margin-left: auto; }
+.consent__btn {
+  border: 0; border-radius: 999px; padding: 10px 20px; font: inherit; font-weight: 700;
+  color: #071018; background: var(--accent); cursor: pointer;
+  transition: transform .15s var(--ease-snappy), filter .15s ease;
+}
+.consent__btn:hover { filter: brightness(1.06); }
+.consent__btn:active { transform: scale(.96); }
+.consent__btn--ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+
 </style>
   <title>VistaViva — Coach de entrenamiento visual</title>
 </head>
@@ -494,6 +531,12 @@ button { font-family: inherit; cursor: pointer; }
       </span>
       <span class="coach-note__chev" aria-hidden="true">›</span>
     </button>
+
+    <!-- Anuncio (solo visible con AdSense configurado y consentimiento) -->
+    <aside id="ad-home" class="adbox" aria-label="Publicidad" hidden>
+      <span class="adbox__label">Publicidad</span>
+      <ins class="adsbygoogle" style="display:block" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    </aside>
   </main>
 
   <!-- ============ DIÁLOGO: COACH (honestidad clínica) ============ -->
@@ -604,6 +647,12 @@ button { font-family: inherit; cursor: pointer; }
       <div id="done-skills" class="skills"></div>
     </section>
 
+    <!-- Anuncio (solo visible con AdSense configurado y consentimiento) -->
+    <aside id="ad-done" class="adbox" aria-label="Publicidad" hidden>
+      <span class="adbox__label">Publicidad</span>
+      <ins class="adsbygoogle" style="display:block" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    </aside>
+
     <button id="btn-home" class="cta cta--ghost" type="button"><span class="cta__title">Volver al inicio</span></button>
   </section>
 
@@ -644,9 +693,21 @@ button { font-family: inherit; cursor: pointer; }
 
       <button class="btn-secondary" id="set-reset" type="button">Reiniciar progreso</button>
       <button class="btn-primary" value="close" type="submit">Listo</button>
-      <p class="sheet__ver">VistaViva · funciona sin conexión</p>
+      <p class="sheet__ver">VistaViva · funciona sin conexión · <a href="privacidad.html" class="sheet__link" target="_blank" rel="noopener">Privacidad</a></p>
     </form>
   </dialog>
+
+  <!-- ============ AVISO DE COOKIES / ANUNCIOS (solo con AdSense activo) ============ -->
+  <div id="ad-consent" class="consent" role="dialog" aria-label="Aviso de cookies" hidden>
+    <p class="consent__text">
+      Usamos cookies de terceros para mostrar anuncios que mantienen la app gratuita.
+      <a href="privacidad.html" target="_blank" rel="noopener">Más información</a>.
+    </p>
+    <div class="consent__actions">
+      <button id="consent-no" class="consent__btn consent__btn--ghost" type="button">Rechazar</button>
+      <button id="consent-yes" class="consent__btn" type="button">Aceptar</button>
+    </div>
+  </div>
 
   <!-- Definiciones SVG reutilizables -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -840,6 +901,67 @@ if (typeof module !== 'undefined' && module.exports) {
   };
   const fmtTime = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
+  // ============================================================
+  //  Monetización (Google AdSense) — DESACTIVADA hasta configurar
+  //  Cuando tengas dominio propio y una cuenta de AdSense aprobada:
+  //    1) pon ADS.enabled = true
+  //    2) sustituye ADS.client por tu ID de editor  (ca-pub-XXXXXXXXXXXXXXXX)
+  //    3) sustituye los slots por los IDs de tus bloques de anuncio
+  //  Mientras siga desactivada, la app funciona 100% offline y sin scripts
+  //  externos. Los anuncios NUNCA aparecen durante los ejercicios.
+  // ============================================================
+  const ADS = {
+    enabled: false,
+    client: 'ca-pub-XXXXXXXXXXXXXXXX',
+    slots: { home: 'XXXXXXXXXX', done: 'XXXXXXXXXX' },
+  };
+  const CONSENT_KEY = 'vistaviva.ads.consent';
+  const getConsent = () => { try { return localStorage.getItem(CONSENT_KEY); } catch { return null; } };
+  const setConsent = (v) => { try { localStorage.setItem(CONSENT_KEY, v); } catch { /* sin almacenamiento */ } };
+  const adsConfigured = () => ADS.enabled && ADS.client.indexOf('XXXX') === -1;
+  const adsAllowed = () => adsConfigured() && getConsent() === 'yes';
+  let adScriptLoading = false;
+  function loadAdSenseScript() {
+    if (adScriptLoading || window.adsbygoogle || !navigator.onLine) return;
+    adScriptLoading = true;
+    const s = document.createElement('script');
+    s.async = true; s.crossOrigin = 'anonymous';
+    s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(ADS.client);
+    s.onerror = () => { adScriptLoading = false; };   // sin conexión: se reintenta al volver
+    document.head.appendChild(s);
+  }
+  function fillSlot(boxId, slotId) {
+    const box = document.getElementById(boxId);
+    if (!box) return;
+    const ins = box.querySelector('.adsbygoogle');
+    box.hidden = false;
+    if (!ins || ins.dataset.filled === '1') return;
+    ins.setAttribute('data-ad-client', ADS.client);
+    ins.setAttribute('data-ad-slot', slotId);
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      ins.dataset.filled = '1';
+    } catch { /* el script aún no está listo; se reintenta al volver a la pantalla */ }
+  }
+  function showAdFor(name) {
+    if (!adsAllowed() || !navigator.onLine) return;
+    loadAdSenseScript();
+    if (name === 'home') fillSlot('ad-home', ADS.slots.home);
+    else if (name === 'done') fillSlot('ad-done', ADS.slots.done);
+  }
+  function maybeConsentBanner() {
+    if (!adsConfigured() || getConsent() !== null) return;
+    const banner = document.getElementById('ad-consent');
+    if (banner) banner.hidden = false;
+  }
+  function bindConsent() {
+    const banner = document.getElementById('ad-consent');
+    const yes = document.getElementById('consent-yes');
+    const no = document.getElementById('consent-no');
+    if (yes) yes.addEventListener('click', () => { setConsent('yes'); if (banner) banner.hidden = true; showAdFor('home'); });
+    if (no) no.addEventListener('click', () => { setConsent('no'); if (banner) banner.hidden = true; });
+  }
+
   // ---------- Estado persistente ----------
   const DEFAULT_STATE = {
     streak: 0,
@@ -976,6 +1098,7 @@ if (typeof module !== 'undefined' && module.exports) {
       node.classList.toggle('is-active', active);
       node.setAttribute('aria-hidden', active ? 'false' : 'true');
     });
+    showAdFor(name);   // anuncios solo en inicio/fin, nunca durante el ejercicio
   }
 
   // ---------- Duración efectiva ----------
@@ -1962,6 +2085,14 @@ if (typeof module !== 'undefined' && module.exports) {
     renderHome();
     bindEvents();
     bindSettings();
+    bindConsent();
+    maybeConsentBanner();
+    showAdFor('home');          // el inicio ya está activo al cargar
+    // si el usuario recupera la conexión, intenta cargar el anuncio pendiente
+    window.addEventListener('online', () => {
+      if (screens.home.classList.contains('is-active')) showAdFor('home');
+      else if (screens.done.classList.contains('is-active')) showAdFor('done');
+    });
     registerSW();
   }
   init();
