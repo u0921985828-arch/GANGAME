@@ -480,6 +480,30 @@ button { font-family: inherit; cursor: pointer; }
 .consent__btn:active { transform: scale(.96); }
 .consent__btn--ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
 
+/* ============ Aviso de salud / fotosensibilidad (primer arranque) ============ */
+.notice {
+  position: fixed; inset: 0; z-index: 80;
+  display: grid; place-items: center; padding: 22px;
+  background: #05070fcc; backdrop-filter: blur(4px);
+}
+.notice[hidden] { display: none; }
+.notice__card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow-2);
+  max-width: 420px; width: 100%; padding: 24px 22px;
+  animation: noticeIn .28s var(--ease-snappy) both;
+}
+@keyframes noticeIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+.notice__title { font-size: 1.25rem; margin-bottom: 10px; color: var(--text); }
+.notice__text { color: var(--muted); font-size: .95rem; line-height: 1.55; margin-bottom: 12px; }
+.notice__btn {
+  width: 100%; margin-top: 6px; padding: 13px 18px;
+  border: 0; border-radius: var(--radius-sm); cursor: pointer;
+  font: inherit; font-weight: 700; color: #101725;
+  background: var(--accent); box-shadow: var(--glow);
+}
+.notice__btn:active { transform: translateY(1px); }
+
 </style>
   <title>VistaViva — Coach de entrenamiento visual</title>
 </head>
@@ -706,6 +730,16 @@ button { font-family: inherit; cursor: pointer; }
     <div class="consent__actions">
       <button id="consent-no" class="consent__btn consent__btn--ghost" type="button">Rechazar</button>
       <button id="consent-yes" class="consent__btn" type="button">Aceptar</button>
+    </div>
+  </div>
+
+  <!-- Aviso de salud / fotosensibilidad (solo la primera vez) -->
+  <div id="health-notice" class="notice" role="dialog" aria-modal="true" aria-labelledby="notice-title" hidden>
+    <div class="notice__card">
+      <h2 id="notice-title" class="notice__title">Antes de empezar</h2>
+      <p class="notice__text">VistaViva ayuda a relajar la vista y reducir la fatiga por pantallas. <strong>No sustituye la revisión de un profesional</strong> ni corrige defectos de la visión.</p>
+      <p class="notice__text">Contiene elementos en movimiento y parpadeos. Si tú o algún familiar tenéis antecedentes de <strong>epilepsia o convulsiones</strong>, consulta a tu médico antes de usarla. Detente si notas mareo, dolor o molestias.</p>
+      <button id="notice-ok" class="notice__btn" type="button">Entendido</button>
     </div>
   </div>
 
@@ -953,6 +987,20 @@ if (typeof module !== 'undefined' && module.exports) {
     if (!adsConfigured() || getConsent() !== null) return;
     const banner = document.getElementById('ad-consent');
     if (banner) banner.hidden = false;
+  }
+  const NOTICE_KEY = 'vistaviva.health.ack';
+  function maybeHealthNotice() {
+    let acked = null;
+    try { acked = localStorage.getItem(NOTICE_KEY); } catch { /* sin almacenamiento */ }
+    const box = document.getElementById('health-notice');
+    if (!box) return;
+    const ok = document.getElementById('notice-ok');
+    const close = () => {
+      box.hidden = true;
+      try { localStorage.setItem(NOTICE_KEY, '1'); } catch { /* sin almacenamiento */ }
+    };
+    if (ok) ok.addEventListener('click', close);
+    if (acked !== '1') box.hidden = false;
   }
   function bindConsent() {
     const banner = document.getElementById('ad-consent');
@@ -2086,6 +2134,7 @@ if (typeof module !== 'undefined' && module.exports) {
     bindEvents();
     bindSettings();
     bindConsent();
+    maybeHealthNotice();
     maybeConsentBanner();
     showAdFor('home');          // el inicio ya está activo al cargar
     // si el usuario recupera la conexión, intenta cargar el anuncio pendiente

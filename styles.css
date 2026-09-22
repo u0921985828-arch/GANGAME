@@ -464,3 +464,27 @@ button { font-family: inherit; cursor: pointer; }
 .consent__btn:hover { filter: brightness(1.06); }
 .consent__btn:active { transform: scale(.96); }
 .consent__btn--ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+
+/* ============ Aviso de salud / fotosensibilidad (primer arranque) ============ */
+.notice {
+  position: fixed; inset: 0; z-index: 80;
+  display: grid; place-items: center; padding: 22px;
+  background: #05070fcc; backdrop-filter: blur(4px);
+}
+.notice[hidden] { display: none; }
+.notice__card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow-2);
+  max-width: 420px; width: 100%; padding: 24px 22px;
+  animation: noticeIn .28s var(--ease-snappy) both;
+}
+@keyframes noticeIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+.notice__title { font-size: 1.25rem; margin-bottom: 10px; color: var(--text); }
+.notice__text { color: var(--muted); font-size: .95rem; line-height: 1.55; margin-bottom: 12px; }
+.notice__btn {
+  width: 100%; margin-top: 6px; padding: 13px 18px;
+  border: 0; border-radius: var(--radius-sm); cursor: pointer;
+  font: inherit; font-weight: 700; color: #101725;
+  background: var(--accent); box-shadow: var(--glow);
+}
+.notice__btn:active { transform: translateY(1px); }

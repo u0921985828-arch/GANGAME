@@ -73,6 +73,20 @@
     const banner = document.getElementById('ad-consent');
     if (banner) banner.hidden = false;
   }
+  const NOTICE_KEY = 'vistaviva.health.ack';
+  function maybeHealthNotice() {
+    let acked = null;
+    try { acked = localStorage.getItem(NOTICE_KEY); } catch { /* sin almacenamiento */ }
+    const box = document.getElementById('health-notice');
+    if (!box) return;
+    const ok = document.getElementById('notice-ok');
+    const close = () => {
+      box.hidden = true;
+      try { localStorage.setItem(NOTICE_KEY, '1'); } catch { /* sin almacenamiento */ }
+    };
+    if (ok) ok.addEventListener('click', close);
+    if (acked !== '1') box.hidden = false;
+  }
   function bindConsent() {
     const banner = document.getElementById('ad-consent');
     const yes = document.getElementById('consent-yes');
@@ -1205,6 +1219,7 @@
     bindEvents();
     bindSettings();
     bindConsent();
+    maybeHealthNotice();
     maybeConsentBanner();
     showAdFor('home');          // el inicio ya está activo al cargar
     // si el usuario recupera la conexión, intenta cargar el anuncio pendiente

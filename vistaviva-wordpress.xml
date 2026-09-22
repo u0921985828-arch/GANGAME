@@ -527,6 +527,30 @@ button { font-family: inherit; cursor: pointer; }
 .consent__btn:active { transform: scale(.96); }
 .consent__btn--ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
 
+/* ============ Aviso de salud / fotosensibilidad (primer arranque) ============ */
+.notice {
+  position: fixed; inset: 0; z-index: 80;
+  display: grid; place-items: center; padding: 22px;
+  background: #05070fcc; backdrop-filter: blur(4px);
+}
+.notice[hidden] { display: none; }
+.notice__card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow-2);
+  max-width: 420px; width: 100%; padding: 24px 22px;
+  animation: noticeIn .28s var(--ease-snappy) both;
+}
+@keyframes noticeIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+.notice__title { font-size: 1.25rem; margin-bottom: 10px; color: var(--text); }
+.notice__text { color: var(--muted); font-size: .95rem; line-height: 1.55; margin-bottom: 12px; }
+.notice__btn {
+  width: 100%; margin-top: 6px; padding: 13px 18px;
+  border: 0; border-radius: var(--radius-sm); cursor: pointer;
+  font: inherit; font-weight: 700; color: #101725;
+  background: var(--accent); box-shadow: var(--glow);
+}
+.notice__btn:active { transform: translateY(1px); }
+
 &lt;/style&gt;
   &lt;title&gt;VistaViva — Coach de entrenamiento visual&lt;/title&gt;
 &lt;/head&gt;
@@ -753,6 +777,16 @@ button { font-family: inherit; cursor: pointer; }
     &lt;div class=&quot;consent__actions&quot;&gt;
       &lt;button id=&quot;consent-no&quot; class=&quot;consent__btn consent__btn--ghost&quot; type=&quot;button&quot;&gt;Rechazar&lt;/button&gt;
       &lt;button id=&quot;consent-yes&quot; class=&quot;consent__btn&quot; type=&quot;button&quot;&gt;Aceptar&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Aviso de salud / fotosensibilidad (solo la primera vez) --&gt;
+  &lt;div id=&quot;health-notice&quot; class=&quot;notice&quot; role=&quot;dialog&quot; aria-modal=&quot;true&quot; aria-labelledby=&quot;notice-title&quot; hidden&gt;
+    &lt;div class=&quot;notice__card&quot;&gt;
+      &lt;h2 id=&quot;notice-title&quot; class=&quot;notice__title&quot;&gt;Antes de empezar&lt;/h2&gt;
+      &lt;p class=&quot;notice__text&quot;&gt;VistaViva ayuda a relajar la vista y reducir la fatiga por pantallas. &lt;strong&gt;No sustituye la revisión de un profesional&lt;/strong&gt; ni corrige defectos de la visión.&lt;/p&gt;
+      &lt;p class=&quot;notice__text&quot;&gt;Contiene elementos en movimiento y parpadeos. Si tú o algún familiar tenéis antecedentes de &lt;strong&gt;epilepsia o convulsiones&lt;/strong&gt;, consulta a tu médico antes de usarla. Detente si notas mareo, dolor o molestias.&lt;/p&gt;
+      &lt;button id=&quot;notice-ok&quot; class=&quot;notice__btn&quot; type=&quot;button&quot;&gt;Entendido&lt;/button&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
@@ -1000,6 +1034,20 @@ if (typeof module !== 'undefined' &amp;&amp; module.exports) {
     if (!adsConfigured() || getConsent() !== null) return;
     const banner = document.getElementById('ad-consent');
     if (banner) banner.hidden = false;
+  }
+  const NOTICE_KEY = 'vistaviva.health.ack';
+  function maybeHealthNotice() {
+    let acked = null;
+    try { acked = localStorage.getItem(NOTICE_KEY); } catch { /* sin almacenamiento */ }
+    const box = document.getElementById('health-notice');
+    if (!box) return;
+    const ok = document.getElementById('notice-ok');
+    const close = () =&gt; {
+      box.hidden = true;
+      try { localStorage.setItem(NOTICE_KEY, '1'); } catch { /* sin almacenamiento */ }
+    };
+    if (ok) ok.addEventListener('click', close);
+    if (acked !== '1') box.hidden = false;
   }
   function bindConsent() {
     const banner = document.getElementById('ad-consent');
@@ -2133,6 +2181,7 @@ if (typeof module !== 'undefined' &amp;&amp; module.exports) {
     bindEvents();
     bindSettings();
     bindConsent();
+    maybeHealthNotice();
     maybeConsentBanner();
     showAdFor('home');          // el inicio ya está activo al cargar
     // si el usuario recupera la conexión, intenta cargar el anuncio pendiente
