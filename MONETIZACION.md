@@ -11,7 +11,7 @@ Mientras no pongas tus IDs de AdSense, los anuncios simplemente no se muestran.
 
 | Archivo | Para qué sirve |
 |---|---|
-| `vistaviva-wordpress.xml` | Importa TODO a WordPress: 6 páginas + 5 artículos, con los huecos de anuncio ya puestos en la página de la app. |
+| `vistaviva-wordpress.xml` | Importa TODO a WordPress: 8 páginas + 5 artículos, con los huecos de anuncio ya puestos en la página de la app. |
 | `articulos/*.html` | Los 5 artículos de salud visual (contenido que AdSense pide para aprobar). |
 | `ads.txt` | Autoriza a Google a vender tu inventario (va en la raíz del dominio). |
 | `app.js` / `index.html` / `styles.css` | Anuncios internos opcionales de la app (bloque `ADS`), desactivados; no hacen falta si usas los de la página. |
@@ -23,13 +23,15 @@ Mientras no pongas tus IDs de AdSense, los anuncios simplemente no se muestran.
 No hace falta Netlify ni ningún otro servicio. Al importar
 `vistaviva-wordpress.xml` se crean:
 
-- **6 páginas**: VistaViva (la app), Política de privacidad, Aviso legal,
-  Política de cookies, Términos y condiciones y Contacto.
+- **8 páginas**: VistaViva (la app), Artículos, Acerca de, Política de privacidad,
+  Aviso legal, Política de cookies, Términos y condiciones y Contacto.
 - **5 artículos** (categoría «Salud visual»): la regla 20-20-20, fatiga por
   pantallas, insuficiencia de convergencia, luz natural y miopía, y el método
   Bates. Son el **contenido de texto** que AdSense necesita para aprobarte.
 
-Los anuncios están en la página **VistaViva**, encima y debajo del iframe de la
+La página **VistaViva** conserva la cabecera de tu tema, muestra la app en su
+marco y, **debajo, un texto propio** que explica qué es la app (más contenido
+rastreable para la aprobación). Los anuncios van encima y debajo del iframe de la
 app (fuera de él, para que Google pueda rastrearlos).
 
 1. WordPress → **Herramientas → Importar → «Importador de WordPress»**.
@@ -99,7 +101,7 @@ plugin como **Complianz**/**CookieYes**. Actívala antes de recibir tráfico eur
 
 ## Comprobación rápida
 
-- [ ] Importado el `.xml`: se ven 6 páginas y 5 artículos.
+- [ ] Importado el `.xml`: se ven 8 páginas y 5 artículos.
 - [ ] En la página VistaViva, la app abre dentro del marco y hay un hueco
       «Publicidad» arriba y otro abajo.
 - [ ] Con tus IDs puestos, Google empieza a rellenar esos huecos (tras aprobación).

@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
   VistaViva - SITIO COMPLETO para WordPress (formato WXR).
-  Todo se muestra como una APP de marco fijo: sin scroll de pagina, con una
-  barra de menu siempre visible para moverse entre secciones. El scroll solo
-  ocurre dentro de la app (iframe) o dentro del contenido de cada pagina.
+  Conserva la CABECERA y el PIE del tema de WordPress: el contenido se integra
+  en el flujo de la pagina (no tapa el tema) y lleva su propia barra de menu
+  "sticky" que se queda pegada arriba al hacer scroll. El scroll de pagina es
+  normal; la app tiene su propio marco a lo ancho.
 
-  Crea 7 paginas + 5 articulos, con el estilo oscuro de VistaViva:
-    Paginas: VistaViva (app) - Articulos - Privacidad - Aviso legal -
-    Cookies - Terminos - Contacto.
+  Crea 8 paginas + 5 articulos, con el estilo oscuro de VistaViva:
+    Paginas: VistaViva (app) - Articulos - Acerca de - Privacidad -
+    Aviso legal - Cookies - Terminos - Contacto.
     Articulos (categoria "Salud visual"): 20-20-20, fatiga por pantallas,
     insuficiencia de convergencia, luz natural/miopia, metodo Bates.
 
@@ -55,19 +56,17 @@
     <description></description>
     <content:encoded><![CDATA[
 <style>
-/* Bloquea el scroll de la página: la navegación es por el menú. */
-html,body{margin:0!important;overflow:hidden!important;height:100%;overscroll-behavior:none}
-body{background:#090d1a!important}
-.vv-shell{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;
-  background:#090d1a;color:#eef2fb;--accent:#fbbf24;
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .vv-shell *{box-sizing:border-box}
-/* Deja hueco para la barra de administración de WordPress si estás logueado. */
-.admin-bar .vv-shell{top:32px}
-@media screen and (max-width:782px){.admin-bar .vv-shell{top:46px}}
-/* Barra de menú superior, siempre visible. */
-.vv-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  padding:9px clamp(10px,3vw,20px);background:#0b1226;border-bottom:1px solid #29365a}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
 .vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
 .vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
 .vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
@@ -75,29 +74,41 @@ body{background:#090d1a!important}
 .vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
 .vv-menu a:hover{color:#eef2fb;background:#1a2543}
 .vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
-/* Zona de contenido: ocupa el resto; el scroll vive aquí, no en la página. */
-.vv-body{flex:1 1 auto;min-height:0;position:relative}
-.vv-body--scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+/* Zona de contenido. */
+.vv-body{position:relative}
 </style>
 <div class="vv-shell"><header class="vv-bar">
   <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
   <nav class="vv-menu" aria-label="Secciones">
-  <a href="/vistaviva/" aria-current="page">Inicio</a><a href="/articulos/">Artículos</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+  <a href="/vistaviva/" aria-current="page">Inicio</a><a href="/articulos/">Artículos</a><a href="/acerca-de/">Acerca de</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
   </nav>
 </header><div class="vv-body">
 <style>
-.vv-app{height:100%;display:flex;flex-direction:column;gap:7px;padding:7px clamp(0px,2vw,16px)}
+.vv-app{display:flex;flex-direction:column;gap:7px;padding:7px clamp(0px,2vw,16px)}
 .vv-ad{flex:0 0 auto;width:100%;max-width:1060px;margin:0 auto;min-height:48px;overflow:hidden;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:#0f1730;border:1px solid #1c2745;border-radius:12px;padding:5px}
 .vv-ad__tag{color:#5f6d92;font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:3px}
 .vv-ad .adsbygoogle{display:block;width:100%}
-.vv-frame{flex:1 1 auto;min-height:0;width:100%;max-width:1060px;margin:0 auto;position:relative;
+.vv-frame{width:100%;max-width:1060px;margin:0 auto;position:relative;
+  height:min(82svh,980px);min-height:520px;
   border:1px solid #29365a;border-radius:16px;overflow:hidden;background:#05070f;box-shadow:0 22px 48px -22px #000c}
 .vv-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+.vv-intro{max-width:820px;margin:26px auto 8px;padding:0 clamp(16px,4vw,26px);line-height:1.65}
+.vv-intro h1{font-size:clamp(1.5rem,5vw,1.9rem);letter-spacing:-.01em;margin:0 0 12px;color:#eef2fb}
+.vv-intro p{color:#aab5cf;margin:0 0 14px}
+.vv-intro strong{color:#eef2fb}
+.vv-intro a{color:var(--accent)}
+.vv-feats{display:grid;grid-template-columns:1fr;gap:14px;margin:18px 0 6px}
+@media (min-width:760px){.vv-feats{grid-template-columns:repeat(3,1fr)}}
+.vv-feat{background:#16203c;border:1px solid #29365a;border-radius:16px;padding:16px 18px}
+.vv-feat h3{margin:0 0 7px;color:var(--accent);font-size:1rem}
+.vv-feat p{margin:0;color:#aab5cf;font-size:.92rem}
+.vv-intro .vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
 @media (max-width:640px){
   .vv-app{padding:6px 0;gap:6px}
   .vv-ad,.vv-frame{border-radius:0;border-inline:0}
+  .vv-frame{height:min(78svh,900px);min-height:460px}
 }
 </style>
 <div class="vv-app">
@@ -2260,7 +2271,28 @@ if (typeof module !== 'undefined' &amp;&amp; module.exports) {
   <div class="vv-ad"><span class="vv-ad__tag">Publicidad</span><!-- ANUNCIO INFERIOR: pega aquí tu bloque de AdSense o deja este -->
 <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0000000002" data-ad-format="auto" data-full-width-responsive="true"></ins>
 <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>
-</div></div></div>
+</div>
+
+<section class="vv-intro">
+  <h1>VistaViva · gimnasia visual para tus ojos</h1>
+  <p><strong>VistaViva</strong> es un entrenador gratuito de ejercicios oculares que
+  funciona en el navegador, <strong>sin instalar nada y sin conexión</strong>. Está
+  pensado para quien pasa horas frente a la pantalla y nota la vista cansada,
+  seca o con visión borrosa al final del día.</p>
+  <p>La app te guía paso a paso por una rutina corta: movimientos oculares suaves,
+  cambios de enfoque de cerca a lejos, parpadeo consciente y pausas de descanso
+  basadas en la <a href="/regla-20-20-20/">regla 20-20-20</a>. Puedes empezar ahora
+  mismo pulsando <em>«Empezar»</em> en el panel de arriba.</p>
+  <div class="vv-feats">
+    <div class="vv-feat"><h3>Rutina diaria guiada</h3><p>Sesiones breves con animaciones que marcan el ritmo de cada ejercicio para que solo tengas que seguirlas con la mirada.</p></div>
+    <div class="vv-feat"><h3>100% privado y sin conexión</h3><p>Todo ocurre en tu dispositivo. No creamos cuentas ni enviamos tus datos a ningún servidor; tu progreso se guarda solo en tu navegador.</p></div>
+    <div class="vv-feat"><h3>Honesto con la evidencia</h3><p>Los ejercicios alivian la fatiga y ayudan a crear buenos hábitos; no «curan» la miopía ni sustituyen a tu oftalmólogo. Te contamos qué esperar en nuestros <a href="/articulos/">artículos</a>.</p></div>
+  </div>
+  <p class="vv-note">VistaViva es una herramienta de bienestar y hábitos visuales,
+  no un producto sanitario ni un sustituto de la revisión con un profesional de la
+  visión. Si tienes dolor, pérdida de visión o molestias persistentes, acude a tu
+  óptico-optometrista u oftalmólogo.</p>
+</section></div></div>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 ]]></content:encoded>
     <excerpt:encoded><![CDATA[
@@ -2291,19 +2323,17 @@ Coach de entrenamiento visual: rutina diaria de ejercicios para los ojos. Gratis
     <content:encoded><![CDATA[
 
 <style>
-/* Bloquea el scroll de la página: la navegación es por el menú. */
-html,body{margin:0!important;overflow:hidden!important;height:100%;overscroll-behavior:none}
-body{background:#090d1a!important}
-.vv-shell{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;
-  background:#090d1a;color:#eef2fb;--accent:#fbbf24;
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .vv-shell *{box-sizing:border-box}
-/* Deja hueco para la barra de administración de WordPress si estás logueado. */
-.admin-bar .vv-shell{top:32px}
-@media screen and (max-width:782px){.admin-bar .vv-shell{top:46px}}
-/* Barra de menú superior, siempre visible. */
-.vv-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  padding:9px clamp(10px,3vw,20px);background:#0b1226;border-bottom:1px solid #29365a}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
 .vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
 .vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
 .vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
@@ -2311,9 +2341,8 @@ body{background:#090d1a!important}
 .vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
 .vv-menu a:hover{color:#eef2fb;background:#1a2543}
 .vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
-/* Zona de contenido: ocupa el resto; el scroll vive aquí, no en la página. */
-.vv-body{flex:1 1 auto;min-height:0;position:relative}
-.vv-body--scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+/* Zona de contenido. */
+.vv-body{position:relative}
 </style>
 <style>
 .vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
@@ -2336,9 +2365,9 @@ body{background:#090d1a!important}
 <div class="vv-shell"><header class="vv-bar">
   <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
   <nav class="vv-menu" aria-label="Secciones">
-  <a href="/vistaviva/">Inicio</a><a href="/articulos/" aria-current="page">Artículos</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+  <a href="/vistaviva/">Inicio</a><a href="/articulos/" aria-current="page">Artículos</a><a href="/acerca-de/">Acerca de</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
   </nav>
-</header><div class="vv-body vv-body--scroll"><div class="vv-page"><div class="vv-card"><h1>Artículos de salud visual</h1>
+</header><div class="vv-body"><div class="vv-page"><div class="vv-card"><h1>Artículos de salud visual</h1>
 <p>Guías honestas sobre salud visual, fatiga por pantallas y qué esperar (y qué no) de los ejercicios oculares.</p>
 <div class="vv-list">
   <a class="vv-item" href="/regla-20-20-20/"><h3>La regla 20-20-20 para descansar la vista</h3><p>Cada 20 minutos, mira a 6 metros durante 20 segundos: por qué funciona y cómo aplicarla.</p></a>
@@ -2368,28 +2397,26 @@ Guías sobre salud visual, fatiga por pantallas y ejercicios oculares.
   </item>
 
   <item>
-    <title>Política de privacidad</title>
-    <link>https://example.com/politica-de-privacidad/</link>
+    <title>Acerca de</title>
+    <link>https://example.com/acerca-de/</link>
     <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
     <dc:creator><![CDATA[admin]]></dc:creator>
-    <guid isPermaLink="false">https://example.com/?p=1002</guid>
+    <guid isPermaLink="false">https://example.com/?p=1008</guid>
     <description></description>
     <content:encoded><![CDATA[
 
 <style>
-/* Bloquea el scroll de la página: la navegación es por el menú. */
-html,body{margin:0!important;overflow:hidden!important;height:100%;overscroll-behavior:none}
-body{background:#090d1a!important}
-.vv-shell{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;
-  background:#090d1a;color:#eef2fb;--accent:#fbbf24;
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .vv-shell *{box-sizing:border-box}
-/* Deja hueco para la barra de administración de WordPress si estás logueado. */
-.admin-bar .vv-shell{top:32px}
-@media screen and (max-width:782px){.admin-bar .vv-shell{top:46px}}
-/* Barra de menú superior, siempre visible. */
-.vv-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  padding:9px clamp(10px,3vw,20px);background:#0b1226;border-bottom:1px solid #29365a}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
 .vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
 .vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
 .vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
@@ -2397,9 +2424,8 @@ body{background:#090d1a!important}
 .vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
 .vv-menu a:hover{color:#eef2fb;background:#1a2543}
 .vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
-/* Zona de contenido: ocupa el resto; el scroll vive aquí, no en la página. */
-.vv-body{flex:1 1 auto;min-height:0;position:relative}
-.vv-body--scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+/* Zona de contenido. */
+.vv-body{position:relative}
 </style>
 <style>
 .vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
@@ -2422,9 +2448,129 @@ body{background:#090d1a!important}
 <div class="vv-shell"><header class="vv-bar">
   <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
   <nav class="vv-menu" aria-label="Secciones">
-  <a href="/vistaviva/">Inicio</a><a href="/articulos/">Artículos</a><a href="/politica-de-privacidad/" aria-current="page">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+  <a href="/vistaviva/">Inicio</a><a href="/articulos/">Artículos</a><a href="/acerca-de/" aria-current="page">Acerca de</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
   </nav>
-</header><div class="vv-body vv-body--scroll"><div class="vv-page"><div class="vv-card"><h1>Política de privacidad</h1>
+</header><div class="vv-body"><div class="vv-page"><div class="vv-card"><h1>Acerca de VistaViva</h1>
+<p><strong>VistaViva</strong> nació de una idea sencilla: quien pasa el día
+frente a una pantalla necesita una forma fácil de recordar que sus ojos también
+descansan y se entrenan. Es una aplicación web gratuita de <strong>gimnasia
+visual</strong> que funciona sin instalación y sin conexión, directamente en el
+navegador del móvil o del ordenador.</p>
+
+<h2>Qué hace la aplicación</h2>
+<p>VistaViva propone una rutina guiada de ejercicios oculares suaves: movimientos
+horizontales y verticales de la mirada, cambios de enfoque entre objetos cercanos
+y lejanos, giros lentos, parpadeo consciente para hidratar la superficie del ojo y
+pausas de descanso inspiradas en la <a href="/regla-20-20-20/">regla 20-20-20</a>.
+Cada ejercicio se acompaña de una animación que marca el ritmo, de modo que solo
+tengas que seguirla con la vista.</p>
+
+<h2>En qué nos basamos</h2>
+<p>Los contenidos de VistaViva se apoyan en recomendaciones ampliamente aceptadas
+sobre higiene visual y descanso frente a pantallas (fatiga visual digital,
+parpadeo, distancia de trabajo y pausas frecuentes). Cuando una práctica está
+respaldada por evidencia lo decimos, y cuando algo es un <strong>mito</strong> —como
+la promesa de «tirar las gafas» con ejercicios— también lo aclaramos en nuestros
+<a href="/articulos/">artículos</a>.</p>
+
+<h2>Qué NO es VistaViva</h2>
+<p>VistaViva es una herramienta de <strong>bienestar y hábitos</strong>, no un
+producto sanitario. No diagnostica, no trata enfermedades y no reemplaza la revisión
+periódica con un profesional. Los ejercicios oculares ayudan a aliviar la tensión y
+la sensación de fatiga y a crear buenos hábitos, pero <strong>no corrigen defectos
+refractivos</strong> como la miopía, la hipermetropía o el astigmatismo.</p>
+
+<h2>Privacidad por diseño</h2>
+<p>No pedimos registro ni recopilamos datos personales para funcionar. La app se
+ejecuta por completo en tu dispositivo y tu progreso se guarda únicamente en el
+almacenamiento local de tu navegador. Puedes leer los detalles en nuestra
+<a href="/politica-de-privacidad/">política de privacidad</a> y en la
+<a href="/politica-de-cookies/">política de cookies</a>.</p>
+
+<h2>Publicidad</h2>
+<p>Para mantener el proyecto gratuito, el sitio puede mostrar anuncios de terceros.
+Están claramente separados del contenido y de la aplicación, y respetamos tu
+elección de consentimiento antes de personalizarlos.</p>
+
+<p class="vv-note">Si tienes dolor ocular, pérdida de visión, visión doble o
+molestias que no mejoran, deja de hacer los ejercicios y consulta a tu
+óptico-optometrista u oftalmólogo. Ante cualquier duda sobre tu salud visual,
+prioriza siempre el criterio de un profesional.</p>
+<a class="vv-back" href="/vistaviva/">← Volver a la app</a></div></div></div></div>
+]]></content:encoded>
+    <excerpt:encoded><![CDATA[
+Qué es VistaViva, en qué se basa y qué no es: gimnasia visual gratuita y sin conexión.
+]]></excerpt:encoded>
+    <wp:post_id>1008</wp:post_id>
+    <wp:post_date><![CDATA[2025-09-01 10:00:00]]></wp:post_date>
+    <wp:post_date_gmt><![CDATA[2025-09-01 10:00:00]]></wp:post_date_gmt>
+    <wp:comment_status><![CDATA[closed]]></wp:comment_status>
+    <wp:ping_status><![CDATA[closed]]></wp:ping_status>
+    <wp:post_name><![CDATA[acerca-de]]></wp:post_name>
+    <wp:status><![CDATA[publish]]></wp:status>
+    <wp:post_parent>0</wp:post_parent>
+    <wp:menu_order>0</wp:menu_order>
+    <wp:post_type><![CDATA[page]]></wp:post_type>
+    <wp:post_password><![CDATA[]]></wp:post_password>
+    <wp:is_sticky>0</wp:is_sticky>
+    
+  </item>
+
+  <item>
+    <title>Política de privacidad</title>
+    <link>https://example.com/politica-de-privacidad/</link>
+    <pubDate>Mon, 01 Sep 2025 10:00:00 +0000</pubDate>
+    <dc:creator><![CDATA[admin]]></dc:creator>
+    <guid isPermaLink="false">https://example.com/?p=1002</guid>
+    <description></description>
+    <content:encoded><![CDATA[
+
+<style>
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.vv-shell *{box-sizing:border-box}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
+.vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
+.vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
+.vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
+.vv-menu::-webkit-scrollbar{display:none}
+.vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
+.vv-menu a:hover{color:#eef2fb;background:#1a2543}
+.vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
+/* Zona de contenido. */
+.vv-body{position:relative}
+</style>
+<style>
+.vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
+.vv-page h1{font-size:clamp(1.4rem,4.5vw,1.7rem);letter-spacing:-.01em;margin:0 0 10px}
+.vv-card{background:#16203c;border:1px solid #29365a;border-radius:18px;padding:24px clamp(18px,4vw,26px) 10px;box-shadow:0 2px 8px #00000055,0 22px 48px -20px #00000099}
+.vv-card h2{font-size:1.12rem;color:var(--accent);margin:26px 0 8px}
+.vv-card p,.vv-card li{color:#aab5cf;margin:0 0 12px}
+.vv-card ul{padding-left:22px}
+.vv-card strong{color:#eef2fb}
+.vv-card a{color:var(--accent)}
+.vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
+.vv-cta,.vv-back{display:inline-block;margin-top:18px;color:#101725!important;background:var(--accent);padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none}
+/* índice de artículos */
+.vv-list{display:grid;gap:12px;margin-top:6px}
+.vv-item{display:block;text-decoration:none;background:#16203c;border:1px solid #29365a;border-radius:16px;padding:16px 18px;transition:border-color .15s,transform .12s,background .15s}
+.vv-item:hover{border-color:#3a4a70;background:#1a2543;transform:translateX(2px)}
+.vv-item h3{margin:0 0 6px;color:#eef2fb;font-size:1.05rem}
+.vv-item p{margin:0;color:#aab5cf;font-size:.9rem}
+</style>
+<div class="vv-shell"><header class="vv-bar">
+  <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
+  <nav class="vv-menu" aria-label="Secciones">
+  <a href="/vistaviva/">Inicio</a><a href="/articulos/">Artículos</a><a href="/acerca-de/">Acerca de</a><a href="/politica-de-privacidad/" aria-current="page">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+  </nav>
+</header><div class="vv-body"><div class="vv-page"><div class="vv-card"><h1>Política de privacidad</h1>
 <p>En VistaViva nos tomamos tu privacidad en serio. En resumen: <strong>no creamos cuentas, no recogemos datos personales en nuestros servidores y tu progreso se guarda solo en tu dispositivo.</strong></p>
 
 <h2>1. Responsable</h2>
@@ -2478,19 +2624,17 @@ Cómo VistaViva maneja tus datos.
     <content:encoded><![CDATA[
 
 <style>
-/* Bloquea el scroll de la página: la navegación es por el menú. */
-html,body{margin:0!important;overflow:hidden!important;height:100%;overscroll-behavior:none}
-body{background:#090d1a!important}
-.vv-shell{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;
-  background:#090d1a;color:#eef2fb;--accent:#fbbf24;
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .vv-shell *{box-sizing:border-box}
-/* Deja hueco para la barra de administración de WordPress si estás logueado. */
-.admin-bar .vv-shell{top:32px}
-@media screen and (max-width:782px){.admin-bar .vv-shell{top:46px}}
-/* Barra de menú superior, siempre visible. */
-.vv-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  padding:9px clamp(10px,3vw,20px);background:#0b1226;border-bottom:1px solid #29365a}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
 .vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
 .vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
 .vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
@@ -2498,9 +2642,8 @@ body{background:#090d1a!important}
 .vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
 .vv-menu a:hover{color:#eef2fb;background:#1a2543}
 .vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
-/* Zona de contenido: ocupa el resto; el scroll vive aquí, no en la página. */
-.vv-body{flex:1 1 auto;min-height:0;position:relative}
-.vv-body--scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+/* Zona de contenido. */
+.vv-body{position:relative}
 </style>
 <style>
 .vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
@@ -2523,9 +2666,9 @@ body{background:#090d1a!important}
 <div class="vv-shell"><header class="vv-bar">
   <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
   <nav class="vv-menu" aria-label="Secciones">
-  <a href="/vistaviva/">Inicio</a><a href="/articulos/">Artículos</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/" aria-current="page">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+  <a href="/vistaviva/">Inicio</a><a href="/articulos/">Artículos</a><a href="/acerca-de/">Acerca de</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/" aria-current="page">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
   </nav>
-</header><div class="vv-body vv-body--scroll"><div class="vv-page"><div class="vv-card"><h1>Aviso legal</h1>
+</header><div class="vv-body"><div class="vv-page"><div class="vv-card"><h1>Aviso legal</h1>
 <p>En cumplimiento del artículo 10 de la Ley 34/2002, de Servicios de la Sociedad de la Información y de Comercio Electrónico (LSSI-CE), se informa de los siguientes datos:</p>
 
 <h2>1. Titular del sitio</h2>
@@ -2586,19 +2729,17 @@ Datos del titular y condiciones de uso (LSSI).
     <content:encoded><![CDATA[
 
 <style>
-/* Bloquea el scroll de la página: la navegación es por el menú. */
-html,body{margin:0!important;overflow:hidden!important;height:100%;overscroll-behavior:none}
-body{background:#090d1a!important}
-.vv-shell{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;
-  background:#090d1a;color:#eef2fb;--accent:#fbbf24;
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .vv-shell *{box-sizing:border-box}
-/* Deja hueco para la barra de administración de WordPress si estás logueado. */
-.admin-bar .vv-shell{top:32px}
-@media screen and (max-width:782px){.admin-bar .vv-shell{top:46px}}
-/* Barra de menú superior, siempre visible. */
-.vv-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  padding:9px clamp(10px,3vw,20px);background:#0b1226;border-bottom:1px solid #29365a}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
 .vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
 .vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
 .vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
@@ -2606,9 +2747,8 @@ body{background:#090d1a!important}
 .vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
 .vv-menu a:hover{color:#eef2fb;background:#1a2543}
 .vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
-/* Zona de contenido: ocupa el resto; el scroll vive aquí, no en la página. */
-.vv-body{flex:1 1 auto;min-height:0;position:relative}
-.vv-body--scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+/* Zona de contenido. */
+.vv-body{position:relative}
 </style>
 <style>
 .vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
@@ -2631,9 +2771,9 @@ body{background:#090d1a!important}
 <div class="vv-shell"><header class="vv-bar">
   <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
   <nav class="vv-menu" aria-label="Secciones">
-  <a href="/vistaviva/">Inicio</a><a href="/articulos/">Artículos</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/" aria-current="page">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+  <a href="/vistaviva/">Inicio</a><a href="/articulos/">Artículos</a><a href="/acerca-de/">Acerca de</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/" aria-current="page">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
   </nav>
-</header><div class="vv-body vv-body--scroll"><div class="vv-page"><div class="vv-card"><h1>Política de cookies</h1>
+</header><div class="vv-body"><div class="vv-page"><div class="vv-card"><h1>Política de cookies</h1>
 <p>Esta Política de cookies explica qué son las cookies y tecnologías similares, cuáles utiliza este sitio y cómo puedes gestionarlas. Al aceptar el aviso, consientes su uso; puedes rechazarlas o retirar tu consentimiento en cualquier momento.</p>
 
 <h2>1. ¿Qué son las cookies?</h2>
@@ -2689,19 +2829,17 @@ Qué cookies usa el sitio y cómo gestionarlas.
     <content:encoded><![CDATA[
 
 <style>
-/* Bloquea el scroll de la página: la navegación es por el menú. */
-html,body{margin:0!important;overflow:hidden!important;height:100%;overscroll-behavior:none}
-body{background:#090d1a!important}
-.vv-shell{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;
-  background:#090d1a;color:#eef2fb;--accent:#fbbf24;
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .vv-shell *{box-sizing:border-box}
-/* Deja hueco para la barra de administración de WordPress si estás logueado. */
-.admin-bar .vv-shell{top:32px}
-@media screen and (max-width:782px){.admin-bar .vv-shell{top:46px}}
-/* Barra de menú superior, siempre visible. */
-.vv-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  padding:9px clamp(10px,3vw,20px);background:#0b1226;border-bottom:1px solid #29365a}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
 .vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
 .vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
 .vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
@@ -2709,9 +2847,8 @@ body{background:#090d1a!important}
 .vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
 .vv-menu a:hover{color:#eef2fb;background:#1a2543}
 .vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
-/* Zona de contenido: ocupa el resto; el scroll vive aquí, no en la página. */
-.vv-body{flex:1 1 auto;min-height:0;position:relative}
-.vv-body--scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+/* Zona de contenido. */
+.vv-body{position:relative}
 </style>
 <style>
 .vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
@@ -2734,9 +2871,9 @@ body{background:#090d1a!important}
 <div class="vv-shell"><header class="vv-bar">
   <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
   <nav class="vv-menu" aria-label="Secciones">
-  <a href="/vistaviva/">Inicio</a><a href="/articulos/">Artículos</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/" aria-current="page">Términos</a><a href="/contacto/">Contacto</a>
+  <a href="/vistaviva/">Inicio</a><a href="/articulos/">Artículos</a><a href="/acerca-de/">Acerca de</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/" aria-current="page">Términos</a><a href="/contacto/">Contacto</a>
   </nav>
-</header><div class="vv-body vv-body--scroll"><div class="vv-page"><div class="vv-card"><h1>Términos y condiciones</h1>
+</header><div class="vv-body"><div class="vv-page"><div class="vv-card"><h1>Términos y condiciones</h1>
 <p>Al usar VistaViva aceptas estos términos. Léelos con atención, especialmente el aviso de salud.</p>
 
 <h2>1. Objeto del servicio</h2>
@@ -2797,19 +2934,17 @@ Términos de uso y aviso de salud.
     <content:encoded><![CDATA[
 
 <style>
-/* Bloquea el scroll de la página: la navegación es por el menú. */
-html,body{margin:0!important;overflow:hidden!important;height:100%;overscroll-behavior:none}
-body{background:#090d1a!important}
-.vv-shell{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;
-  background:#090d1a;color:#eef2fb;--accent:#fbbf24;
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .vv-shell *{box-sizing:border-box}
-/* Deja hueco para la barra de administración de WordPress si estás logueado. */
-.admin-bar .vv-shell{top:32px}
-@media screen and (max-width:782px){.admin-bar .vv-shell{top:46px}}
-/* Barra de menú superior, siempre visible. */
-.vv-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  padding:9px clamp(10px,3vw,20px);background:#0b1226;border-bottom:1px solid #29365a}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
 .vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
 .vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
 .vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
@@ -2817,9 +2952,8 @@ body{background:#090d1a!important}
 .vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
 .vv-menu a:hover{color:#eef2fb;background:#1a2543}
 .vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
-/* Zona de contenido: ocupa el resto; el scroll vive aquí, no en la página. */
-.vv-body{flex:1 1 auto;min-height:0;position:relative}
-.vv-body--scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+/* Zona de contenido. */
+.vv-body{position:relative}
 </style>
 <style>
 .vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
@@ -2842,9 +2976,9 @@ body{background:#090d1a!important}
 <div class="vv-shell"><header class="vv-bar">
   <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
   <nav class="vv-menu" aria-label="Secciones">
-  <a href="/vistaviva/">Inicio</a><a href="/articulos/">Artículos</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/" aria-current="page">Contacto</a>
+  <a href="/vistaviva/">Inicio</a><a href="/articulos/">Artículos</a><a href="/acerca-de/">Acerca de</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/" aria-current="page">Contacto</a>
   </nav>
-</header><div class="vv-body vv-body--scroll"><div class="vv-page"><div class="vv-card"><h1>Contacto</h1>
+</header><div class="vv-body"><div class="vv-page"><div class="vv-card"><h1>Contacto</h1>
 <p>¿Tienes dudas, sugerencias o una consulta sobre privacidad? Escríbenos y te responderemos lo antes posible.</p>
 
 <h2>Correo electrónico</h2>
@@ -2887,19 +3021,17 @@ Cómo contactar y ejercer tus derechos.
     <content:encoded><![CDATA[
 
 <style>
-/* Bloquea el scroll de la página: la navegación es por el menú. */
-html,body{margin:0!important;overflow:hidden!important;height:100%;overscroll-behavior:none}
-body{background:#090d1a!important}
-.vv-shell{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;
-  background:#090d1a;color:#eef2fb;--accent:#fbbf24;
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .vv-shell *{box-sizing:border-box}
-/* Deja hueco para la barra de administración de WordPress si estás logueado. */
-.admin-bar .vv-shell{top:32px}
-@media screen and (max-width:782px){.admin-bar .vv-shell{top:46px}}
-/* Barra de menú superior, siempre visible. */
-.vv-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  padding:9px clamp(10px,3vw,20px);background:#0b1226;border-bottom:1px solid #29365a}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
 .vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
 .vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
 .vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
@@ -2907,9 +3039,8 @@ body{background:#090d1a!important}
 .vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
 .vv-menu a:hover{color:#eef2fb;background:#1a2543}
 .vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
-/* Zona de contenido: ocupa el resto; el scroll vive aquí, no en la página. */
-.vv-body{flex:1 1 auto;min-height:0;position:relative}
-.vv-body--scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+/* Zona de contenido. */
+.vv-body{position:relative}
 </style>
 <style>
 .vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
@@ -2932,9 +3063,9 @@ body{background:#090d1a!important}
 <div class="vv-shell"><header class="vv-bar">
   <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
   <nav class="vv-menu" aria-label="Secciones">
-  <a href="/vistaviva/">Inicio</a><a href="/articulos/" aria-current="page">Artículos</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+  <a href="/vistaviva/">Inicio</a><a href="/articulos/" aria-current="page">Artículos</a><a href="/acerca-de/">Acerca de</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
   </nav>
-</header><div class="vv-body vv-body--scroll"><div class="vv-page"><div class="vv-card"><h1>La regla 20-20-20 para descansar la vista</h1>
+</header><div class="vv-body"><div class="vv-page"><div class="vv-card"><h1>La regla 20-20-20 para descansar la vista</h1>
 <p>Si pasas horas frente a una pantalla, es muy probable que al final del día notes los ojos cansados, secos o algo borrosos. Es lo que se conoce como <strong>fatiga visual digital</strong> (o astenopia), y una de las formas más sencillas y respaldadas de aliviarla es la <strong>regla 20-20-20</strong>.</p>
 
 <h2>En qué consiste</h2>
@@ -2986,19 +3117,17 @@ Cada 20 minutos, mira a 6 metros durante 20 segundos: por qué funciona y cómo 
     <content:encoded><![CDATA[
 
 <style>
-/* Bloquea el scroll de la página: la navegación es por el menú. */
-html,body{margin:0!important;overflow:hidden!important;height:100%;overscroll-behavior:none}
-body{background:#090d1a!important}
-.vv-shell{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;
-  background:#090d1a;color:#eef2fb;--accent:#fbbf24;
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .vv-shell *{box-sizing:border-box}
-/* Deja hueco para la barra de administración de WordPress si estás logueado. */
-.admin-bar .vv-shell{top:32px}
-@media screen and (max-width:782px){.admin-bar .vv-shell{top:46px}}
-/* Barra de menú superior, siempre visible. */
-.vv-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  padding:9px clamp(10px,3vw,20px);background:#0b1226;border-bottom:1px solid #29365a}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
 .vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
 .vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
 .vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
@@ -3006,9 +3135,8 @@ body{background:#090d1a!important}
 .vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
 .vv-menu a:hover{color:#eef2fb;background:#1a2543}
 .vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
-/* Zona de contenido: ocupa el resto; el scroll vive aquí, no en la página. */
-.vv-body{flex:1 1 auto;min-height:0;position:relative}
-.vv-body--scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+/* Zona de contenido. */
+.vv-body{position:relative}
 </style>
 <style>
 .vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
@@ -3031,9 +3159,9 @@ body{background:#090d1a!important}
 <div class="vv-shell"><header class="vv-bar">
   <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
   <nav class="vv-menu" aria-label="Secciones">
-  <a href="/vistaviva/">Inicio</a><a href="/articulos/" aria-current="page">Artículos</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+  <a href="/vistaviva/">Inicio</a><a href="/articulos/" aria-current="page">Artículos</a><a href="/acerca-de/">Acerca de</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
   </nav>
-</header><div class="vv-body vv-body--scroll"><div class="vv-page"><div class="vv-card"><h1>Fatiga visual por pantallas: cómo aliviarla</h1>
+</header><div class="vv-body"><div class="vv-page"><div class="vv-card"><h1>Fatiga visual por pantallas: cómo aliviarla</h1>
 <p>Trabajar o estudiar frente a pantallas durante horas pasa factura: ojos secos, escozor, visión borrosa al final del día y, a veces, dolor de cabeza. Se conoce como <strong>síndrome visual informático</strong> y no es una enfermedad, sino la suma de varios pequeños esfuerzos que se acumulan. La buena noticia es que casi todo se corrige con hábitos.</p>
 
 <h2>Por qué se cansan los ojos</h2>
@@ -3086,19 +3214,17 @@ Hábitos y ejercicios sencillos contra el síndrome visual informático.
     <content:encoded><![CDATA[
 
 <style>
-/* Bloquea el scroll de la página: la navegación es por el menú. */
-html,body{margin:0!important;overflow:hidden!important;height:100%;overscroll-behavior:none}
-body{background:#090d1a!important}
-.vv-shell{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;
-  background:#090d1a;color:#eef2fb;--accent:#fbbf24;
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .vv-shell *{box-sizing:border-box}
-/* Deja hueco para la barra de administración de WordPress si estás logueado. */
-.admin-bar .vv-shell{top:32px}
-@media screen and (max-width:782px){.admin-bar .vv-shell{top:46px}}
-/* Barra de menú superior, siempre visible. */
-.vv-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  padding:9px clamp(10px,3vw,20px);background:#0b1226;border-bottom:1px solid #29365a}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
 .vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
 .vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
 .vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
@@ -3106,9 +3232,8 @@ body{background:#090d1a!important}
 .vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
 .vv-menu a:hover{color:#eef2fb;background:#1a2543}
 .vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
-/* Zona de contenido: ocupa el resto; el scroll vive aquí, no en la página. */
-.vv-body{flex:1 1 auto;min-height:0;position:relative}
-.vv-body--scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+/* Zona de contenido. */
+.vv-body{position:relative}
 </style>
 <style>
 .vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
@@ -3131,9 +3256,9 @@ body{background:#090d1a!important}
 <div class="vv-shell"><header class="vv-bar">
   <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
   <nav class="vv-menu" aria-label="Secciones">
-  <a href="/vistaviva/">Inicio</a><a href="/articulos/" aria-current="page">Artículos</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+  <a href="/vistaviva/">Inicio</a><a href="/articulos/" aria-current="page">Artículos</a><a href="/acerca-de/">Acerca de</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
   </nav>
-</header><div class="vv-body vv-body--scroll"><div class="vv-page"><div class="vv-card"><h1>Insuficiencia de convergencia: qué es y cómo se entrena</h1>
+</header><div class="vv-body"><div class="vv-page"><div class="vv-card"><h1>Insuficiencia de convergencia: qué es y cómo se entrena</h1>
 <p>¿Te cuesta mantener la lectura, se te juntan las letras o notas que un ojo "se va" cuando llevas un rato de cerca? Podría tratarse de una <strong>insuficiencia de convergencia</strong>, uno de los problemas de visión binocular más frecuentes y, afortunadamente, de los que mejor responden al entrenamiento.</p>
 
 <h2>Qué es la convergencia</h2>
@@ -3180,19 +3305,17 @@ Uno de los problemas de visión binocular que mejor responde al entrenamiento.
     <content:encoded><![CDATA[
 
 <style>
-/* Bloquea el scroll de la página: la navegación es por el menú. */
-html,body{margin:0!important;overflow:hidden!important;height:100%;overscroll-behavior:none}
-body{background:#090d1a!important}
-.vv-shell{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;
-  background:#090d1a;color:#eef2fb;--accent:#fbbf24;
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .vv-shell *{box-sizing:border-box}
-/* Deja hueco para la barra de administración de WordPress si estás logueado. */
-.admin-bar .vv-shell{top:32px}
-@media screen and (max-width:782px){.admin-bar .vv-shell{top:46px}}
-/* Barra de menú superior, siempre visible. */
-.vv-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  padding:9px clamp(10px,3vw,20px);background:#0b1226;border-bottom:1px solid #29365a}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
 .vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
 .vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
 .vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
@@ -3200,9 +3323,8 @@ body{background:#090d1a!important}
 .vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
 .vv-menu a:hover{color:#eef2fb;background:#1a2543}
 .vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
-/* Zona de contenido: ocupa el resto; el scroll vive aquí, no en la página. */
-.vv-body{flex:1 1 auto;min-height:0;position:relative}
-.vv-body--scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+/* Zona de contenido. */
+.vv-body{position:relative}
 </style>
 <style>
 .vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
@@ -3225,9 +3347,9 @@ body{background:#090d1a!important}
 <div class="vv-shell"><header class="vv-bar">
   <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
   <nav class="vv-menu" aria-label="Secciones">
-  <a href="/vistaviva/">Inicio</a><a href="/articulos/" aria-current="page">Artículos</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+  <a href="/vistaviva/">Inicio</a><a href="/articulos/" aria-current="page">Artículos</a><a href="/acerca-de/">Acerca de</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
   </nav>
-</header><div class="vv-body vv-body--scroll"><div class="vv-page"><div class="vv-card"><h1>Luz natural y prevención de la miopía</h1>
+</header><div class="vv-body"><div class="vv-page"><div class="vv-card"><h1>Luz natural y prevención de la miopía</h1>
 <p>En las últimas décadas la miopía ha crecido mucho, sobre todo entre niños y jóvenes. Entre los factores que la investigación relaciona con ese aumento hay uno que se puede cambiar sin coste: el <strong>tiempo al aire libre</strong>.</p>
 
 <h2>Qué dice la evidencia</h2>
@@ -3279,19 +3401,17 @@ Por qué el tiempo al aire libre protege la vista de niños y jóvenes.
     <content:encoded><![CDATA[
 
 <style>
-/* Bloquea el scroll de la página: la navegación es por el menú. */
-html,body{margin:0!important;overflow:hidden!important;height:100%;overscroll-behavior:none}
-body{background:#090d1a!important}
-.vv-shell{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;
-  background:#090d1a;color:#eef2fb;--accent:#fbbf24;
+/* Full-bleed: el shell ocupa todo el ancho aunque el tema centre el contenido,
+   pero SIN tapar la cabecera del tema (va en el flujo, no fijo). */
+.vv-shell{position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .vv-shell *{box-sizing:border-box}
-/* Deja hueco para la barra de administración de WordPress si estás logueado. */
-.admin-bar .vv-shell{top:32px}
-@media screen and (max-width:782px){.admin-bar .vv-shell{top:46px}}
-/* Barra de menú superior, siempre visible. */
-.vv-bar{flex:0 0 auto;display:flex;align-items:center;gap:12px;
-  padding:9px clamp(10px,3vw,20px);background:#0b1226;border-bottom:1px solid #29365a}
+/* Barra de menú propia: pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:#0b1226e6;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
 .vv-bar__brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
 .vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
 .vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
@@ -3299,9 +3419,8 @@ body{background:#090d1a!important}
 .vv-menu a{white-space:nowrap;color:#aab5cf;text-decoration:none;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
 .vv-menu a:hover{color:#eef2fb;background:#1a2543}
 .vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
-/* Zona de contenido: ocupa el resto; el scroll vive aquí, no en la página. */
-.vv-body{flex:1 1 auto;min-height:0;position:relative}
-.vv-body--scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+/* Zona de contenido. */
+.vv-body{position:relative}
 </style>
 <style>
 .vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
@@ -3324,9 +3443,9 @@ body{background:#090d1a!important}
 <div class="vv-shell"><header class="vv-bar">
   <a class="vv-bar__brand" href="/vistaviva/"><span class="vv-bar__logo">V</span><span>VistaViva</span></a>
   <nav class="vv-menu" aria-label="Secciones">
-  <a href="/vistaviva/">Inicio</a><a href="/articulos/" aria-current="page">Artículos</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
+  <a href="/vistaviva/">Inicio</a><a href="/articulos/" aria-current="page">Artículos</a><a href="/acerca-de/">Acerca de</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/aviso-legal/">Aviso legal</a><a href="/politica-de-cookies/">Cookies</a><a href="/terminos-y-condiciones/">Términos</a><a href="/contacto/">Contacto</a>
   </nav>
-</header><div class="vv-body vv-body--scroll"><div class="vv-page"><div class="vv-card"><h1>El método Bates y el mito de tirar las gafas</h1>
+</header><div class="vv-body"><div class="vv-page"><div class="vv-card"><h1>El método Bates y el mito de tirar las gafas</h1>
 <p>Cada cierto tiempo reaparece la promesa de "tirar las gafas" con ejercicios. Gran parte de esa idea viene del <strong>método Bates</strong>, un conjunto de técnicas de principios del siglo XX. Conviene separar lo que ayuda de lo que es simplemente un mito.</p>
 
 <h2>Qué propone el método Bates</h2>

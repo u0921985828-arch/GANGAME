@@ -17,15 +17,16 @@ términos y contacto.
    (**Páginas → Papelera**), para que no salgan duplicadas con `-2`.
 2. WordPress → **Herramientas → Importar → «Importador de WordPress»**.
 3. Sube **`vistaviva-wordpress.xml`** → asigna a **admin** → importar.
-4. Se crean 7 páginas ya enlazadas entre sí:
-   **VistaViva** (app), **Artículos**, **Política de privacidad**,
+4. Se crean 8 páginas ya enlazadas entre sí:
+   **VistaViva** (app), **Artículos**, **Acerca de**, **Política de privacidad**,
    **Aviso legal**, **Política de cookies**, **Términos y condiciones** y
    **Contacto**, más **5 artículos** en la categoría «Salud visual».
 
-Todas se muestran como una **app de marco fijo**: sin scroll de página y con
-una **barra de menú propia siempre visible** para moverte entre secciones (el
-scroll solo ocurre dentro de la app o del contenido de cada página). Por eso el
-menú de pie del tema es opcional (paso 3).
+Todas **conservan la cabecera y el pie de tu tema de WordPress**: el contenido de
+VistaViva se integra en el flujo de la página (no tapa el tema) y añade su propia
+**barra de menú «sticky»** que se queda pegada arriba al hacer scroll para moverte
+entre secciones. El scroll de página es normal. Por eso el menú de pie del tema es
+opcional (paso 3).
 
 ## 2. Rellena tus datos
 
