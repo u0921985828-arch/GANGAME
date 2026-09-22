@@ -841,6 +841,7 @@
   function startRoutine() {
     if (!routine.length) return;   // rutina personalizada vacía
     stopConfetti();
+    stopCounts();
     stopPreviews();
     player.index = 0;
     player.paused = false;
@@ -873,6 +874,7 @@
   function exitToHome() {
     stopLoop();
     stopConfetti();
+    stopCounts();
     releaseWake();
     renderHome();
     show('home');
@@ -910,10 +912,26 @@
     calentamiento: 'Calentamiento', seguimiento: 'Seguimiento', sacadicos: 'Sacádicos',
     enfoque: 'Enfoque', convergencia: 'Convergencia', periferia: 'Periferia', habitos: 'Descanso',
   };
+  // Conteo animado (0 → valor) con easeOutCubic; instantáneo en movimiento reducido.
+  let countRafs = [];
+  function stopCounts() { countRafs.forEach((id) => cancelAnimationFrame(id)); countRafs = []; }
+  function countUp(node, to) {
+    if (!node) return;
+    if (state.settings.reduced || to <= 0) { node.textContent = String(to); return; }
+    const dur = 850; let start = 0;
+    const step = (now) => {
+      if (!start) start = now;
+      const p = clamp((now - start) / dur, 0, 1);
+      node.textContent = String(Math.round(to * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) countRafs.push(requestAnimationFrame(step));
+    };
+    countRafs.push(requestAnimationFrame(step));
+  }
   function renderDone() {
-    el.doneStreak.textContent = state.streak;
-    el.doneTotal.textContent = state.total;
-    el.doneMins.textContent = Math.max(1, Math.round(totalRoutineSeconds() / 60));
+    stopCounts();
+    countUp(el.doneStreak, state.streak);
+    countUp(el.doneTotal, state.total);
+    countUp(el.doneMins, Math.max(1, Math.round(totalRoutineSeconds() / 60)));
     el.doneSub.textContent = state.streak > 1
       ? `¡${state.streak} días seguidos! Sigue así.`
       : 'Tus ojos te lo agradecen.';
@@ -1010,7 +1028,7 @@
   function bindSettings() {
     setInputs.sound.addEventListener('change', (e) => { state.settings.sound = e.target.checked; saveState(); if (e.target.checked) sfx('toggle'); });
     setInputs.haptics.addEventListener('change', (e) => { state.settings.haptics = e.target.checked; saveState(); haptic(); });
-    setInputs.reduced.addEventListener('change', (e) => { state.settings.reduced = e.target.checked; saveState(); renderHome(); });
+    setInputs.reduced.addEventListener('change', (e) => { state.settings.reduced = e.target.checked; saveState(); applyReduceClass(); renderHome(); });
     setInputs.colorblind.addEventListener('change', (e) => { state.settings.colorblind = e.target.checked; saveState(); renderHome(); });
     setInputs.intensity.addEventListener('change', (e) => { state.settings.intensity = parseFloat(e.target.value) || 1; saveState(); renderHome(); });
     $('#set-reset').addEventListener('click', () => {
@@ -1084,8 +1102,12 @@
   }
 
   // ---------- Init ----------
+  function applyReduceClass() {
+    document.documentElement.classList.toggle('reduce-motion', !!state.settings.reduced);
+  }
   function init() {
     try { FONT = getComputedStyle(document.body).fontFamily || FONT; } catch {}
+    applyReduceClass();
     renderHome();
     bindEvents();
     bindSettings();
