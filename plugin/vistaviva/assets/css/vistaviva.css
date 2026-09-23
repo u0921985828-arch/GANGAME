@@ -1,0 +1,79 @@
+/* ===== VistaViva — estilos del frontend ===== */
+
+/* Bloque a todo el ancho, integrado en el flujo de la página (conserva la
+   cabecera y el pie del tema de WordPress; no los tapa). */
+.vv-shell{
+  position:relative;width:100vw;margin-left:calc(50% - 50vw);
+  background:#090d1a;color:#eef2fb;--accent:#fbbf24;overflow-x:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+.vv-shell *{box-sizing:border-box}
+.vv-shell a{text-decoration:none}
+
+/* Barra de menú: se queda pegada arriba al hacer scroll, bajo la cabecera del tema. */
+.vv-bar{
+  position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;
+  padding:9px clamp(10px,3vw,20px);background:rgba(11,18,38,.9);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid #29365a;
+}
+.admin-bar .vv-bar{top:32px}
+@media screen and (max-width:782px){.admin-bar .vv-bar{top:46px}}
+.vv-bar__brand{display:flex;align-items:center;gap:9px;color:#eef2fb;font-weight:800;letter-spacing:-.01em;flex:0 0 auto}
+.vv-bar__logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:grid;place-items:center;color:#101725;font-weight:800;font-size:.95rem}
+.vv-menu{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+.vv-menu::-webkit-scrollbar{display:none}
+.vv-menu a{white-space:nowrap;color:#aab5cf;font-size:.84rem;padding:7px 11px;border-radius:9px;transition:background .15s,color .15s}
+.vv-menu a:hover{color:#eef2fb;background:#1a2543}
+.vv-menu a[aria-current="page"]{color:#101725;background:var(--accent);font-weight:700}
+
+.vv-body{position:relative}
+
+/* ---- App: anuncios fuera del iframe + marco a lo ancho ---- */
+.vv-app{display:flex;flex-direction:column;gap:7px;padding:7px clamp(0px,2vw,16px)}
+.vv-ad{flex:0 0 auto;width:100%;max-width:1060px;margin:0 auto;min-height:48px;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:#0f1730;border:1px solid #1c2745;border-radius:12px;padding:5px}
+.vv-ad__tag{color:#5f6d92;font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:3px}
+.vv-ad .adsbygoogle{display:block;width:100%}
+.vv-frame{width:100%;max-width:1060px;margin:0 auto;position:relative;
+  height:min(var(--vv-frame-h,82svh),980px);min-height:520px;
+  border:1px solid #29365a;border-radius:16px;overflow:hidden;background:#05070f;box-shadow:0 22px 48px -22px #000c}
+.vv-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+
+/* ---- Texto de la portada ---- */
+.vv-intro{max-width:820px;margin:26px auto 8px;padding:0 clamp(16px,4vw,26px) 30px;line-height:1.65}
+.vv-intro h1{font-size:clamp(1.5rem,5vw,1.9rem);letter-spacing:-.01em;margin:0 0 12px;color:#eef2fb}
+.vv-intro p{color:#aab5cf;margin:0 0 14px}
+.vv-intro strong{color:#eef2fb}
+.vv-intro a{color:var(--accent)}
+.vv-feats{display:grid;grid-template-columns:1fr;gap:14px;margin:18px 0 6px}
+@media (min-width:760px){.vv-feats{grid-template-columns:repeat(3,1fr)}}
+.vv-feat{background:#16203c;border:1px solid #29365a;border-radius:16px;padding:16px 18px}
+.vv-feat h3{margin:0 0 7px;color:var(--accent);font-size:1rem}
+.vv-feat p{margin:0;color:#aab5cf;font-size:.92rem}
+
+/* ---- Páginas de contenido (legales, acerca, artículos) ---- */
+.vv-shell--content .vv-page{max-width:820px;margin:0 auto;padding:22px clamp(16px,4vw,26px) 64px;line-height:1.65}
+.vv-page h1{font-size:clamp(1.4rem,4.5vw,1.7rem);letter-spacing:-.01em;margin:0 0 10px;color:#eef2fb}
+.vv-card{background:#16203c;border:1px solid #29365a;border-radius:18px;padding:24px clamp(18px,4vw,26px) 10px;box-shadow:0 2px 8px #00000055,0 22px 48px -20px #00000099}
+.vv-card h2{font-size:1.12rem;color:var(--accent);margin:26px 0 8px}
+.vv-card p,.vv-card li{color:#aab5cf;margin:0 0 12px}
+.vv-card ul{padding-left:22px}
+.vv-card strong{color:#eef2fb}
+.vv-card a{color:var(--accent)}
+
+.vv-note{font-size:.9rem;font-style:italic;color:#8ea0c6!important;border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-top:22px}
+.vv-cta,.vv-back{display:inline-block;margin-top:6px;color:#101725!important;background:var(--accent);padding:12px 20px;border-radius:12px;font-weight:700}
+
+/* Índice de artículos */
+.vv-list{display:grid;gap:12px;margin-top:6px}
+.vv-item{display:block;background:#16203c;border:1px solid #29365a;border-radius:16px;padding:16px 18px;transition:border-color .15s,transform .12s,background .15s}
+.vv-item:hover{border-color:#3a4a70;background:#1a2543;transform:translateX(2px)}
+.vv-item h3{margin:0 0 6px;color:#eef2fb;font-size:1.05rem}
+.vv-item p{margin:0;color:#aab5cf;font-size:.9rem}
+
+@media (max-width:640px){
+  .vv-app{padding:6px 0;gap:6px}
+  .vv-ad,.vv-frame{border-radius:0;border-inline:0}
+  .vv-frame{height:min(78svh,900px);min-height:460px}
+}

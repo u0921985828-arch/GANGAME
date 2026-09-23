@@ -7,6 +7,21 @@ Mientras no pongas tus IDs de AdSense, los anuncios simplemente no se muestran.
 
 ---
 
+## Dos formas de instalarlo
+
+1. **Plugin (recomendado)** — `vistaviva-plugin.zip`. Plugins → Añadir nuevo →
+   Subir plugin → Activar. Crea solo las 8 páginas + 5 artículos, sirve la app
+   como archivo real (sin que editores ni plugins de seguridad rompan el
+   `<script>`) y trae una pantalla **Ajustes → VistaViva** para tus IDs de
+   AdSense. Los anuncios se activan desde ahí; no hay que tocar HTML.
+2. **Importación XML** — `vistaviva-wordpress.xml`. Herramientas → Importar →
+   WordPress. Alternativa si el hosting no deja subir plugins. Para cambiar los
+   IDs de AdSense hay que editar la página de la app a mano.
+
+No instales las dos: crearían páginas duplicadas.
+
+---
+
 ## Resumen de piezas ya incluidas
 
 | Archivo | Para qué sirve |
